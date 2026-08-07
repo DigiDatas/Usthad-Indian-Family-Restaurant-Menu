@@ -705,7 +705,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                 // 🔒 NEW: CLOUD SECURITY KILL-SWITCH
                 // ==========================================
                 try {
-                    const authUrl = "https://raw.githubusercontent.com/Rmoosa2014/Restaurant-menu/main/images/CustomerID.json?v=" + new Date().getTime();
+                    const authUrl = "https://raw.githubusercontent.com/Rmoosa2014/Restaurant-menu/main/CustomerID.json?v=" + new Date().getTime();
                     const authResponse = await fetch(authUrl);
                     if (!authResponse.ok) throw new Error("Cannot reach security server");
                     
