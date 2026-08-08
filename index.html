@@ -798,10 +798,11 @@ let relatedItemsData = []; // (You did this perfectly!)
         };
 
         /// --- Master Initialization (JSON Upgraded) ---
+        /// --- Master Initialization ---
         async function init() {
             try {
                 // ==========================================
-                // 🔒 NEW: CLOUD SECURITY KILL-SWITCH
+                // 🔒 CLOUD SECURITY KILL-SWITCH
                 // ==========================================
                 try {
                     const authUrl = "https://raw.githubusercontent.com/Rmoosa2014/Restaurant-menu/main/CustomerID.json?v=" + new Date().getTime();
@@ -811,36 +812,55 @@ let relatedItemsData = []; // (You did this perfectly!)
                     const authData = await authResponse.json();
                     let isValidCustomer = false;
                     
-                    // Search all sheets in the Security JSON for the Customer ID
                     for (const sheet in authData) {
                         const rows = authData[sheet];
                         if (Array.isArray(rows)) {
-                            // Find row where Column C matches our ID
                             const match = rows.find(row => String(row.C || "").trim() === String(CUSTOMER_ID).trim());
-                            
-                            // Check if matched row exists and Column E says "Active"
                             if (match && String(match.E || "").trim().toLowerCase() === "active") {
                                 isValidCustomer = true;
                                 break;
                             }
                         }
                     }
-
                     if (!isValidCustomer) throw new Error("Not Active");
-
                 } catch (authError) {
-                    // Triggers if fetch fails, file is missing, ID is wrong, or status is not Active
                     document.body.innerHTML = `
                         <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#f8fafc; font-family:sans-serif; color:#ef4444; text-align:center; padding: 20px;">
                             <i class="fas fa-store-slash text-6xl mb-4 text-gray-300"></i>
                             <h2 class="text-3xl font-extrabold text-gray-800">Temporarily Not Available</h2>
                             <p class="text-gray-500 mt-2 font-bold">This menu is currently inactive. Please contact the administrator.</p>
                         </div>`;
-                    return; // Completely stops the app from loading!
+                    return; 
                 }
                 // ==========================================
 
-                // --- Fetch live menu items directly from Supabase ---
+                // 1. FETCH BRANDING & OFFERS FROM JSON
+                const fileUrl = "MenuMasterData.json?v=" + new Date().getTime();
+                const response = await fetch(fileUrl);
+                if (response.ok) {
+                    const jsonData = await response.json();
+                    const sNames = Object.keys(jsonData);
+                    
+                    const sBrand = sNames.find(n => n.includes("01") || n.includes("Brand") || n.replace(/\s/g,'') === "Sheet1") || sNames[0];
+                    const sOffer = sNames.find(n => n.includes("2") || n.includes("Offer")) || sNames[1];
+                    const sRelated = sNames.find(n => n.toLowerCase().includes("relateditems"));
+
+                    if(sBrand && jsonData[sBrand]) {
+                        window.rawBrandRows = jsonData[sBrand];
+                        rawBranding = window.rawBrandRows.find((r, i) => i > 0 && (r.K || r.B || r.L)) || window.rawBrandRows[1] || window.rawBrandRows[0] || {};
+                    }
+                    if(sOffer && jsonData[sOffer]) {
+                        const offerRows = jsonData[sOffer];
+                        if(offerRows.length > 1) rawOffers = offerRows.slice(1);
+                    }
+                    if(sRelated && Array.isArray(jsonData[sRelated])) {
+                        relatedItemsData = jsonData[sRelated];
+                    } else {
+                        relatedItemsData = [];
+                    }
+                }
+
+                // 2. FETCH LIVE MENU ITEMS FROM SUPABASE
                 const { data: menuData, error: menuError } = await supabaseClient
                     .from('menu_items')
                     .select('*')
@@ -860,8 +880,8 @@ let relatedItemsData = []; // (You did this perfectly!)
                         calories: item.calories || "",
                         recipe: item.recipe || "",
                         isTodaySpecial: item.is_today_special || false,
-                        imgUrls: item.img_urls && item.img_urls.length > 0 ? item.img_urls : ['https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'],
-                        img: item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png',
+                        imgUrls: item.img_urls && item.img_urls.length > 0 ? item.img_urls : [rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'],
+                        img: item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : (rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'),
                         video: item.video_url || "",
                         reviewLinks: item.review_links || "",
                         flashCards: item.flash_cards || ""
@@ -872,20 +892,17 @@ let relatedItemsData = []; // (You did this perfectly!)
                 }
 
                 document.getElementById('loading-state').classList.add('hidden');
+                
+                // Initialize UI
+                applySystemSetup();
+                renderSocialMedia();
                 renderCategoryFilters();
                 renderSubCategoryFilters();
                 executeFilter();
                 
             } catch (error) {
-                console.error("JSON Initialization Error:", error);
+                console.error("Initialization Error:", error);
                 document.getElementById('loading-state').classList.add('hidden');
-                const errState = document.getElementById('error-state');
-                errState.classList.remove('hidden');
-                errState.classList.add('flex');
-                
-                // Dynamically update the error text if the JSON file is missing
-                const errText = errState.querySelector('p');
-                if(errText) errText.textContent = "Please ensure `MenuMasterData.json` is uploaded to your repository and formatted correctly.";
             }
         }
 
@@ -1012,8 +1029,11 @@ let relatedItemsData = []; // (You did this perfectly!)
             document.getElementById('label-contact').textContent = t.contact;
             document.getElementById('label-location').textContent = t.location;
             
-            const rawSource = currentLang === 'en' ? rawMenuEn : rawMenuAr;
-            formatMenuData(rawSource);
+            // Instead of resetting data from the old Excel arrays, just re-render the live Supabase data!
+            renderCategoryFilters();
+            renderSubCategoryFilters();
+            executeFilter();
+            animateSearchPlaceholder();
         }
 
         function renderOffers() {
@@ -2612,8 +2632,8 @@ function toggleQuickCart(id) {
             }
         }
 
-        // UPDATED: Reads the address box and removes VAT math
-        function sendOrderViaWhatsApp() {
+        // UPDATED: Sends order to Supabase AND WhatsApp
+        async function sendOrderViaWhatsApp() {
             if(cart.length === 0 || !rawBranding.D) return;
             
             const restaurantName = rawBranding.B || 'Our Store';
@@ -2623,6 +2643,7 @@ function toggleQuickCart(id) {
             
             let orderTypeStr = diningType;
             let locationText = "";
+            let addressInput = "";
 
             if (diningType === 'Dine In') {
                 if (!selectedTable) {
@@ -2632,23 +2653,57 @@ function toggleQuickCart(id) {
                 orderTypeStr = `Dine In (${selectedTable})`;
             } else if (diningType === 'Takeaway') {
                 // Read whatever the user typed or pasted via GPS into the box
-                const addressInput = document.getElementById('delivery-address').value.trim();
+                addressInput = document.getElementById('delivery-address').value.trim();
                 
                 if (addressInput) {
                     locationText = `\n📍 *Delivery Address:*\n${addressInput}\n`;
                 } else {
-                    // NEW: Smart confirmation if the address is empty
+                    // Smart confirmation if the address is empty
                     const proceedWithoutAddress = confirm("You haven't entered a delivery address. Do you want to send the order anyway and share your location directly in WhatsApp?");
+                    if (!proceedWithoutAddress) return; 
                     
-                    if (!proceedWithoutAddress) {
-                        // User clicked Cancel, stop the order process so they can type it
-                        return; 
-                    }
-                    
-                    // User clicked OK, proceed with the order
                     locationText = `\n📍 *Delivery Address:*\n(Will share via WhatsApp)\n`;
                 }
             }
+
+            // Calculate Subtotal
+            let subtotal = 0;
+            cart.forEach(item => {
+                subtotal += (parseFloat(item.price) || 0) * item.qty;
+            });
+
+            // ==========================================
+            // 🔒 NEW: SAVE ORDER TO SUPABASE DATABASE
+            // ==========================================
+            try {
+                // Change button text to show it is saving
+                const btn = document.querySelector('button[onclick="sendOrderViaWhatsApp()"]');
+                const originalBtnHtml = btn.innerHTML;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Saving Order...`;
+                
+                // Insert into the 'orders' table
+                const { error } = await supabaseClient
+                    .from('orders')
+                    .insert([{
+                        customer_id: currentUser ? currentUser.id : 'guest',
+                        order_type: diningType,
+                        table_number: diningType === 'Dine In' ? selectedTable : null,
+                        delivery_address: addressInput || null,
+                        items: cart,
+                        total_amount: subtotal,
+                        status: 'Pending'
+                    }]);
+                    
+                btn.innerHTML = originalBtnHtml; // Restore button appearance
+
+                if (error) {
+                    console.error("Supabase Error:", error);
+                    alert("Warning: Could not save order to database, but we will still send it to WhatsApp.");
+                }
+            } catch (err) {
+                console.error("System Error:", err);
+            }
+            // ==========================================
 
             let msg = `🧾 *NEW ORDER*\n`;
             msg += `📅 Date: ${orderDate}\n`;
@@ -2656,11 +2711,9 @@ function toggleQuickCart(id) {
             msg += `🍽️ Option: *${orderTypeStr}*\n`;
             msg += `------------------------\n`;
             
-            let subtotal = 0;
             cart.forEach((item, index) => {
                 const itemPrice = parseFloat(item.price) || 0;
                 const total = itemPrice * item.qty;
-                subtotal += total;
                 msg += `${index + 1}. ${item.qty}x ${item.name} @ ${itemPrice.toFixed(2)} = ${total.toFixed(2)}\n`;
             });
             
@@ -2673,6 +2726,11 @@ function toggleQuickCart(id) {
             }
 
             closeCartModal();
+            
+            // Empty the cart after ordering
+            cart = [];
+            updateCartUI();
+
             window.location.href = `https://wa.me/${rawBranding.D}?text=${encodeURIComponent(msg)}`;
         }
 
