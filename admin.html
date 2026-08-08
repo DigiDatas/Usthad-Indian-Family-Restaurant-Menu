@@ -590,7 +590,7 @@
                 let totalImported = 0;
                 btn.innerHTML = `<i class="fas fa-spin fa-spinner"></i> Importing Fresh Data...`;
 
-                / --- 2. IMPORT BRANDING (Matches Excel exactly, row by row) ---
+                // --- 2. IMPORT BRANDING (Matches Excel exactly, row by row) ---
                 if (jsonData["Branding"]) {
                     const brandRows = jsonData["Branding"]
                         .filter((r, idx) => idx > 0) // Skips the title header (Row 0)
