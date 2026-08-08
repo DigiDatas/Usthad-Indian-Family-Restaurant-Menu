@@ -70,9 +70,14 @@
         <span id="lang-text">EN</span>
     </button>
 <!-- NEW SIGN OUT BUTTON -->
+                    <div class="flex items-center gap-2">
+                    <!-- NEW: Display Logged-in User Email -->
+                    <span id="logged-in-user-email" class="text-xs font-bold text-gray-600 hidden sm:inline"></span>
+                    
                     <button id="btn-signout" onclick="handleSignOut()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-red-100 hover:bg-red-200 text-red-600 font-bold text-sm transition shadow-sm">
                         <i class="fas fa-sign-out-alt me-1"></i> Out
                     </button>
+                </div>
     
     <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-10 h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
         <i class="fas fa-shopping-cart text-sm"></i> 
@@ -613,6 +618,16 @@
                     </div>
                 </div>
 
+                <!-- ⬇️ PASTE THE NEW CUSTOMER DETAILS CODE RIGHT HERE ⬇️ -->
+                <div class="mb-3">
+                    <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Customer Details</div>
+                    <div class="flex flex-col gap-2">
+                        <input type="text" id="order-customer-name" placeholder="Your Full Name" class="border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:border-green-500 transition-colors">
+                        <input type="tel" id="order-customer-phone" placeholder="Phone Number / WhatsApp" class="border border-gray-200 rounded-lg px-3 py-2 text-xs font-medium text-gray-700 focus:outline-none focus:border-green-500 transition-colors">
+                    </div>
+                </div>
+                <!-- ⬆️ END OF PASTE AREA ⬆️ -->
+
                 <!-- Calculations (VAT Removed) -->
                 <div class="space-y-2 mb-4 text-sm font-medium text-gray-600">
                     <div class="flex justify-between text-xl font-extrabold text-gray-900 pt-2 mt-2">
@@ -695,15 +710,18 @@
             const { data: { session } } = await supabaseClient.auth.getSession();
             const authModal = document.getElementById('authModal');
             const signOutBtn = document.getElementById('btn-signout');
+            const userEmailSpan = document.getElementById('logged-in-user-email');
             
             if (session) {
                 currentUser = session.user;
                 authModal.classList.replace('flex', 'hidden'); // Hide login modal
                 if(signOutBtn) signOutBtn.classList.replace('hidden', 'flex'); // Show sign out button
+                if(userEmailSpan) userEmailSpan.textContent = currentUser.email || 'Guest User'; // Show email
             } else {
                 currentUser = null;
                 authModal.classList.replace('hidden', 'flex'); // Show login modal
                 if(signOutBtn) signOutBtn.classList.replace('flex', 'hidden'); // Hide sign out button
+                if(userEmailSpan) userEmailSpan.textContent = ''; // Clear email
             }
         }
 
@@ -2681,11 +2699,23 @@ function toggleQuickCart(id) {
                 const originalBtnHtml = btn.innerHTML;
                 btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Saving Order...`;
                 
+                // Read Name and Phone from inputs
+                const customerName = document.getElementById('order-customer-name').value.trim();
+                const customerPhone = document.getElementById('order-customer-phone').value.trim();
+
+                if (!customerName || !customerPhone) {
+                    alert('Please enter your Name and Phone Number so we can process your order!');
+                    btn.innerHTML = originalBtnHtml;
+                    return;
+                }
+
                 // Insert into the 'orders' table
                 const { error } = await supabaseClient
                     .from('orders')
                     .insert([{
                         customer_id: currentUser ? currentUser.id : 'guest',
+                        customer_name: customerName,
+                        customer_phone: customerPhone,
                         order_type: diningType,
                         table_number: diningType === 'Dine In' ? selectedTable : null,
                         delivery_address: addressInput || null,
@@ -2703,6 +2733,19 @@ function toggleQuickCart(id) {
             } catch (err) {
                 console.error("System Error:", err);
             }
+            // ==========================================
+
+            // Read Name and Phone again for the WhatsApp text message
+            const customerName = document.getElementById('order-customer-name').value.trim();
+            const customerPhone = document.getElementById('order-customer-phone').value.trim();
+
+            let msg = `🧾 *NEW ORDER*\n`;
+            msg += `👤 Name: *${customerName}*\n`;
+            msg += `📞 Phone: ${customerPhone}\n`;
+            msg += `📅 Date: ${orderDate}\n`;
+            msg += `📍 Store: *${restaurantName}*\n`;
+            msg += `🍽️ Option: *${orderTypeStr}*\n`;
+            msg += `------------------------\n`;
             // ==========================================
 
             let msg = `🧾 *NEW ORDER*\n`;
