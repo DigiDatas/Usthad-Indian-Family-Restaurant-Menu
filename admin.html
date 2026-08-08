@@ -190,7 +190,6 @@
             <div class="p-6 overflow-y-auto flex flex-col gap-4">
                 <input type="hidden" id="edit-item-id">
                 
-                <!-- NEW: Item Code and Language Fields -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Item Code *</label>
@@ -221,14 +220,18 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Price *</label>
                         <input type="number" step="0.01" id="form-price" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Display Order</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Order</label>
                         <input type="number" id="form-order" value="1" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Calories</label>
+                        <input type="number" id="form-calories" placeholder="e.g. 450" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
                     </div>
                 </div>
 
@@ -236,12 +239,32 @@
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
                     <textarea id="form-desc" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500"></textarea>
                 </div>
-
-                <!-- NEW: Related Items Map Input -->
+                
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-link text-blue-500 me-1"></i> Related Items (Cross-Sell)</label>
-                    <input type="text" id="form-related" placeholder="e.g. ITM008, ITM009" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
-                    <p class="text-[10px] text-gray-400 mt-1">Separate Item IDs with commas.</p>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Recipe / Ingredients</label>
+                    <textarea id="form-recipe" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-play text-red-500 me-1"></i> Video URL</label>
+                        <input type="text" id="form-video" placeholder="https://..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-star text-yellow-500 me-1"></i> Review Links</label>
+                        <input type="text" id="form-reviews" placeholder="Comma separated URLs" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-link text-blue-500 me-1"></i> Related Items IDs</label>
+                        <input type="text" id="form-related" placeholder="e.g. ITM008, ITM009" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-images text-purple-500 me-1"></i> Flash Cards</label>
+                        <input type="text" id="form-flash" placeholder="Comma separated URLs" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    </div>
                 </div>
 
                 <!-- IMAGE UPLOAD SECTION -->
@@ -473,12 +496,20 @@
                 document.getElementById('form-price').value = '';
                 document.getElementById('form-order').value = '1';
                 document.getElementById('form-desc').value = '';
+                document.getElementById('form-calories').value = '';
+                document.getElementById('form-recipe').value = '';
+                document.getElementById('form-video').value = '';
+                document.getElementById('form-reviews').value = '';
+                document.getElementById('form-flash').value = '';
                 document.getElementById('form-img').value = '';
                 document.getElementById('form-image-file').value = '';
                 document.getElementById('form-special').checked = false;
             } else {
                 document.getElementById('menu-modal-title').textContent = 'Edit Menu Item';
-                const item = allMenuItems.find(i => i.id === id);
+                
+                // CRITICAL FIX: Convert both to String so they match perfectly!
+                const item = allMenuItems.find(i => String(i.id) === String(id));
+                
                 if (item) {
                     document.getElementById('form-item-code').value = item.item_code || '';
                     document.getElementById('form-language').value = item.language || 'en';
@@ -488,6 +519,11 @@
                     document.getElementById('form-price').value = item.price || '';
                     document.getElementById('form-order').value = item.order_index || 1;
                     document.getElementById('form-desc').value = item.description || '';
+                    document.getElementById('form-calories').value = item.calories || '';
+                    document.getElementById('form-recipe').value = item.recipe || '';
+                    document.getElementById('form-video').value = item.video_url || '';
+                    document.getElementById('form-reviews').value = item.review_links || '';
+                    document.getElementById('form-flash').value = item.flash_cards || '';
                     
                     let existingImgs = '';
                     if (item.img_urls) {
@@ -529,6 +565,11 @@
             const price = parseFloat(document.getElementById('form-price').value);
             const orderIndex = parseInt(document.getElementById('form-order').value) || 1;
             const desc = document.getElementById('form-desc').value.trim();
+            const calories = parseInt(document.getElementById('form-calories').value) || null;
+            const recipe = document.getElementById('form-recipe').value.trim();
+            const video = document.getElementById('form-video').value.trim();
+            const reviews = document.getElementById('form-reviews').value.trim();
+            const flash = document.getElementById('form-flash').value.trim();
             const isSpecial = document.getElementById('form-special').checked;
             const relatedInput = document.getElementById('form-related').value.trim();
             
@@ -565,12 +606,17 @@
             const payload = {
                 item_code: itemCode,
                 language: language,
-                name,
+                name: name,
                 main_cat: mainCat,
                 sub_cat: subCat,
-                price,
+                price: price,
                 order_index: orderIndex,
                 description: desc,
+                calories: calories,
+                recipe: recipe,
+                video_url: video,
+                review_links: reviews,
+                flash_cards: flash,
                 is_today_special: isSpecial,
                 img_urls: imgUrlsArray
             };
