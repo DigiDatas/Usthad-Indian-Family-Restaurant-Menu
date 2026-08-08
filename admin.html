@@ -590,35 +590,38 @@
                 let totalImported = 0;
                 btn.innerHTML = `<i class="fas fa-spin fa-spinner"></i> Importing Fresh Data...`;
 
-                // --- 2. IMPORT BRANDING (Aggregates multiple banner rows) ---
+                / --- 2. IMPORT BRANDING (Matches Excel exactly, row by row) ---
                 if (jsonData["Branding"]) {
-                    let allBanners = [];
-                    let mainRow = {};
-                    jsonData["Branding"].forEach((r, idx) => {
-                        if (idx === 0) return; // Skip headers
-                        if (idx === 1) mainRow = r; // Row 1 holds main data
-                        if (r.O) {
-                            String(r.O).split(',').forEach(b => {
-                                if (b.trim()) allBanners.push(b.trim());
-                            });
-                        }
-                    });
+                    const brandRows = jsonData["Branding"]
+                        .filter((r, idx) => idx > 0) // Skips the title header (Row 0)
+                        .map(r => {
+                            let banners = [];
+                            if (r.O) {
+                                String(r.O).split(',').forEach(b => {
+                                    if (b.trim()) banners.push(b.trim());
+                                });
+                            }
+                            return {
+                                brand_name: r.B || '',
+                                contact: r.C || '',
+                                whatsapp: r.D || '',
+                                other_number: r.E || '',  // Excel Column E
+                                email: r.F || '',         // Excel Column F
+                                website: r.G || '',       // Excel Column G
+                                address: r.H || '',
+                                location_url: r.I || '',
+                                currency: r.K || '',
+                                language: r.L || '',
+                                delivery_charge: r.M || '',
+                                logo_link: r.N || '',
+                                banner_images: banners,
+                                game_enabled: r.P === true || String(r.P).toLowerCase() === "true"
+                            };
+                        });
 
-                    if (mainRow.B) {
-                        await supabaseClient.from('restaurant_settings').insert([{
-                            brand_name: mainRow.B,
-                            contact: mainRow.C || '',
-                            whatsapp: mainRow.D || '',
-                            address: mainRow.H || '',
-                            location_url: mainRow.I || '',
-                            currency: mainRow.K || 'SR',
-                            language: mainRow.L || 'English',
-                            delivery_charge: mainRow.M || '',
-                            logo_link: mainRow.N || '',
-                            banner_images: [...new Set(allBanners)],
-                            game_enabled: mainRow.P === true || String(mainRow.P).toLowerCase() === "true"
-                        }]);
-                        totalImported++;
+                    if (brandRows.length > 0) {
+                        await supabaseClient.from('restaurant_settings').insert(brandRows);
+                        totalImported += brandRows.length;
                     }
                 }
 
