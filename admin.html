@@ -391,7 +391,7 @@
         // --- FETCH & RENDER MENU MANAGER ---
         async function fetchMenu() {
             const tbody = document.getElementById('menu-table-body');
-            const { data, error } = await supabaseClient.from('menu_items').select('*').order('order_index', { ascending: true });
+            const { data, error } = await supabaseClient.from('menu_items').select('*').order('item_code', { ascending: true });
             
             if (error) {
                 tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Error loading menu items.</td></tr>`;
@@ -408,13 +408,18 @@
 
             allMenuItems.forEach(item => {
                 const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
+                const langColor = item.language === 'en' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700';
+                
                 tbody.innerHTML += `
                     <tr class="hover:bg-gray-50/50 transition">
                         <td class="p-4 flex items-center gap-3">
                             <img src="${img}" class="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0">
                             <div>
                                 <p class="font-bold text-gray-900 leading-tight">${item.name}</p>
-                                <p class="text-xs text-gray-400 line-clamp-1">${item.description || ''}</p>
+                                <div class="flex gap-1.5 mt-1">
+                                    <span class="bg-gray-800 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">${item.item_code || 'NO-ID'}</span>
+                                    <span class="${langColor} px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">${item.language || 'en'}</span>
+                                </div>
                             </div>
                         </td>
                         <td class="p-4 font-semibold text-gray-600">${item.main_cat}</td>
@@ -431,12 +436,15 @@
         }
 
         // --- MENU ITEM MODAL & SUPABASE STORAGE UPLOADS ---
-        function openMenuModal(mode, id = null) {
+        async function openMenuModal(mode, id = null) {
             const modal = document.getElementById('menuModal');
             document.getElementById('edit-item-id').value = id || '';
+            document.getElementById('form-related').value = ''; // Reset related mapping
             
             if (mode === 'add') {
                 document.getElementById('menu-modal-title').textContent = 'Add Menu Item';
+                document.getElementById('form-item-code').value = '';
+                document.getElementById('form-language').value = 'en';
                 document.getElementById('form-name').value = '';
                 document.getElementById('form-maincat').value = '';
                 document.getElementById('form-subcat').value = '';
@@ -450,6 +458,8 @@
                 document.getElementById('menu-modal-title').textContent = 'Edit Menu Item';
                 const item = allMenuItems.find(i => i.id === id);
                 if (item) {
+                    document.getElementById('form-item-code').value = item.item_code || '';
+                    document.getElementById('form-language').value = item.language || 'en';
                     document.getElementById('form-name').value = item.name || '';
                     document.getElementById('form-maincat').value = item.main_cat || '';
                     document.getElementById('form-subcat').value = item.sub_cat || '';
@@ -457,17 +467,25 @@
                     document.getElementById('form-order').value = item.order_index || 1;
                     document.getElementById('form-desc').value = item.description || '';
                     
-                    // Automatically load all saved image URLs (multi-images or storage links) into the edit input
                     let existingImgs = '';
                     if (item.img_urls) {
-                        if (Array.isArray(item.img_urls)) {
-                            existingImgs = item.img_urls.join(', ');
-                        } else {
-                            existingImgs = item.img_urls;
-                        }
+                        existingImgs = Array.isArray(item.img_urls) ? item.img_urls.join(', ') : item.img_urls;
                     }
                     document.getElementById('form-img').value = existingImgs;
                     document.getElementById('form-special').checked = item.is_today_special || false;
+
+                    // FETCH RELATED ITEMS MAP FROM DATABASE USING ITEM_CODE
+                    if (item.item_code) {
+                        const { data: relData } = await supabaseClient
+                            .from('related_items_map')
+                            .select('related_item_ids')
+                            .eq('item_id', item.item_code)
+                            .maybeSingle();
+
+                        if (relData && relData.related_item_ids) {
+                            document.getElementById('form-related').value = relData.related_item_ids.join(', ');
+                        }
+                    }
                 }
             }
             modal.classList.remove('hidden');
@@ -481,6 +499,8 @@
 
         async function saveMenuItem() {
             const id = document.getElementById('edit-item-id').value;
+            const itemCode = document.getElementById('form-item-code').value.trim();
+            const language = document.getElementById('form-language').value;
             const name = document.getElementById('form-name').value.trim();
             const mainCat = document.getElementById('form-maincat').value.trim();
             const subCat = document.getElementById('form-subcat').value.trim();
@@ -488,28 +508,26 @@
             const orderIndex = parseInt(document.getElementById('form-order').value) || 1;
             const desc = document.getElementById('form-desc').value.trim();
             const isSpecial = document.getElementById('form-special').checked;
+            const relatedInput = document.getElementById('form-related').value.trim();
             
             let rawImgInput = document.getElementById('form-img').value.trim();
             let imgUrlsArray = rawImgInput ? rawImgInput.split(',').map(u => u.trim()).filter(Boolean) : [];
 
-            if (!name || !mainCat || !subCat || isNaN(price)) {
-                alert('Please fill out all required fields (Name, Main Category, Sub Category, Price).');
+            if (!name || !mainCat || !subCat || isNaN(price) || !itemCode) {
+                alert('Please fill out all required fields (Item Code, Name, Main Category, Sub Category, Price).');
                 return;
             }
 
             const btn = document.getElementById('btn-save-item');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
-            // Handle file upload to Supabase Storage if a new file is chosen
             const fileInput = document.getElementById('form-image-file');
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
                 const fileExt = file.name.split('.').pop();
                 const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
                 
-                const { error: uploadError } = await supabaseClient.storage
-                    .from('menu-images')
-                    .upload(fileName, file);
+                const { error: uploadError } = await supabaseClient.storage.from('menu-images').upload(fileName, file);
 
                 if (uploadError) {
                     alert('Image Upload Failed: ' + uploadError.message);
@@ -517,15 +535,14 @@
                     return;
                 }
 
-                const { data: publicData } = supabaseClient.storage
-                    .from('menu-images')
-                    .getPublicUrl(fileName);
-
-                // Add newly uploaded image to the front of the array
+                const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(fileName);
                 imgUrlsArray.unshift(publicData.publicUrl);
             }
 
+            // 1. Save Menu Item
             const payload = {
+                item_code: itemCode,
+                language: language,
                 name,
                 main_cat: mainCat,
                 sub_cat: subCat,
@@ -533,22 +550,39 @@
                 order_index: orderIndex,
                 description: desc,
                 is_today_special: isSpecial,
-                img_urls: imgUrlsArray // Saved as a clean array of multiple image links
+                img_urls: imgUrlsArray
             };
 
-            let error;
+            let saveError;
             if (id) {
-                const res = await supabaseClient.from('menu_items').update(payload).eq('id', id);
-                error = res.error;
+                const { error } = await supabaseClient.from('menu_items').update(payload).eq('id', id);
+                saveError = error;
             } else {
-                const res = await supabaseClient.from('menu_items').insert([payload]);
-                error = res.error;
+                const { error } = await supabaseClient.from('menu_items').insert([payload]);
+                saveError = error;
+            }
+
+            // 2. Save Related Items Map Connection
+            if (!saveError && itemCode) {
+                const relArr = relatedInput ? relatedInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+                
+                const { data: existRel } = await supabaseClient.from('related_items_map').select('id').eq('item_id', itemCode).maybeSingle();
+                
+                if (existRel) {
+                    if (relArr.length === 0) {
+                        await supabaseClient.from('related_items_map').delete().eq('id', existRel.id);
+                    } else {
+                        await supabaseClient.from('related_items_map').update({ related_item_ids: relArr }).eq('id', existRel.id);
+                    }
+                } else if (relArr.length > 0) {
+                    await supabaseClient.from('related_items_map').insert([{ item_id: itemCode, related_item_ids: relArr }]);
+                }
             }
 
             btn.innerHTML = 'Save Item';
 
-            if (error) {
-                alert('Database Error: ' + error.message);
+            if (saveError) {
+                alert('Database Error: ' + saveError.message);
             } else {
                 closeMenuModal();
                 fetchMenu();
