@@ -66,19 +66,20 @@
         const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k"; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // --- Security Check ---
+        // --- Secure Supabase Auth Check ---
         async function verifyAdmin() {
             const { data: { session }, error } = await supabaseClient.auth.getSession();
             const overlay = document.getElementById('admin-login-overlay');
             
-            // TYPE YOUR REAL ADMIN EMAIL HERE:
-            const MASTER_ADMIN_EMAIL = "riyasmundengara2@gmail.com"; 
+            // Check if user is logged in AND has the admin app metadata flag
+            const userMeta = session?.user?.app_metadata;
+            const isAdmin = userMeta && userMeta.is_admin === true;
             
-            if (!session || session.user.email !== MASTER_ADMIN_EMAIL) {
+            if (!session || !isAdmin) {
                 overlay.innerHTML = `
                     <i class="fas fa-shield-alt text-6xl text-red-500 mb-6"></i>
                     <h1 class="text-3xl font-black mb-2">Access Denied</h1>
-                    <p class="text-gray-400 mb-6 text-center">This area is restricted to the restaurant owner.</p>
+                    <p class="text-gray-400 mb-6 text-center">This area is restricted to verified administrators.</p>
                     <button onclick="window.location.href='index.html'" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition">Return to Main Menu</button>
                 `;
             } else {
@@ -91,6 +92,7 @@
         async function fetchOrders() {
             const container = document.getElementById('orders-container');
             
+            // Supabase RLS will automatically block this query if not logged in as admin
             const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select('*')
@@ -98,12 +100,13 @@
 
             if (error) {
                 console.error("Error fetching orders:", error);
+                container.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold py-10">Access Denied or Database Error.</div>`;
                 return;
             }
 
             container.innerHTML = '';
 
-            if (orders.length === 0) {
+            if (!orders || orders.length === 0) {
                 container.innerHTML = `
                     <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400 bg-white rounded-2xl border border-gray-200 border-dashed">
                         <i class="fas fa-inbox text-5xl mb-4 text-gray-300"></i>
@@ -116,14 +119,12 @@
             orders.forEach(order => {
                 const date = new Date(order.created_at).toLocaleString();
                 
-                // Status Color Logic
                 let statusColor = "bg-gray-100 text-gray-600";
                 if(order.status === 'Pending') statusColor = "bg-yellow-100 text-yellow-700";
                 if(order.status === 'Cooking') statusColor = "bg-blue-100 text-blue-700";
                 if(order.status === 'Completed') statusColor = "bg-green-100 text-green-700";
                 if(order.status === 'Cancelled') statusColor = "bg-red-100 text-red-700";
 
-                // Build Items List
                 let itemsHtml = '';
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
@@ -140,7 +141,7 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusColor}" id="badge-${order.id}">${order.status}</span>
+                            <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusColor}">${order.status}</span>
                             <h3 class="font-bold text-gray-900 mt-2 text-lg">${order.order_type}</h3>
                             <p class="text-xs text-gray-400 font-medium">${date}</p>
                         </div>
@@ -168,27 +169,21 @@
             });
         }
 
-        // --- Update Order Status ---
         async function updateStatus(orderId, newStatus) {
             const { error } = await supabaseClient
                 .from('orders')
                 .update({ status: newStatus })
                 .eq('id', orderId);
 
-            if (error) {
-                alert("Could not update status: " + error.message);
-            } else {
-                fetchOrders(); // Refresh the list instantly
-            }
+            if (error) alert("Could not update status: " + error.message);
+            else fetchOrders();
         }
 
-        // --- Logout Admin ---
         async function logoutAdmin() {
             await supabaseClient.auth.signOut();
             window.location.href = 'index.html';
         }
 
-        // Run security check on load
         window.onload = verifyAdmin;
     </script>
 </body>
