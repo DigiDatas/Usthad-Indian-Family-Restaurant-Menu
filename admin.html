@@ -578,154 +578,130 @@
 
             try {
                 const jsonData = JSON.parse(rawText);
-                if (typeof jsonData !== 'object' || Array.isArray(jsonData)) {
-                    throw new Error('JSON must be an object containing your sheets.');
-                }
-
                 const btn = document.getElementById('btn-import-json');
                 
                 // --- 1. AUTO-DELETE OLD DATA TO PREVENT DUPLICATES ---
-                btn.innerHTML = `<i class="fas fa-spin fa-spinner"></i> Clearing Old Data...`;
+                btn.innerHTML = `<i class="fas fa-spin fa-spinner"></i> Wiping Old Data...`;
                 await supabaseClient.from('menu_items').delete().neq('id', -1);
                 await supabaseClient.from('restaurant_settings').delete().neq('id', -1);
-                await supabaseClient.from('related_items_map').delete().neq('id', -1);
                 await supabaseClient.from('special_offers').delete().neq('id', -1);
+                await supabaseClient.from('related_items_map').delete().neq('id', -1);
 
-                btn.innerHTML = `<i class="fas fa-spin fa-spinner"></i> Importing Fresh Data...`;
                 let totalImported = 0;
+                btn.innerHTML = `<i class="fas fa-spin fa-spinner"></i> Importing Fresh Data...`;
 
                 // --- 2. IMPORT BRANDING (Aggregates multiple banner rows) ---
-                const brandingKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('brand'));
-                if (brandingKey && Array.isArray(jsonData[brandingKey])) {
+                if (jsonData["Branding"]) {
                     let allBanners = [];
-                    // Row index 1 is your main brand data (Row 0 is headers)
-                    const mainRow = jsonData[brandingKey].length > 1 ? jsonData[brandingKey][1] : {};
-
-                    jsonData[brandingKey].forEach((r, idx) => {
-                        if (idx === 0) return; // Skip Headers
-                        const bannerVal = r.O || r.Banner_Image;
-                        if (bannerVal) {
-                            String(bannerVal).split(',').forEach(b => {
-                                let cleanB = b.trim();
-                                if (cleanB) allBanners.push(cleanB);
+                    let mainRow = {};
+                    jsonData["Branding"].forEach((r, idx) => {
+                        if (idx === 0) return; // Skip headers
+                        if (idx === 1) mainRow = r; // Row 1 holds main data
+                        if (r.O) {
+                            String(r.O).split(',').forEach(b => {
+                                if (b.trim()) allBanners.push(b.trim());
                             });
                         }
                     });
 
-                    const brandingPayload = {
-                        brand_name: mainRow.B || 'ShawarMax',
-                        contact: mainRow.C || '',
-                        whatsapp: mainRow.D || '',
-                        address: mainRow.H || '',
-                        location_url: mainRow.I || '',
-                        currency: mainRow.K || 'SR',
-                        language: mainRow.L || 'English',
-                        delivery_charge: mainRow.M || '',
-                        logo_link: mainRow.N || '',
-                        banner_images: [...new Set(allBanners)], // All 5 banners saved cleanly
-                        game_enabled: mainRow.P === true || String(mainRow.P).toLowerCase() === "true"
-                    };
-
-                    const { error: bError } = await supabaseClient.from('restaurant_settings').insert([brandingPayload]);
-                    if (!bError) totalImported++;
+                    if (mainRow.B) {
+                        await supabaseClient.from('restaurant_settings').insert([{
+                            brand_name: mainRow.B,
+                            contact: mainRow.C || '',
+                            whatsapp: mainRow.D || '',
+                            address: mainRow.H || '',
+                            location_url: mainRow.I || '',
+                            currency: mainRow.K || 'SR',
+                            language: mainRow.L || 'English',
+                            delivery_charge: mainRow.M || '',
+                            logo_link: mainRow.N || '',
+                            banner_images: [...new Set(allBanners)],
+                            game_enabled: mainRow.P === true || String(mainRow.P).toLowerCase() === "true"
+                        }]);
+                        totalImported++;
+                    }
                 }
 
                 // --- 3. IMPORT SPECIAL OFFERS ---
-                const offerKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('offer') || k.toLowerCase().includes('special'));
-                if (offerKey && Array.isArray(jsonData[offerKey])) {
-                    const offerRows = jsonData[offerKey]
-                        .filter((r, idx) => idx > 0 && r.B) // Skip header (idx 0)
+                if (jsonData["SpecialOffer"]) {
+                    const offers = jsonData["SpecialOffer"]
+                        .filter((r, i) => i > 0 && r.B) // Skip headers
                         .map(r => ({
                             offer_name: String(r.B),
                             description: r.C || '',
                             price_before: parseFloat(r.D) || null,
                             price_after: parseFloat(r.E) || null,
-                            image_url: r.F || '' // Excel column F
+                            image_url: r.F || '' // Column F
                         }));
 
-                    if (offerRows.length > 0) {
-                        const { error: oError } = await supabaseClient.from('special_offers').insert(offerRows);
-                        if (!oError) totalImported += offerRows.length;
+                    if (offers.length > 0) {
+                        await supabaseClient.from('special_offers').insert(offers);
+                        totalImported += offers.length;
                     }
                 }
 
-                // --- 4. IMPORT MENU ITEMS (EN & AR) ---
+                // --- 4. IMPORT MENU ITEMS (Reads EN and AR Separately) ---
                 let menuRows = [];
-                Object.keys(jsonData).forEach(sheetKey => {
-                    const lowerKey = sheetKey.toLowerCase();
-                    if (lowerKey.includes('menu')) {
-                        const isArabic = lowerKey.includes('arabic') || lowerKey.includes('ar');
-                        const itemLang = isArabic ? 'ar' : 'en';
-
-                        jsonData[sheetKey].forEach((row, idx) => {
-                            if (idx === 0) return; // Skip Header row
-                            
-                            const name = row.name || row.D;
-                            const price = row.price || row.F;
-                            if (!name) return;
-                            
-                            const parsedPrice = parseFloat(price);
-                            if (isNaN(parsedPrice)) return;
-
-                            // Store image exactly as it is in JSON (Column K)
-                            let imgArray = [];
-                            if (row.K) {
-                                imgArray = String(row.K).split(',').map(s => s.trim()).filter(Boolean);
-                            }
+                ['Menu-English', 'Menu-Arabic'].forEach(sheetName => {
+                    if (jsonData[sheetName]) {
+                        const langTag = sheetName === 'Menu-English' ? 'en' : 'ar';
+                        
+                        jsonData[sheetName].forEach((r, idx) => {
+                            if (idx === 0 || !r.D) return; // Skip headers and empty names
+                            const p = parseFloat(r.F);
+                            if (isNaN(p)) return;
 
                             menuRows.push({
-                                item_code: String(row.A || ''), // ItemID
-                                name: String(name),
-                                main_cat: row.main_cat || row.B || 'General',
-                                sub_cat: row.sub_cat || row.C || 'Other',
-                                price: parsedPrice,
-                                order_index: parseInt(row.order_index || row.E || idx),
-                                description: row.description || row.G || '',
-                                calories: row.H ? parseInt(row.H) : null,
-                                recipe: row.I || '',
-                                is_today_special: String(row.is_today_special || row.J || '').toLowerCase().includes('special'),
-                                img_urls: imgArray,
-                                video_url: row.L || '',
-                                review_links: row.M || '', // Column M
-                                flash_cards: row.N || '', // Column N
-                                language: itemLang
+                                item_code: String(r.A || ''), // Column A
+                                name: String(r.D), // Column D
+                                main_cat: r.B || 'General',
+                                sub_cat: r.C || 'Other',
+                                price: p,
+                                order_index: parseInt(r.E || idx),
+                                description: r.G || '',
+                                calories: r.H ? parseInt(r.H) : null,
+                                recipe: r.I || '',
+                                is_today_special: String(r.J || '').toLowerCase().includes('special'),
+                                img_urls: r.K ? String(r.K).split(',').map(s => s.trim()).filter(Boolean) : [],
+                                video_url: r.L || '',
+                                review_links: r.M || '',
+                                flash_cards: r.N || '',
+                                language: langTag
                             });
                         });
                     }
                 });
 
                 if (menuRows.length > 0) {
-                    const { error: mError } = await supabaseClient.from('menu_items').insert(menuRows);
-                    if (!mError) totalImported += menuRows.length;
+                    await supabaseClient.from('menu_items').insert(menuRows);
+                    totalImported += menuRows.length;
                 }
 
                 // --- 5. IMPORT RELATED ITEMS ---
-                const relatedKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('related'));
-                if (relatedKey && Array.isArray(jsonData[relatedKey])) {
-                    const relatedRows = jsonData[relatedKey]
-                        .filter((r, idx) => idx > 0 && r.C) // Skip header (idx 0)
+                if (jsonData["RelatedItems"]) {
+                    const related = jsonData["RelatedItems"]
+                        .filter((r, i) => i > 0 && r.C) // Skip headers
                         .map(r => {
-                            const itemId = String(r.C);
                             const rels = [];
                             ['D','E','F','G','H','I','J','K','L','M','N'].forEach(col => {
                                 if (r[col]) rels.push(String(r[col]));
                             });
-                            return { item_id: itemId, related_item_ids: rels };
+                            return { item_id: String(r.C), related_item_ids: rels };
                         });
 
-                    if (relatedRows.length > 0) {
-                        const { error: rError } = await supabaseClient.from('related_items_map').insert(relatedRows);
-                        if (!rError) totalImported += relatedRows.length;
+                    if (related.length > 0) {
+                        await supabaseClient.from('related_items_map').insert(related);
+                        totalImported += related.length;
                     }
                 }
 
                 btn.innerHTML = 'Import to Database';
                 closeJsonModal();
                 fetchMenu();
-                alert(`Successfully refreshed and imported ${totalImported} records! Old duplicates were securely removed.`);
+                alert(`Successfully refreshed and imported ${totalImported} records! Old duplicates were permanently removed.`);
 
             } catch (err) {
-                alert('Multi-sheet Import Error: ' + err.message);
+                alert('Import Error: ' + err.message);
                 document.getElementById('btn-import-json').innerHTML = 'Import to Database';
             }
         }
