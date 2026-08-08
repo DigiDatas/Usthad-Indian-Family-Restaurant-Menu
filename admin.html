@@ -190,6 +190,21 @@
             <div class="p-6 overflow-y-auto flex flex-col gap-4">
                 <input type="hidden" id="edit-item-id">
                 
+                <!-- NEW: Item Code and Language Fields -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Item Code *</label>
+                        <input type="text" id="form-item-code" placeholder="e.g. ITM001" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Language *</label>
+                        <select id="form-language" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-white font-bold text-gray-700">
+                            <option value="en">English (EN)</option>
+                            <option value="ar">Arabic (AR)</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Item Name *</label>
                     <input type="text" id="form-name" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
@@ -220,6 +235,13 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
                     <textarea id="form-desc" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500"></textarea>
+                </div>
+
+                <!-- NEW: Related Items Map Input -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-link text-blue-500 me-1"></i> Related Items (Cross-Sell)</label>
+                    <input type="text" id="form-related" placeholder="e.g. ITM008, ITM009" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    <p class="text-[10px] text-gray-400 mt-1">Separate Item IDs with commas.</p>
                 </div>
 
                 <!-- IMAGE UPLOAD SECTION -->
