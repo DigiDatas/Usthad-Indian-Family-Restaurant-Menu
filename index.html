@@ -519,7 +519,35 @@
     </button>
 
     
+<!-- Authentication Modal -->
+    <div id="authModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
+        <div class="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-center">
+            <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
+                <i class="fas fa-user-circle text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-black text-gray-900">Welcome!</h2>
+            <p class="text-sm text-gray-500 font-medium">Please sign in or continue as a guest to start ordering.</p>
+            
+            <div class="flex flex-col gap-3 mt-2">
+                <input type="email" id="auth-email" placeholder="Email Address" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                <input type="password" id="auth-password" placeholder="Password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                
+                <button onclick="handleEmailLogin()" id="btn-email-login" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-600 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-envelope"></i> Login / Sign Up
+                </button>
+            </div>
 
+            <div class="flex items-center gap-3 my-2 opacity-50">
+                <div class="flex-1 h-px bg-gray-400"></div>
+                <span class="text-xs font-bold uppercase">OR</span>
+                <div class="flex-1 h-px bg-gray-400"></div>
+            </div>
+
+            <button onclick="handleGuestLogin()" id="btn-guest-login" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition flex items-center justify-center gap-2">
+                <i class="fas fa-user-secret"></i> Continue as Guest
+            </button>
+        </div>
+    </div>
     <!-- Cart / Bill Modal -->
     <div id="cartModal" class="fixed inset-0 z-[90] hidden items-end md:items-center justify-center p-0 md:p-6">
         <div class="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closeCartModal()"></div>
@@ -656,6 +684,60 @@
         const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k"; 
 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// --- Authentication Logic ---
+        let currentUser = null;
+
+        async function checkSession() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            const authModal = document.getElementById('authModal');
+            
+            if (session) {
+                currentUser = session.user;
+                authModal.classList.replace('flex', 'hidden'); // Hide modal if logged in
+            } else {
+                authModal.classList.replace('hidden', 'flex'); // Show modal if logged out
+            }
+        }
+
+        async function handleGuestLogin() {
+            const btn = document.getElementById('btn-guest-login');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+            
+            const { error } = await supabaseClient.auth.signInAnonymously();
+            
+            if (error) alert("Error: " + error.message);
+            else checkSession();
+            
+            btn.innerHTML = `<i class="fas fa-user-secret"></i> Continue as Guest`;
+        }
+
+        async function handleEmailLogin() {
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            if (!email || !password) return alert("Please enter both email and password.");
+            
+            const btn = document.getElementById('btn-email-login');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+            
+            // Try to sign in first
+            let { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            
+            // If the account doesn't exist, create it instantly!
+            if (error && error.message.includes("Invalid login")) {
+                const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
+                if (signUpError) alert("Error: " + signUpError.message);
+                else checkSession();
+            } else if (error) {
+                alert("Error: " + error.message);
+            } else {
+                checkSession();
+            }
+            
+            btn.innerHTML = `<i class="fas fa-envelope"></i> Login / Sign Up`;
+        }
+
+        // Trigger the check when the page finishes loading
+        window.addEventListener('load', checkSession);
         // --- Core State ---
 const CUSTOMER_ID = "CS02-2026-08";
       let rawBranding = {};
