@@ -456,7 +456,17 @@
                     document.getElementById('form-price').value = item.price || '';
                     document.getElementById('form-order').value = item.order_index || 1;
                     document.getElementById('form-desc').value = item.description || '';
-                    document.getElementById('form-img').value = item.img_urls?.[0] || '';
+                    
+                    // Handle multi-image array conversion back to comma-separated text
+                    let existingImgs = '';
+                    if (item.img_urls) {
+                        if (Array.isArray(item.img_urls)) {
+                            existingImgs = item.img_urls.join(', ');
+                        } else {
+                            existingImgs = item.img_urls;
+                        }
+                    }
+                    document.getElementById('form-img').value = existingImgs;
                     document.getElementById('form-special').checked = item.is_today_special || false;
                 }
             }
@@ -478,7 +488,9 @@
             const orderIndex = parseInt(document.getElementById('form-order').value) || 1;
             const desc = document.getElementById('form-desc').value.trim();
             const isSpecial = document.getElementById('form-special').checked;
-            let imgUrl = document.getElementById('form-img').value.trim();
+            
+            let rawImgInput = document.getElementById('form-img').value.trim();
+            let imgUrlsArray = rawImgInput ? rawImgInput.split(',').map(u => u.trim()).filter(Boolean) : [];
 
             if (!name || !mainCat || !subCat || isNaN(price)) {
                 alert('Please fill out all required fields (Name, Main Category, Sub Category, Price).');
@@ -488,6 +500,7 @@
             const btn = document.getElementById('btn-save-item');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
+            // Handle file upload to Supabase Storage if a new file is chosen
             const fileInput = document.getElementById('form-image-file');
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
@@ -508,7 +521,8 @@
                     .from('menu-images')
                     .getPublicUrl(fileName);
 
-                imgUrl = publicData.publicUrl;
+                // Add newly uploaded image to the front of the array
+                imgUrlsArray.unshift(publicData.publicUrl);
             }
 
             const payload = {
@@ -519,7 +533,7 @@
                 order_index: orderIndex,
                 description: desc,
                 is_today_special: isSpecial,
-                img_urls: imgUrl ? [imgUrl] : []
+                img_urls: imgUrlsArray // Saved as a clean array of multiple image links
             };
 
             let error;
