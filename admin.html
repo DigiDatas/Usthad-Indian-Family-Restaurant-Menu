@@ -158,6 +158,7 @@
                             <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
                                 <th class="p-4">Customer Name</th>
                                 <th class="p-4">Phone / WhatsApp</th>
+                                <th class="p-4">Email Address</th>
                                 <th class="p-4">Latest Address</th>
                                 <th class="p-4 text-center">Total Orders</th>
                                 <th class="p-4">Lifetime Spent</th>
@@ -1320,6 +1321,7 @@ fetchOffers();
             window.allCustomerOrders.forEach(order => {
                 const phone = order.customer_phone || 'No Phone';
                 const name = order.customer_name || 'Guest';
+                const email = order.customer_email || (currentUser ? currentUser.email : '') || 'Guest';
                 const address = order.delivery_address || '';
                 const amount = parseFloat(order.total_amount) || 0;
 
@@ -1327,6 +1329,7 @@ fetchOffers();
                     userMap[phone] = { 
                         name: name, 
                         phone: phone, 
+                        email: email,
                         count: 0, 
                         totalSpent: 0, 
                         lastDate: order.created_at,
@@ -1337,11 +1340,11 @@ fetchOffers();
                 userMap[phone].count += 1;
                 userMap[phone].totalSpent += amount;
                 
-                // Keep the most recent address and name if they update it
                 if (new Date(order.created_at) >= new Date(userMap[phone].lastDate)) {
                     userMap[phone].lastDate = order.created_at;
                     if (address) userMap[phone].address = address;
                     if (name !== 'Guest') userMap[phone].name = name;
+                    if (email && email !== 'Guest') userMap[phone].email = email;
                 }
             });
 
@@ -1373,6 +1376,7 @@ fetchOffers();
                     <tr class="${rowBg} transition">
                         <td class="p-4 font-bold text-gray-900 flex items-center">${rankBadge} ${u.name}</td>
                         <td class="p-4 text-blue-600 font-semibold"><a href="tel:${u.phone}">${u.phone}</a></td>
+                        <td class="p-4 text-gray-600 text-xs font-medium"><a href="mailto:${u.email}">${u.email || '<span class="text-gray-300 italic">No Email</span>'}</a></td>
                         <td class="p-4 text-gray-500 text-xs truncate max-w-[150px]" title="${u.address}">${u.address || '<span class="text-gray-300 italic">No Address</span>'}</td>
                         <td class="p-4 text-center"><span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg font-black text-xs border border-gray-200">${u.count}</span></td>
                         <td class="p-4 font-black text-green-600">${u.totalSpent.toFixed(2)}</td>
