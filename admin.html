@@ -40,6 +40,8 @@
                 <button onclick="switchTab('menu')" id="tab-btn-menu" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-utensils me-2"></i>Menu Manager</button>
                 <button onclick="switchTab('users')" id="tab-btn-users" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-users me-2"></i>Customers</button>
                 <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-chart-pie me-2"></i>Analytics</button>
+<button onclick="switchTab('offers')" id="tab-btn-offers" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-tags me-2"></i>Offers</button>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-cog me-2"></i>Settings</button>
             </div>
 
             <button onclick="logoutAdmin()" class="flex items-center gap-2 text-gray-500 hover:text-red-600 font-bold text-sm transition">
@@ -52,6 +54,8 @@
             <button onclick="switchTab('menu')" id="m-tab-menu" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600">Menu</button>
             <button onclick="switchTab('users')" id="m-tab-users" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600">Customers</button>
             <button onclick="switchTab('analytics')" id="m-tab-analytics" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600">Analytics</button>
+<button onclick="switchTab('offers')" id="m-tab-offers" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600">Offers</button>
+            <button onclick="switchTab('settings')" id="m-tab-settings" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600">Settings</button>
         </div>
     </nav>
 
@@ -193,6 +197,111 @@
                 </div>
             </div>
         </section>
+<!-- ================= TAB 5: SPECIAL OFFERS ================= -->
+        <section id="section-offers" class="tab-section hidden">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">Special Offers Manager</h2>
+                    <p class="text-sm text-gray-500">Manage your promotional banners and discounts.</p>
+                </div>
+                <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add Offer
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4">Image</th>
+                                <th class="p-4">Offer Name</th>
+                                <th class="p-4">Old Price</th>
+                                <th class="p-4">New Price</th>
+                                <th class="p-4 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offers-table-body" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="5" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
+        <section id="section-settings" class="tab-section hidden">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">Restaurant Settings</h2>
+                    <p class="text-sm text-gray-500">Update your branding, contact info, and global configurations.</p>
+                </div>
+                <button onclick="saveSettings()" id="btn-save-settings" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
+                    <i class="fas fa-save"></i> Save Settings
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <input type="hidden" id="setting-id">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name *</label>
+                        <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Currency</label>
+                        <input type="text" id="set-currency" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone text-blue-500"></i> Primary Contact</label>
+                        <input type="text" id="set-contact" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp</label>
+                        <input type="text" id="set-wa" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-envelope text-red-500"></i> Email</label>
+                        <input type="email" id="set-email" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map-marker-alt text-red-500"></i> Address</label>
+                    <textarea id="set-address" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"></textarea>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map text-blue-500"></i> Google Maps URL</label>
+                    <input type="text" id="set-map" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-images text-purple-500"></i> Banner Images (Comma separated URLs)</label>
+                    <textarea id="set-banners" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logo Link</label>
+                        <input type="text" id="set-logo" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Charge</label>
+                        <input type="text" id="set-delivery" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="set-game" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
+                    <label for="set-game" class="text-sm font-bold text-gray-700">Enable Arcade Game Feature</label>
+                </div>
+            </div>
+        </section>
 
     </main>
 
@@ -304,6 +413,48 @@
             </div>
         </div>
     </div>
+<!-- ================= MODAL: ADD / EDIT OFFER ================= -->
+    <div id="offerModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 id="offer-modal-title" class="font-bold text-lg text-gray-900">Add Special Offer</h3>
+                <button onclick="closeOfferModal()" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 flex flex-col gap-4">
+                <input type="hidden" id="offer-id">
+                
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Offer Title *</label>
+                    <input type="text" id="offer-name" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                    <textarea id="offer-desc" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500"></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Price Before (Old)</label>
+                        <input type="number" step="0.01" id="offer-old" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500 text-gray-400 line-through">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Price After (New)</label>
+                        <input type="number" step="0.01" id="offer-new" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500 font-bold text-green-600">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Image URL</label>
+                    <input type="text" id="offer-img" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-red-500">
+                </div>
+
+                <button onclick="saveOffer()" id="btn-save-offer" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 shadow-md mt-2 transition">
+                    Save Offer
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- ================= MODAL: BULK JSON IMPORT ================= -->
     <div id="jsonModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
@@ -350,11 +501,13 @@
                 fetchOrders();
                 fetchMenu();
                 fetchUsersAndOrders();
+fetchOffers();
+                fetchSettings();
             }
         }
 
         function switchTab(tabName) {
-            ['orders', 'menu', 'users', 'analytics'].forEach(t => {
+            ['orders', 'menu', 'users', 'analytics', 'offers', 'settings'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if(btn) {
@@ -1155,6 +1308,158 @@
             document.getElementById('stat-orders').textContent = allOrders.length;
             document.getElementById('stat-dinein').textContent = dineInCount;
             document.getElementById('stat-takeaway').textContent = takeawayCount;
+        }
+// ==========================================
+        // OFFERS MANAGER LOGIC
+        // ==========================================
+        let allOffers = [];
+
+        async function fetchOffers() {
+            const tbody = document.getElementById('offers-table-body');
+            const { data, error } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
+            
+            if (error) { tbody.innerHTML = `<tr><td colspan="5">Error loading offers.</td></tr>`; return; }
+            
+            allOffers = data || [];
+            tbody.innerHTML = '';
+
+            if (allOffers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No active offers.</td></tr>`;
+                return;
+            }
+
+            allOffers.forEach(o => {
+                const img = o.image_url ? `<img src="${o.image_url}" class="w-12 h-8 object-cover rounded shadow-sm">` : `<div class="w-12 h-8 bg-gray-100 rounded text-center text-[10px] text-gray-400 pt-1">No Img</div>`;
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="p-3">${img}</td>
+                        <td class="p-3 font-bold text-gray-900">${o.offer_name} <br><span class="text-[10px] font-normal text-gray-400">${o.description || ''}</span></td>
+                        <td class="p-3 text-gray-400 line-through">${o.price_before || '-'}</td>
+                        <td class="p-3 font-black text-green-600">${o.price_after || '-'}</td>
+                        <td class="p-3 text-end">
+                            <button onclick="openOfferModal('edit', '${o.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition me-1"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="deleteOffer('${o.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"><i class="fas fa-trash-alt text-xs"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function openOfferModal(mode, id = null) {
+            const modal = document.getElementById('offerModal');
+            document.getElementById('offer-id').value = id || '';
+            
+            if (mode === 'add') {
+                document.getElementById('offer-modal-title').textContent = 'Add Special Offer';
+                document.getElementById('offer-name').value = '';
+                document.getElementById('offer-desc').value = '';
+                document.getElementById('offer-old').value = '';
+                document.getElementById('offer-new').value = '';
+                document.getElementById('offer-img').value = '';
+            } else {
+                document.getElementById('offer-modal-title').textContent = 'Edit Special Offer';
+                const o = allOffers.find(i => String(i.id) === String(id));
+                if (o) {
+                    document.getElementById('offer-name').value = o.offer_name || '';
+                    document.getElementById('offer-desc').value = o.description || '';
+                    document.getElementById('offer-old').value = o.price_before || '';
+                    document.getElementById('offer-new').value = o.price_after || '';
+                    document.getElementById('offer-img').value = o.image_url || '';
+                }
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeOfferModal() {
+            document.getElementById('offerModal').classList.remove('flex');
+            document.getElementById('offerModal').classList.add('hidden');
+        }
+
+        async function saveOffer() {
+            const id = document.getElementById('offer-id').value;
+            const payload = {
+                offer_name: document.getElementById('offer-name').value.trim(),
+                description: document.getElementById('offer-desc').value.trim(),
+                price_before: parseFloat(document.getElementById('offer-old').value) || null,
+                price_after: parseFloat(document.getElementById('offer-new').value) || null,
+                image_url: document.getElementById('offer-img').value.trim()
+            };
+
+            if (!payload.offer_name) return alert("Offer Title is required.");
+            
+            const btn = document.getElementById('btn-save-offer');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+
+            if (id) await supabaseClient.from('special_offers').update(payload).eq('id', id);
+            else await supabaseClient.from('special_offers').insert([payload]);
+
+            btn.innerHTML = 'Save Offer';
+            closeOfferModal();
+            fetchOffers();
+        }
+
+        async function deleteOffer(id) {
+            if (!confirm('Permanently delete this offer?')) return;
+            await supabaseClient.from('special_offers').delete().eq('id', id);
+            fetchOffers();
+        }
+
+        // ==========================================
+        // RESTAURANT SETTINGS LOGIC
+        // ==========================================
+        async function fetchSettings() {
+            const { data, error } = await supabaseClient.from('restaurant_settings').select('*').limit(1).maybeSingle();
+            if (data) {
+                document.getElementById('setting-id').value = data.id;
+                document.getElementById('set-brand').value = data.brand_name || '';
+                document.getElementById('set-currency').value = data.currency || '';
+                document.getElementById('set-contact').value = data.contact || '';
+                document.getElementById('set-wa').value = data.whatsapp || '';
+                document.getElementById('set-email').value = data.email || '';
+                document.getElementById('set-address').value = data.address || '';
+                document.getElementById('set-map').value = data.location_url || '';
+                document.getElementById('set-logo').value = data.logo_link || '';
+                document.getElementById('set-delivery').value = data.delivery_charge || '';
+                document.getElementById('set-game').checked = data.game_enabled || false;
+                
+                if (data.banner_images && Array.isArray(data.banner_images)) {
+                    document.getElementById('set-banners').value = data.banner_images.join(',\n');
+                }
+            }
+        }
+
+        async function saveSettings() {
+            const id = document.getElementById('setting-id').value;
+            const btn = document.getElementById('btn-save-settings');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+
+            const rawBanners = document.getElementById('set-banners').value;
+            const bannerArray = rawBanners ? rawBanners.split(',').map(b => b.trim()).filter(Boolean) : [];
+
+            const payload = {
+                brand_name: document.getElementById('set-brand').value.trim(),
+                currency: document.getElementById('set-currency').value.trim(),
+                contact: document.getElementById('set-contact').value.trim(),
+                whatsapp: document.getElementById('set-wa').value.trim(),
+                email: document.getElementById('set-email').value.trim(),
+                address: document.getElementById('set-address').value.trim(),
+                location_url: document.getElementById('set-map').value.trim(),
+                logo_link: document.getElementById('set-logo').value.trim(),
+                delivery_charge: document.getElementById('set-delivery').value.trim(),
+                banner_images: bannerArray,
+                game_enabled: document.getElementById('set-game').checked
+            };
+
+            if (id) {
+                await supabaseClient.from('restaurant_settings').update(payload).eq('id', id);
+            } else {
+                await supabaseClient.from('restaurant_settings').insert([payload]);
+            }
+
+            btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;
+            alert("Restaurant settings updated successfully!");
+            fetchSettings();
         }
 
         window.onload = verifyAdmin;
