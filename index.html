@@ -879,9 +879,12 @@ let relatedItemsData = []; // (You did this perfectly!)
                 }
 
                 // 2. FETCH LIVE MENU ITEMS FROM SUPABASE
+                const activeLang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'en';
+
                 const { data: menuData, error: menuError } = await supabaseClient
                     .from('menu_items')
                     .select('*')
+                    .eq('language', activeLang) // <--- Filters items to match EN or AR automatically
                     .order('order_index', { ascending: true });
 
                 if (menuError) throw menuError;
