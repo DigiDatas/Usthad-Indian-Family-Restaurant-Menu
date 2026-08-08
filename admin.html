@@ -564,21 +564,55 @@
 
             try {
                 const jsonData = JSON.parse(rawText);
-                if (!Array.isArray(jsonData)) throw new Error('JSON must be an array of items.');
+                let rawRows = [];
+
+                // Smart Check: If it's an object with sheets (like your master JSON), extract rows automatically
+                if (!Array.isArray(jsonData) && typeof jsonData === 'object') {
+                    // Find the sheet that contains menu items (usually contains 'B', 'D', 'F' keys or is the first array)
+                    const sheetKeys = Object.keys(jsonData);
+                    for (const key of sheetKeys) {
+                        if (Array.isArray(jsonData[key]) && jsonData[key].length > 0) {
+                            // Check if rows look like menu items (contain properties like B, D, F or name, price)
+                            const sample = jsonData[key][0];
+                            if (sample.B || sample.D || sample.name) {
+                                rawRows = jsonData[key];
+                                break;
+                            }
+                        }
+                    }
+                    // Fallback to the first array found if no match
+                    if (rawRows.length === 0) {
+                        const firstKey = sheetKeys.find(k => Array.isArray(jsonData[k]));
+                        if (firstKey) rawRows = jsonData[firstKey];
+                    }
+                } else if (Array.isArray(jsonData)) {
+                    rawRows = jsonData;
+                }
+
+                if (rawRows.length === 0) throw new Error('Could not find any valid item rows in the JSON structure.');
 
                 const btn = document.getElementById('btn-import-json');
                 btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Importing...`;
 
-                const formattedRows = jsonData.map((row, idx) => ({
-                    name: row.name || row.D || 'Unnamed Item',
-                    main_cat: row.main_cat || row.B || 'General',
-                    sub_cat: row.sub_cat || row.C || 'Other',
-                    price: parseFloat(row.price || row.F || 0),
-                    order_index: parseInt(row.order_index || row.E || idx + 1),
-                    description: row.description || row.G || '',
-                    is_today_special: false,
-                    img_urls: row.img_urls ? [row.img_urls] : []
-                }));
+                // Map rows supporting both standard column letters (B, C, D, E, F, G, K) and regular property names
+                const formattedRows = rawRows.map((row, idx) => {
+                    // Skip header rows if they contain titles like "Name" or "Price"
+                    const name = row.name || row.D || '';
+                    if (String(name).toLowerCase() === 'name' || String(name).toLowerCase() === 'item name') return null;
+
+                    return {
+                        name: name || 'Unnamed Item',
+                        main_cat: row.main_cat || row.B || 'General',
+                        sub_cat: row.sub_cat || row.C || 'Other',
+                        price: parseFloat(row.price || row.F || 0),
+                        order_index: parseInt(row.order_index || row.E || idx + 1),
+                        description: row.description || row.G || '',
+                        is_today_special: String(row.is_today_special || row.J || '').trim().toLowerCase().includes('special'),
+                        img_urls: row.img_urls ? (Array.isArray(row.img_urls) ? row.img_urls : [row.img_urls]) : (row.K ? String(row.K).split(',').map(u => u.trim()) : [])
+                    };
+                }).filter(r => r !== null && r.name !== 'Unnamed Item');
+
+                if (formattedRows.length === 0) throw new Error('No valid items could be parsed from this JSON.');
 
                 const { error } = await supabaseClient.from('menu_items').insert(formattedRows);
                 btn.innerHTML = 'Import to Database';
@@ -587,7 +621,7 @@
                 else {
                     closeJsonModal();
                     fetchMenu();
-                    alert('Successfully imported items!');
+                    alert(`Successfully imported ${formattedRows.length} items to Supabase!`);
                 }
             } catch (err) {
                 alert('Invalid JSON format: ' + err.message);
