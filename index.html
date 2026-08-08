@@ -69,6 +69,10 @@
     <button id="lang-toggle-btn" onclick="toggleLanguage()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition">
         <span id="lang-text">EN</span>
     </button>
+<!-- NEW SIGN OUT BUTTON -->
+                    <button id="btn-signout" onclick="handleSignOut()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-red-100 hover:bg-red-200 text-red-600 font-bold text-sm transition shadow-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i> Out
+                    </button>
     
     <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-10 h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
         <i class="fas fa-shopping-cart text-sm"></i> 
@@ -690,13 +694,22 @@
         async function checkSession() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             const authModal = document.getElementById('authModal');
+            const signOutBtn = document.getElementById('btn-signout');
             
             if (session) {
                 currentUser = session.user;
-                authModal.classList.replace('flex', 'hidden'); // Hide modal if logged in
+                authModal.classList.replace('flex', 'hidden'); // Hide login modal
+                if(signOutBtn) signOutBtn.classList.replace('hidden', 'flex'); // Show sign out button
             } else {
-                authModal.classList.replace('hidden', 'flex'); // Show modal if logged out
+                currentUser = null;
+                authModal.classList.replace('hidden', 'flex'); // Show login modal
+                if(signOutBtn) signOutBtn.classList.replace('flex', 'hidden'); // Hide sign out button
             }
+        }
+
+        async function handleSignOut() {
+            await supabaseClient.auth.signOut();
+            checkSession(); // This will automatically pop the login modal back up!
         }
 
         async function handleGuestLogin() {
