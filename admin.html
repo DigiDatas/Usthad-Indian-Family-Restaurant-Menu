@@ -450,15 +450,14 @@
         }
 
         // --- NEW: MENU MANAGER STATE ---
-        let currentAdminLang = 'en'; // Default language
-        let modifiedMenuIds = new Set(); // Tracks items that were dragged
+        let currentAdminLang = 'en'; 
+        let modifiedMenuIds = new Set(); 
 
         function switchAdminLanguage(lang) {
             currentAdminLang = lang;
             document.getElementById('filter-lang-en').className = lang === 'en' ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition";
             document.getElementById('filter-lang-ar').className = lang === 'ar' ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition";
             
-            // Discard unsaved changes when switching languages
             document.getElementById('btn-save-order').classList.add('hidden');
             document.getElementById('btn-save-order').classList.remove('flex');
             modifiedMenuIds.clear();
@@ -469,11 +468,12 @@
         // --- FETCH & RENDER MENU MANAGER ---
         async function fetchMenu() {
             const tbody = document.getElementById('menu-table-body');
-            // Fetch everything ordered by order_index
+            if(tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>`;
+
             const { data, error } = await supabaseClient.from('menu_items').select('*').order('order_index', { ascending: true });
             
             if (error) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Error loading menu items.</td></tr>`;
+                alert("Error loading menu items: " + error.message);
                 return;
             }
 
@@ -483,67 +483,77 @@
 
         function renderMenuTable() {
             const table = document.getElementById('menu-table');
+            const thead = table.querySelector('thead');
             
-            // Remove old dynamic tbodies
-            const oldBodies = table.querySelectorAll('tbody:not(#menu-table-body)');
-            oldBodies.forEach(b => b.remove());
-            
-            const mainBody = document.getElementById('menu-table-body');
-            mainBody.innerHTML = ''; // Clear default body
+            // Clear the table completely, but keep the header
+            table.innerHTML = '';
+            table.appendChild(thead);
 
-            // 1. Filter by language
-            const filteredItems = allMenuItems.filter(i => i.language === currentAdminLang);
+            // Filter items by active language and ensure they are sorted by index
+            let filteredItems = allMenuItems.filter(i => i.language === currentAdminLang);
+            filteredItems.sort((a, b) => a.order_index - b.order_index);
 
             if (filteredItems.length === 0) {
-                mainBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No menu items found for this language. Click 'Add New Item'.</td></tr>`;
+                const emptyBody = document.createElement('tbody');
+                emptyBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No menu items found. Click 'Add New Item'.</td></tr>`;
+                table.appendChild(emptyBody);
                 return;
             }
 
-            // 2. Group items by Main Category -> Sub Category
-            const grouped = {};
+            // Group items using Map to guarantee visual insertion order is strictly preserved!
+            const grouped = new Map();
             filteredItems.forEach(item => {
                 const groupKey = `${item.main_cat}|${item.sub_cat}`;
-                if (!grouped[groupKey]) grouped[groupKey] = [];
-                grouped[groupKey].push(item);
+                if (!grouped.has(groupKey)) grouped.set(groupKey, []);
+                grouped.get(groupKey).push(item);
             });
 
-            // 3. Render a separate Sortable TBODY for each group
-            let globalSerial = 1;
-
-            for (const [groupKey, items] in Object.entries(grouped)) {} // Used Object.entries safely below
-
-            Object.entries(grouped).forEach(([groupKey, items]) => {
+            // --- BUILD THE NESTED DRAGGABLE INTERFACE ---
+            grouped.forEach((items, groupKey) => {
                 const [mainCat, subCat] = groupKey.split('|');
                 
-                // Group Header
-                const headerTbody = document.createElement('tbody');
-                headerTbody.innerHTML = `
-                    <tr class="bg-gray-100/80 border-t border-b border-gray-200">
-                        <td colspan="7" class="p-2 px-4 font-black text-gray-700 text-xs uppercase tracking-widest">
-                            <i class="fas fa-folder-open text-red-500 me-2"></i> ${mainCat} <i class="fas fa-chevron-right text-gray-400 mx-1 text-[10px]"></i> <span class="text-gray-500">${subCat}</span>
-                        </td>
-                    </tr>
-                `;
-                table.appendChild(headerTbody);
-
-                // Sortable Container
                 const sortableTbody = document.createElement('tbody');
-                sortableTbody.className = "sortable-group divide-y divide-gray-100 text-sm";
+                sortableTbody.className = "category-tbody transition-all duration-300";
                 sortableTbody.dataset.maincat = mainCat;
                 sortableTbody.dataset.subcat = subCat;
 
-                items.forEach((item, index) => {
+                // 1. Group Header Row (Acts as the drag handle for the entire category block)
+                const headerRow = document.createElement('tr');
+                headerRow.className = "bg-gray-200/80 border-t-[6px] border-white group-header";
+                headerRow.innerHTML = `
+                    <td colspan="7" class="p-2 px-4 hover:bg-gray-200 transition">
+                        <div class="flex justify-between items-center w-full">
+                            <div class="flex items-center gap-3 category-drag-handle cursor-grab active:cursor-grabbing w-full">
+                                <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </div>
+                                <span class="font-black text-gray-800 text-sm uppercase tracking-widest flex items-center gap-2">
+                                    <i class="fas fa-folder text-red-500"></i> ${mainCat} 
+                                    <i class="fas fa-chevron-right text-[10px] text-gray-400"></i> 
+                                    <span class="text-red-600">${subCat}</span>
+                                </span>
+                            </div>
+                            <button onclick="toggleCategory(this)" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 shadow-sm transition shrink-0 z-10">
+                                <i class="fas fa-chevron-up toggle-icon"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                sortableTbody.appendChild(headerRow);
+
+                // 2. Individual Item Rows
+                items.forEach(item => {
                     const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
-                    const isModified = modifiedMenuIds.has(item.id) ? 'bg-yellow-50/50' : 'hover:bg-gray-50/50';
+                    const isModified = modifiedMenuIds.has(item.id) ? 'bg-yellow-50/50' : 'bg-white hover:bg-gray-50/50';
                     
                     const tr = document.createElement('tr');
-                    tr.className = `transition ${isModified}`;
+                    tr.className = `item-row border-b border-gray-100 transition-colors duration-500 ${isModified}`;
                     tr.dataset.id = item.id;
                     tr.innerHTML = `
-                        <td class="p-4 text-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 drag-handle">
-                            <i class="fas fa-grip-vertical"></i>
+                        <td class="p-4 text-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 item-drag-handle">
+                            <i class="fas fa-grip-lines"></i>
                         </td>
-                        <td class="p-4 font-bold text-gray-400 text-center serial-col">${globalSerial++}</td>
+                        <td class="p-4 font-black text-gray-400 text-center serial-col">0</td>
                         <td class="p-4 text-center">
                             <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-bold text-[10px] index-col">${item.order_index}</span>
                         </td>
@@ -553,7 +563,7 @@
                                 <p class="font-bold text-gray-900 leading-tight">${item.name}</p>
                                 <div class="flex gap-1.5 mt-1">
                                     <span class="bg-gray-800 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">${item.item_code || 'NO-ID'}</span>
-                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase cat-indicator">${subCat}</span>
+                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase cat-indicator transition-colors">${subCat}</span>
                                 </div>
                             </div>
                         </td>
@@ -570,128 +580,160 @@
                 table.appendChild(sortableTbody);
             });
 
-            // 4. Initialize SortableJS on all created tbodies
-            document.querySelectorAll('.sortable-group').forEach(el => {
-                new Sortable(el, {
-                    group: 'menuItems', // Allows dragging between different categories
-                    handle: '.drag-handle', // Only drag when clicking the icon
+            // Set initial serial numbers
+            updateSerialNumbers();
+
+            // --- 3. INITIALIZE OUTER SORTABLE (Drags Entire Categories) ---
+            new Sortable(table, {
+                group: 'categories',
+                handle: '.category-drag-handle',
+                draggable: '.category-tbody',
+                animation: 250,
+                ghostClass: 'opacity-50',
+                onEnd: function (evt) {
+                    recalculateGlobalOrder(); // Recalculate everything when a block is moved
+                }
+            });
+
+            // --- 4. INITIALIZE INNER SORTABLE (Drags Items Inside/Between Categories) ---
+            document.querySelectorAll('.category-tbody').forEach(tbody => {
+                new Sortable(tbody, {
+                    group: 'menuItems',
+                    handle: '.item-drag-handle',
+                    draggable: '.item-row',
                     animation: 150,
-                    ghostClass: 'bg-blue-50', // Class while dragging
+                    ghostClass: 'bg-blue-50',
                     onEnd: function (evt) {
-                        handleDragEnd(evt);
+                        const itemEl = evt.item;
+                        const toBody = evt.to;
+                        const newSubCat = toBody.dataset.subcat;
+                        
+                        // Visually Flash the item if it was moved!
+                        itemEl.classList.add('bg-yellow-100');
+                        setTimeout(() => itemEl.classList.remove('bg-yellow-100'), 1500);
+
+                        // Update the Category Pill indicator instantly
+                        const pill = itemEl.querySelector('.cat-indicator');
+                        pill.textContent = newSubCat;
+                        pill.classList.replace('bg-blue-100', 'bg-yellow-200');
+                        pill.classList.replace('text-blue-700', 'text-yellow-800');
+
+                        recalculateGlobalOrder();
                     }
                 });
             });
         }
 
-        // --- NEW: HANDLE DRAG & DROP LOGIC ---
-        function handleDragEnd(evt) {
-            const itemEl = evt.item;  // dragged HTML element
-            const toBody = evt.to;    // target tbody
-            const fromBody = evt.from;// origin tbody
-
-            // The new category parameters based on where it was dropped
-            const newMainCat = toBody.dataset.maincat;
-            const newSubCat = toBody.dataset.subcat;
-            const itemId = itemEl.dataset.id;
-
-            // Mark this item as modified
-            modifiedMenuIds.add(itemId);
-
-            // Find the item in our data array and update its category locally
-            const dataItem = allMenuItems.find(i => String(i.id) === String(itemId));
-            if (dataItem) {
-                dataItem.main_cat = newMainCat;
-                dataItem.sub_cat = newSubCat;
+        // --- NEW: EXPAND / COLLAPSE TOGGLE ---
+        function toggleCategory(btn) {
+            const tbody = btn.closest('tbody');
+            const icon = btn.querySelector('.toggle-icon');
+            const rows = tbody.querySelectorAll('.item-row');
+            
+            const isCollapsed = icon.classList.contains('fa-chevron-down');
+            
+            if (isCollapsed) {
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+                rows.forEach(r => r.classList.remove('hidden'));
+            } else {
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+                rows.forEach(r => r.classList.add('hidden'));
             }
-
-            // Visually update the item's category badge and row color
-            itemEl.classList.add('bg-yellow-50/50');
-            itemEl.querySelector('.cat-indicator').textContent = newSubCat;
-            itemEl.querySelector('.cat-indicator').classList.replace('bg-blue-100', 'bg-yellow-100');
-            itemEl.querySelector('.cat-indicator').classList.replace('text-blue-700', 'text-yellow-700');
-
-            // Recalculate Order Indexes for the affected containers
-            recalculateIndexes(toBody);
-            if (fromBody !== toBody) {
-                recalculateIndexes(fromBody);
-            }
-
-            // Recalculate Global Serial Numbers top-to-bottom
-            let currentSerial = 1;
-            document.querySelectorAll('.sortable-group tr').forEach(tr => {
-                tr.querySelector('.serial-col').textContent = currentSerial++;
-            });
-
-            // Show the Save Button
-            const saveBtn = document.getElementById('btn-save-order');
-            saveBtn.classList.remove('hidden');
-            saveBtn.classList.add('flex');
         }
 
-        function recalculateIndexes(tbody) {
-            // Give every item in this specific category group a new 1 to N index
-            Array.from(tbody.children).forEach((tr, index) => {
-                const newIndex = index + 1;
-                tr.querySelector('.index-col').textContent = newIndex;
-                
-                const dataId = tr.dataset.id;
-                const dataItem = allMenuItems.find(i => String(i.id) === String(dataId));
-                if (dataItem && dataItem.order_index !== newIndex) {
-                    dataItem.order_index = newIndex;
-                    modifiedMenuIds.add(dataId);
-                }
+        // --- NEW: GLOBAL SERIAL UPDATER ---
+        function updateSerialNumbers() {
+            let globalSerial = 1;
+            document.querySelectorAll('.item-row').forEach(tr => {
+                tr.querySelector('.serial-col').textContent = globalSerial++;
             });
         }
 
-        // --- NEW: SAVE REARRANGED ORDER TO SUPABASE ---
+        // --- NEW: GLOBAL RECALCULATION ENGINE ---
+        function recalculateGlobalOrder() {
+            let globalIndex = 1;
+
+            // Loop through categories top-to-bottom
+            document.querySelectorAll('.category-tbody').forEach(tbody => {
+                const newMainCat = tbody.dataset.maincat;
+                const newSubCat = tbody.dataset.subcat;
+
+                // Loop through items in that category top-to-bottom
+                tbody.querySelectorAll('.item-row').forEach(tr => {
+                    const itemId = tr.dataset.id;
+                    
+                    // Update visual index pill
+                    tr.querySelector('.index-col').textContent = globalIndex;
+                    
+                    // Update exact backend data map
+                    const item = allMenuItems.find(i => String(i.id) === String(itemId));
+                    if (item) {
+                        if (item.order_index !== globalIndex || item.main_cat !== newMainCat || item.sub_cat !== newSubCat) {
+                            item.order_index = globalIndex;
+                            item.main_cat = newMainCat;
+                            item.sub_cat = newSubCat;
+                            
+                            // Mark item as dirty and color it yellow
+                            modifiedMenuIds.add(itemId);
+                            tr.classList.add('bg-yellow-50/50');
+                        }
+                    }
+                    globalIndex++;
+                });
+            });
+
+            // Update serials dynamically just in case
+            updateSerialNumbers();
+
+            // Trigger the "Save Changes" button
+            if (modifiedMenuIds.size > 0) {
+                const saveBtn = document.getElementById('btn-save-order');
+                saveBtn.classList.remove('hidden');
+                saveBtn.classList.add('flex');
+            }
+        }
+
+        // --- NEW: BATCH SAVE TO DATABASE ---
         async function saveMenuOrder() {
             if (modifiedMenuIds.size === 0) return;
 
             const btn = document.getElementById('btn-save-order');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
-            // Collect all modified items
-            const updates = [];
-            modifiedMenuIds.forEach(id => {
+            let hasError = false;
+            
+            // Loop and save everything that was touched
+            for (const id of modifiedMenuIds) {
                 const item = allMenuItems.find(i => String(i.id) === String(id));
                 if (item) {
-                    updates.push({
-                        id: item.id,
-                        order_index: item.order_index,
-                        main_cat: item.main_cat,
-                        sub_cat: item.sub_cat
-                    });
+                    const { error } = await supabaseClient
+                        .from('menu_items')
+                        .update({ 
+                            order_index: item.order_index,
+                            main_cat: item.main_cat,
+                            sub_cat: item.sub_cat 
+                        })
+                        .eq('id', item.id);
+                    
+                    if (error) hasError = true;
                 }
-            });
-
-            // Supabase requires upserting or looping updates. We will loop for safety.
-            let hasError = false;
-            for (const update of updates) {
-                const { error } = await supabaseClient
-                    .from('menu_items')
-                    .update({ 
-                        order_index: update.order_index,
-                        main_cat: update.main_cat,
-                        sub_cat: update.sub_cat 
-                    })
-                    .eq('id', update.id);
-                
-                if (error) hasError = true;
             }
 
             if (hasError) {
-                alert('Warning: Some items failed to save. Please refresh and try again.');
+                alert('Warning: Some items failed to save. Please refresh the page and try again.');
+                btn.innerHTML = `<i class="fas fa-save"></i> Save Order Changes`;
             } else {
                 modifiedMenuIds.clear();
                 btn.classList.add('hidden');
                 btn.classList.remove('flex');
                 btn.innerHTML = `<i class="fas fa-save"></i> Save Order Changes`;
                 
-                // Refresh data to secure the new state
+                // Final re-fetch to lock everything in securely!
                 fetchMenu();
             }
         }
+
+        
 
         // --- MENU ITEM MODAL & SUPABASE STORAGE UPLOADS ---
         async function openMenuModal(mode, id = null) {
