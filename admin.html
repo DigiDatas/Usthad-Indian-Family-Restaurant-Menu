@@ -587,38 +587,64 @@
 
                 let totalImported = 0;
 
-                // 1. IMPORT BRANDING SHEET INTO restaurant_settings
+                // 1. IMPORT BRANDING SHEET (Collecting all banners across rows)
                 const brandingKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('brand'));
                 if (brandingKey && Array.isArray(jsonData[brandingKey])) {
-                    const bRows = jsonData[brandingKey];
-                    // Find the first row that actually has brand details (skip header rows)
-                    const bRow = bRows.find(r => r.B && r.B !== "Brand name" && r.B !== "SL#");
-                    if (bRow) {
-                        const brandingPayload = {
-                            brand_name: bRow.B || 'ShawarMax',
-                            contact: bRow.C || '',
-                            whatsapp: bRow.D || '',
-                            address: bRow.H || '',
-                            location_url: bRow.I || '',
-                            currency: bRow.K || 'SR',
-                            language: bRow.L || 'English',
-                            delivery_charge: bRow.M || '',
-                            logo_link: bRow.N || '',
-                            banner_images: bRow.O ? String(bRow.O).split(',').map(s => s.trim()) : [],
-                            game_enabled: bRow.P === true || String(bRow.P).toLowerCase() === "true"
-                        };
-                        const { error: bError } = await supabaseClient.from('restaurant_settings').insert([brandingPayload]);
-                        if (!bError) totalImported++;
-                        else console.error("Branding insert error:", bError);
+                    let allBanners = [];
+                    let mainBrandRow = jsonData[brandingKey].find(r => r.B && r.B !== "Brand name" && r.B !== "SL#") || {};
+
+                    jsonData[brandingKey].forEach(r => {
+                        const bannerVal = r.O || r.Banner_Image || r.banner;
+                        if (bannerVal) {
+                            String(bannerVal).split(',').forEach(b => {
+                                let cleanB = b.trim();
+                                if (cleanB) allBanners.push(cleanB);
+                            });
+                        }
+                    });
+
+                    const brandingPayload = {
+                        brand_name: mainBrandRow.B || 'ShawarMax',
+                        contact: mainBrandRow.C || '',
+                        whatsapp: mainBrandRow.D || '',
+                        address: mainBrandRow.H || '',
+                        location_url: mainBrandRow.I || '',
+                        currency: mainBrandRow.K || 'SR',
+                        language: mainBrandRow.L || 'English',
+                        delivery_charge: mainBrandRow.M || '',
+                        logo_link: mainBrandRow.N || '',
+                        banner_images: [...new Set(allBanners)], // Combines all banner rows cleanly
+                        game_enabled: mainBrandRow.P === true || String(mainBrandRow.P).toLowerCase() === "true"
+                    };
+
+                    const { error: bError } = await supabaseClient.from('restaurant_settings').insert([brandingPayload]);
+                    if (!bError) totalImported++;
+                }
+
+                // 2. IMPORT SPECIAL OFFERS SHEET
+                const offerKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('offer') || k.toLowerCase().includes('special'));
+                if (offerKey && Array.isArray(jsonData[offerKey])) {
+                    const offerRows = jsonData[offerKey]
+                        .filter(r => (r.B || r.ofer_name) && String(r.B) !== "Ofer Name" && String(r.B) !== "SL#")
+                        .map(r => ({
+                            offer_name: r.B || '',
+                            description: r.C || '',
+                            price_before: parseFloat(r.D) || null,
+                            price_after: parseFloat(r.E) || null,
+                            image_url: r.F || ''
+                        }));
+
+                    if (offerRows.length > 0) {
+                        const { error: oError } = await supabaseClient.from('special_offers').insert(offerRows);
+                        if (!oError) totalImported += offerRows.length;
                     }
                 }
 
-                // 2. IMPORT MENU SHEETS (Strict Separation of English 'en' and Arabic 'ar')
+                // 3. IMPORT MENU SHEETS (Mapping item_code, calories, recipe, review_links, flash_cards)
                 let menuRows = [];
                 Object.keys(jsonData).forEach(sheetKey => {
                     const lowerKey = sheetKey.toLowerCase();
                     if (lowerKey.includes('menu')) {
-                        // Check if it's explicitly Arabic
                         const isArabic = lowerKey.includes('arabic') || lowerKey.includes('ar');
                         const itemLang = isArabic ? 'ar' : 'en';
 
@@ -626,21 +652,26 @@
                             const name = row.name || row.D;
                             const price = row.price || row.F;
                             
-                            // Skip header rows or metadata descriptions
                             if (!name || String(name).toLowerCase() === 'items name' || String(name).toLowerCase() === 'name' || String(name).toLowerCase() === 'itemid' || String(name).toLowerCase() === 'sl#') return;
                             const parsedPrice = parseFloat(price);
                             if (isNaN(parsedPrice)) return;
 
                             menuRows.push({
+                                item_code: String(row.A || row.item_id || ''), // Maps ItemID -> item_code
                                 name: String(name),
                                 main_cat: row.main_cat || row.B || 'General',
                                 sub_cat: row.sub_cat || row.C || 'Other',
                                 price: parsedPrice,
                                 order_index: parseInt(row.order_index || row.E || idx + 1),
                                 description: row.description || row.G || '',
+                                calories: row.H ? parseInt(row.H) : null, // Maps Calories
+                                recipe: row.I || '', // Maps Recipe
                                 is_today_special: String(row.is_today_special || row.J || '').toLowerCase().includes('special'),
                                 img_urls: row.img_urls ? (Array.isArray(row.img_urls) ? row.img_urls : [row.img_urls]) : (row.K ? [String(row.K)] : []),
-                                language: itemLang // Accurately tags 'en' or 'ar'
+                                video_url: row.L || '',
+                                review_links: row.M || '', // Maps Review links
+                                flash_cards: row.N || '', // Maps Flash cards
+                                language: itemLang
                             });
                         });
                     }
@@ -649,10 +680,9 @@
                 if (menuRows.length > 0) {
                     const { error: mError } = await supabaseClient.from('menu_items').insert(menuRows);
                     if (!mError) totalImported += menuRows.length;
-                    else console.error("Menu insert error:", mError);
                 }
 
-                // 3. IMPORT RELATED ITEMS SHEET INTO related_items_map
+                // 4. IMPORT RELATED ITEMS SHEET
                 const relatedKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('related'));
                 if (relatedKey && Array.isArray(jsonData[relatedKey])) {
                     const relatedRows = jsonData[relatedKey]
@@ -669,14 +699,13 @@
                     if (relatedRows.length > 0) {
                         const { error: rError } = await supabaseClient.from('related_items_map').insert(relatedRows);
                         if (!rError) totalImported += relatedRows.length;
-                        else console.error("Related items insert error:", rError);
                     }
                 }
 
                 btn.innerHTML = 'Import to Database';
                 closeJsonModal();
                 fetchMenu();
-                alert(`Successfully imported ${totalImported} total records across Branding, Menu (EN/AR), and Related Items!`);
+                alert(`Successfully imported ${totalImported} total records across all sheets!`);
 
             } catch (err) {
                 alert('Multi-sheet Import Error: ' + err.message);
