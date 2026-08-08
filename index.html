@@ -655,7 +655,7 @@
         const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k"; 
 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         // --- Core State ---
 const CUSTOMER_ID = "CS02-2026-08";
       let rawBranding = {};
@@ -746,7 +746,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                 // ==========================================
 
                 // --- Fetch live menu items directly from Supabase ---
-                const { data: menuData, error: menuError } = await supabase
+                const { data: menuData, error: menuError } = await supabaseClient
                     .from('menu_items')
                     .select('*')
                     .order('order_index', { ascending: true });
