@@ -242,12 +242,18 @@
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+                <!-- Hidden IDs to track Row 1 (English) and Row 2 (Arabic) -->
                 <input type="hidden" id="setting-id">
+                <input type="hidden" id="setting-id-ar">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name *</label>
-                        <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (EN) *</label>
+                        <input type="text" id="set-brand" placeholder="e.g. ShawarMax" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (AR)</label>
+                        <input type="text" id="set-brand-ar" placeholder="e.g. شاور ماكس" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Currency</label>
@@ -1409,35 +1415,58 @@ fetchOffers();
         // RESTAURANT SETTINGS LOGIC
         // ==========================================
         async function fetchSettings() {
-            const { data, error } = await supabaseClient.from('restaurant_settings').select('*').limit(1).maybeSingle();
-            if (data) {
-                document.getElementById('setting-id').value = data.id;
-                document.getElementById('set-brand').value = data.brand_name || '';
-                document.getElementById('set-currency').value = data.currency || '';
-                document.getElementById('set-contact').value = data.contact || '';
-                document.getElementById('set-wa').value = data.whatsapp || '';
-                document.getElementById('set-email').value = data.email || '';
-                document.getElementById('set-address').value = data.address || '';
-                document.getElementById('set-map').value = data.location_url || '';
-                document.getElementById('set-logo').value = data.logo_link || '';
-                document.getElementById('set-delivery').value = data.delivery_charge || '';
-                document.getElementById('set-game').checked = data.game_enabled || false;
+            // Fetch all settings rows, ordered by ID so Row 1 is English, Row 2 is Arabic
+            const { data, error } = await supabaseClient.from('restaurant_settings').select('*').order('id', { ascending: true });
+            
+            if (data && data.length > 0) {
+                const mainRow = data[0]; // First row (English)
+                const arRow = data.length > 1 ? data[1] : null; // Second row (Arabic)
+
+                document.getElementById('setting-id').value = mainRow.id;
+                document.getElementById('set-brand').value = mainRow.brand_name || '';
                 
-                if (data.banner_images && Array.isArray(data.banner_images)) {
-                    document.getElementById('set-banners').value = data.banner_images.join(',\n');
+                // Safely load Arabic brand name from the second row
+                if (arRow) {
+                    document.getElementById('setting-id-ar').value = arRow.id;
+                    document.getElementById('set-brand-ar').value = arRow.brand_name || '';
+                } else {
+                    document.getElementById('setting-id-ar').value = '';
+                    document.getElementById('set-brand-ar').value = '';
                 }
+
+                document.getElementById('set-currency').value = mainRow.currency || '';
+                document.getElementById('set-contact').value = mainRow.contact || '';
+                document.getElementById('set-wa').value = mainRow.whatsapp || '';
+                document.getElementById('set-email').value = mainRow.email || '';
+                document.getElementById('set-address').value = mainRow.address || '';
+                document.getElementById('set-map').value = mainRow.location_url || '';
+                document.getElementById('set-logo').value = mainRow.logo_link || '';
+                document.getElementById('set-delivery').value = mainRow.delivery_charge || '';
+                document.getElementById('set-game').checked = mainRow.game_enabled || false;
+                
+                // Combine all banner images from all rows into the text area
+                let allBanners = [];
+                data.forEach(row => {
+                    if (row.banner_images && Array.isArray(row.banner_images)) {
+                        allBanners.push(...row.banner_images);
+                    }
+                });
+                document.getElementById('set-banners').value = [...new Set(allBanners)].join(',\n');
             }
         }
 
         async function saveSettings() {
-            const id = document.getElementById('setting-id').value;
+            const idEn = document.getElementById('setting-id').value;
+            const idAr = document.getElementById('setting-id-ar').value;
+            
             const btn = document.getElementById('btn-save-settings');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
             const rawBanners = document.getElementById('set-banners').value;
             const bannerArray = rawBanners ? rawBanners.split(',').map(b => b.trim()).filter(Boolean) : [];
 
-            const payload = {
+            // Payload for the First Row (English + Master Settings)
+            const payloadEn = {
                 brand_name: document.getElementById('set-brand').value.trim(),
                 currency: document.getElementById('set-currency').value.trim(),
                 contact: document.getElementById('set-contact').value.trim(),
@@ -1447,19 +1476,40 @@ fetchOffers();
                 location_url: document.getElementById('set-map').value.trim(),
                 logo_link: document.getElementById('set-logo').value.trim(),
                 delivery_charge: document.getElementById('set-delivery').value.trim(),
-                banner_images: bannerArray,
+                banner_images: bannerArray, 
                 game_enabled: document.getElementById('set-game').checked
             };
 
-            if (id) {
-                await supabaseClient.from('restaurant_settings').update(payload).eq('id', id);
-            } else {
-                await supabaseClient.from('restaurant_settings').insert([payload]);
+            // Payload for the Second Row (Arabic Brand Name only)
+            const payloadAr = {
+                brand_name: document.getElementById('set-brand-ar').value.trim()
+            };
+
+            let hasError = false;
+
+            // Update Row 1 (English)
+            if (idEn) {
+                const { error: err1 } = await supabaseClient.from('restaurant_settings').update(payloadEn).eq('id', idEn);
+                if (err1) hasError = true;
+            }
+
+            // Update Row 2 (Arabic)
+            if (idAr) {
+                const { error: err2 } = await supabaseClient.from('restaurant_settings').update(payloadAr).eq('id', idAr);
+                if (err2) hasError = true;
+            } else if (payloadAr.brand_name) {
+                // If row 2 was missing from the DB, create it dynamically
+                await supabaseClient.from('restaurant_settings').insert([payloadAr]);
             }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;
-            alert("Restaurant settings updated successfully!");
-            fetchSettings();
+            
+            if (hasError) {
+                alert("Warning: There was an issue saving some settings.");
+            } else {
+                alert("Restaurant settings updated successfully!");
+                fetchSettings(); // Refresh to ensure IDs are synced
+            }
         }
 
         window.onload = verifyAdmin;
