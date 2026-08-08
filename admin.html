@@ -488,12 +488,11 @@
             const btn = document.getElementById('btn-save-item');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
-            // Check if user selected a file to upload to Supabase Storage
             const fileInput = document.getElementById('form-image-file');
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
                 const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36.substring(2, 7))}.${fileExt}`;
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
                 
                 const { error: uploadError } = await supabaseClient.storage
                     .from('menu-images')
@@ -505,7 +504,6 @@
                     return;
                 }
 
-                // Get Public URL
                 const { data: publicData } = supabaseClient.storage
                     .from('menu-images')
                     .getPublicUrl(fileName);
