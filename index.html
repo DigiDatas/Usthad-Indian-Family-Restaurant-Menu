@@ -14,7 +14,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
 
     <style>
@@ -651,7 +651,11 @@
             }
         });
 
-      
+      // --- Supabase Cloud Connection ---
+        const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k"; 
+
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         // --- Core State ---
 const CUSTOMER_ID = "CS02-2026-08";
       let rawBranding = {};
@@ -741,49 +745,41 @@ let relatedItemsData = []; // (You did this perfectly!)
                 }
                 // ==========================================
 
-                // Point directly to the JSON file
-                const fileUrl = "MenuMasterData.json?v=" + new Date().getTime();
-                const response = await fetch(fileUrl);
-                if (!response.ok) throw new Error("Could not fetch JSON file");
-                
-                // Natively parse the JSON data (Extremely Fast!)
-                const jsonData = await response.json();
-                const sNames = Object.keys(jsonData);
-                
-                // Find the specific arrays by sheet name
-                const sBrand = sNames.find(n => n.includes("01") || n.includes("Brand") || n.replace(/\s/g,'') === "Sheet1") || sNames[0];
-                const sOffer = sNames.find(n => n.includes("2") || n.includes("Offer")) || sNames[1];
-                const sMenuEn = sNames.find(n => n.includes("3") || n.includes("English")) || sNames[2];
-                const sMenuAr = sNames.find(n => n.includes("4") || n.includes("Arabic")) || sNames[3];
-                const sRelated = sNames.find(n => n.toLowerCase().includes("relateditems"));
+                // --- Fetch live menu items directly from Supabase ---
+                const { data: menuData, error: menuError } = await supabase
+                    .from('menu_items')
+                    .select('*')
+                    .order('order_index', { ascending: true });
 
-                // Load Data
-                if(sBrand && jsonData[sBrand]) {
-                    window.rawBrandRows = jsonData[sBrand]; // NEW: Saves all rows so we can match them to categories!
-                    rawBranding = window.rawBrandRows.find((r, i) => i > 0 && (r.K || r.B || r.L)) || window.rawBrandRows[1] || window.rawBrandRows[0] || {};
+                if (menuError) throw menuError;
+
+                if (menuData && menuData.length > 0) {
+                    activeMenuData = menuData.map(item => ({
+                        id: item.id,
+                        mainCat: item.main_cat,
+                        subCat: item.sub_cat,
+                        name: item.name,
+                        order: item.order_index || 999,
+                        price: item.price || 0,
+                        desc: item.description || "",
+                        calories: item.calories || "",
+                        recipe: item.recipe || "",
+                        isTodaySpecial: item.is_today_special || false,
+                        imgUrls: item.img_urls && item.img_urls.length > 0 ? item.img_urls : ['https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'],
+                        img: item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png',
+                        video: item.video_url || "",
+                        reviewLinks: item.review_links || "",
+                        flashCards: item.flash_cards || ""
+                    }));
+
+                    mainCategories = [...new Set(activeMenuData.map(i => i.mainCat))];
+                    allSubCategories = [...new Set(activeMenuData.map(i => i.subCat))];
                 }
-                if(sOffer && jsonData[sOffer]) {
-                    const offerRows = jsonData[sOffer];
-                    if(offerRows.length > 1) rawOffers = offerRows.slice(1);
-                }
-                if(sMenuEn && jsonData[sMenuEn]) {
-                    const enRows = jsonData[sMenuEn];
-                    if(enRows.length > 1) rawMenuEn = enRows.slice(1);
-                }
-                if(sMenuAr && jsonData[sMenuAr]) {
-                    const arRows = jsonData[sMenuAr];
-                    if(arRows.length > 1) rawMenuAr = arRows.slice(1);
-                }
-                if(sRelated && Array.isArray(jsonData[sRelated])) {
-    relatedItemsData = jsonData[sRelated];
-} else {
-    relatedItemsData = [];
-}
 
                 document.getElementById('loading-state').classList.add('hidden');
-                
-                applySystemSetup();
-                renderSocialMedia();
+                renderCategoryFilters();
+                renderSubCategoryFilters();
+                executeFilter();
                 
             } catch (error) {
                 console.error("JSON Initialization Error:", error);
