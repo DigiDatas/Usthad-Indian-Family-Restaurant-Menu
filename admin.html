@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
@@ -79,38 +80,53 @@
 
         <!-- ================= TAB 2: MENU MANAGER ================= -->
         <section id="section-menu" class="tab-section hidden">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Menu Manager</h2>
-                    <p class="text-sm text-gray-500">Add, edit, upload photos, or bulk-import items via JSON.</p>
+            <div class="flex flex-col mb-6 gap-4">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800">Menu Manager</h2>
+                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical mx-1 text-gray-400"></i> to reorder. Drag between groups to change categories.</p>
+                    </div>
+                    
+                    <!-- NEW: Language Filter -->
+                    <div class="flex bg-gray-200 p-1 rounded-lg">
+                        <button onclick="switchAdminLanguage('en')" id="filter-lang-en" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition">English (EN)</button>
+                        <button onclick="switchAdminLanguage('ar')" id="filter-lang-ar" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition">Arabic (AR)</button>
+                    </div>
                 </div>
-                <div class="flex gap-2 w-full sm:w-auto">
-                    <button onclick="openMenuModal('add')" class="flex-1 sm:flex-none bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center justify-center gap-2">
+
+                <div class="flex gap-2 w-full justify-end border-t border-gray-200 pt-4">
+                    <!-- NEW: Save Changes Button (Hidden by default) -->
+                    <button onclick="saveMenuOrder()" id="btn-save-order" class="hidden bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center justify-center gap-2 animate-pulse">
+                        <i class="fas fa-save"></i> Save Order Changes
+                    </button>
+                    <button onclick="openMenuModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center justify-center gap-2">
                         <i class="fas fa-plus"></i> Add New Item
                     </button>
-                    <button onclick="openJsonModal()" class="flex-1 sm:flex-none bg-gray-900 text-white px-4 py-2 rounded-xl shadow-md hover:bg-gray-800 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-file-code"></i> Bulk JSON Import
+                    <button onclick="openJsonModal()" class="bg-gray-900 text-white px-4 py-2 rounded-xl shadow-md hover:bg-gray-800 font-bold text-sm transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-code"></i> Bulk JSON
                     </button>
                 </div>
             </div>
 
             <!-- Menu Table Grid -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="overflow-x-auto pb-20">
+                    <table class="w-full text-left border-collapse" id="menu-table">
                         <thead>
                             <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4 w-10"></th> <!-- Drag Handle Column -->
+                                <th class="p-4 w-12 text-center">SL#</th>
+                                <th class="p-4 w-12 text-center">Index</th>
                                 <th class="p-4">Item</th>
-                                <th class="p-4">Category</th>
-                                <th class="p-4">Sub Category</th>
                                 <th class="p-4">Price</th>
                                 <th class="p-4">Special</th>
                                 <th class="p-4 text-end">Actions</th>
                             </tr>
                         </thead>
+                        <!-- JS will inject dynamic TBODY elements here based on Category -->
                         <tbody id="menu-table-body" class="divide-y divide-gray-100 text-sm">
                             <tr>
-                                <td colspan="6" class="p-8 text-center text-gray-400">Loading Menu Items...</td>
+                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Menu Items...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -433,51 +449,248 @@
             else fetchOrders();
         }
 
+        // --- NEW: MENU MANAGER STATE ---
+        let currentAdminLang = 'en'; // Default language
+        let modifiedMenuIds = new Set(); // Tracks items that were dragged
+
+        function switchAdminLanguage(lang) {
+            currentAdminLang = lang;
+            document.getElementById('filter-lang-en').className = lang === 'en' ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition";
+            document.getElementById('filter-lang-ar').className = lang === 'ar' ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition";
+            
+            // Discard unsaved changes when switching languages
+            document.getElementById('btn-save-order').classList.add('hidden');
+            document.getElementById('btn-save-order').classList.remove('flex');
+            modifiedMenuIds.clear();
+            
+            renderMenuTable();
+        }
+
         // --- FETCH & RENDER MENU MANAGER ---
         async function fetchMenu() {
             const tbody = document.getElementById('menu-table-body');
-            const { data, error } = await supabaseClient.from('menu_items').select('*').order('item_code', { ascending: true });
+            // Fetch everything ordered by order_index
+            const { data, error } = await supabaseClient.from('menu_items').select('*').order('order_index', { ascending: true });
             
             if (error) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Error loading menu items.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Error loading menu items.</td></tr>`;
                 return;
             }
 
             allMenuItems = data || [];
-            tbody.innerHTML = '';
+            renderMenuTable();
+        }
 
-            if (allMenuItems.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">No menu items found. Click 'Add New Item' to start.</td></tr>`;
+        function renderMenuTable() {
+            const table = document.getElementById('menu-table');
+            
+            // Remove old dynamic tbodies
+            const oldBodies = table.querySelectorAll('tbody:not(#menu-table-body)');
+            oldBodies.forEach(b => b.remove());
+            
+            const mainBody = document.getElementById('menu-table-body');
+            mainBody.innerHTML = ''; // Clear default body
+
+            // 1. Filter by language
+            const filteredItems = allMenuItems.filter(i => i.language === currentAdminLang);
+
+            if (filteredItems.length === 0) {
+                mainBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No menu items found for this language. Click 'Add New Item'.</td></tr>`;
                 return;
             }
 
-            allMenuItems.forEach(item => {
-                const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
-                const langColor = item.language === 'en' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700';
+            // 2. Group items by Main Category -> Sub Category
+            const grouped = {};
+            filteredItems.forEach(item => {
+                const groupKey = `${item.main_cat}|${item.sub_cat}`;
+                if (!grouped[groupKey]) grouped[groupKey] = [];
+                grouped[groupKey].push(item);
+            });
+
+            // 3. Render a separate Sortable TBODY for each group
+            let globalSerial = 1;
+
+            for (const [groupKey, items] in Object.entries(grouped)) {} // Used Object.entries safely below
+
+            Object.entries(grouped).forEach(([groupKey, items]) => {
+                const [mainCat, subCat] = groupKey.split('|');
                 
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50/50 transition">
+                // Group Header
+                const headerTbody = document.createElement('tbody');
+                headerTbody.innerHTML = `
+                    <tr class="bg-gray-100/80 border-t border-b border-gray-200">
+                        <td colspan="7" class="p-2 px-4 font-black text-gray-700 text-xs uppercase tracking-widest">
+                            <i class="fas fa-folder-open text-red-500 me-2"></i> ${mainCat} <i class="fas fa-chevron-right text-gray-400 mx-1 text-[10px]"></i> <span class="text-gray-500">${subCat}</span>
+                        </td>
+                    </tr>
+                `;
+                table.appendChild(headerTbody);
+
+                // Sortable Container
+                const sortableTbody = document.createElement('tbody');
+                sortableTbody.className = "sortable-group divide-y divide-gray-100 text-sm";
+                sortableTbody.dataset.maincat = mainCat;
+                sortableTbody.dataset.subcat = subCat;
+
+                items.forEach((item, index) => {
+                    const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
+                    const isModified = modifiedMenuIds.has(item.id) ? 'bg-yellow-50/50' : 'hover:bg-gray-50/50';
+                    
+                    const tr = document.createElement('tr');
+                    tr.className = `transition ${isModified}`;
+                    tr.dataset.id = item.id;
+                    tr.innerHTML = `
+                        <td class="p-4 text-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 drag-handle">
+                            <i class="fas fa-grip-vertical"></i>
+                        </td>
+                        <td class="p-4 font-bold text-gray-400 text-center serial-col">${globalSerial++}</td>
+                        <td class="p-4 text-center">
+                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-bold text-[10px] index-col">${item.order_index}</span>
+                        </td>
                         <td class="p-4 flex items-center gap-3">
                             <img src="${img}" class="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0">
                             <div>
                                 <p class="font-bold text-gray-900 leading-tight">${item.name}</p>
                                 <div class="flex gap-1.5 mt-1">
                                     <span class="bg-gray-800 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">${item.item_code || 'NO-ID'}</span>
-                                    <span class="${langColor} px-1.5 py-0.5 rounded text-[10px] font-bold uppercase">${item.language || 'en'}</span>
+                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase cat-indicator">${subCat}</span>
                                 </div>
                             </div>
                         </td>
-                        <td class="p-4 font-semibold text-gray-600">${item.main_cat}</td>
-                        <td class="p-4 text-gray-500">${item.sub_cat}</td>
                         <td class="p-4 font-black text-red-600">${item.price}</td>
                         <td class="p-4">${item.is_today_special ? '<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold">Special</span>' : '-'}</td>
                         <td class="p-4 text-end">
                             <button onclick="openMenuModal('edit', '${item.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition me-1"><i class="fas fa-pen text-xs"></i></button>
                             <button onclick="deleteMenuItem('${item.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"><i class="fas fa-trash-alt text-xs"></i></button>
                         </td>
-                    </tr>
-                `;
+                    `;
+                    sortableTbody.appendChild(tr);
+                });
+
+                table.appendChild(sortableTbody);
             });
+
+            // 4. Initialize SortableJS on all created tbodies
+            document.querySelectorAll('.sortable-group').forEach(el => {
+                new Sortable(el, {
+                    group: 'menuItems', // Allows dragging between different categories
+                    handle: '.drag-handle', // Only drag when clicking the icon
+                    animation: 150,
+                    ghostClass: 'bg-blue-50', // Class while dragging
+                    onEnd: function (evt) {
+                        handleDragEnd(evt);
+                    }
+                });
+            });
+        }
+
+        // --- NEW: HANDLE DRAG & DROP LOGIC ---
+        function handleDragEnd(evt) {
+            const itemEl = evt.item;  // dragged HTML element
+            const toBody = evt.to;    // target tbody
+            const fromBody = evt.from;// origin tbody
+
+            // The new category parameters based on where it was dropped
+            const newMainCat = toBody.dataset.maincat;
+            const newSubCat = toBody.dataset.subcat;
+            const itemId = itemEl.dataset.id;
+
+            // Mark this item as modified
+            modifiedMenuIds.add(itemId);
+
+            // Find the item in our data array and update its category locally
+            const dataItem = allMenuItems.find(i => String(i.id) === String(itemId));
+            if (dataItem) {
+                dataItem.main_cat = newMainCat;
+                dataItem.sub_cat = newSubCat;
+            }
+
+            // Visually update the item's category badge and row color
+            itemEl.classList.add('bg-yellow-50/50');
+            itemEl.querySelector('.cat-indicator').textContent = newSubCat;
+            itemEl.querySelector('.cat-indicator').classList.replace('bg-blue-100', 'bg-yellow-100');
+            itemEl.querySelector('.cat-indicator').classList.replace('text-blue-700', 'text-yellow-700');
+
+            // Recalculate Order Indexes for the affected containers
+            recalculateIndexes(toBody);
+            if (fromBody !== toBody) {
+                recalculateIndexes(fromBody);
+            }
+
+            // Recalculate Global Serial Numbers top-to-bottom
+            let currentSerial = 1;
+            document.querySelectorAll('.sortable-group tr').forEach(tr => {
+                tr.querySelector('.serial-col').textContent = currentSerial++;
+            });
+
+            // Show the Save Button
+            const saveBtn = document.getElementById('btn-save-order');
+            saveBtn.classList.remove('hidden');
+            saveBtn.classList.add('flex');
+        }
+
+        function recalculateIndexes(tbody) {
+            // Give every item in this specific category group a new 1 to N index
+            Array.from(tbody.children).forEach((tr, index) => {
+                const newIndex = index + 1;
+                tr.querySelector('.index-col').textContent = newIndex;
+                
+                const dataId = tr.dataset.id;
+                const dataItem = allMenuItems.find(i => String(i.id) === String(dataId));
+                if (dataItem && dataItem.order_index !== newIndex) {
+                    dataItem.order_index = newIndex;
+                    modifiedMenuIds.add(dataId);
+                }
+            });
+        }
+
+        // --- NEW: SAVE REARRANGED ORDER TO SUPABASE ---
+        async function saveMenuOrder() {
+            if (modifiedMenuIds.size === 0) return;
+
+            const btn = document.getElementById('btn-save-order');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+
+            // Collect all modified items
+            const updates = [];
+            modifiedMenuIds.forEach(id => {
+                const item = allMenuItems.find(i => String(i.id) === String(id));
+                if (item) {
+                    updates.push({
+                        id: item.id,
+                        order_index: item.order_index,
+                        main_cat: item.main_cat,
+                        sub_cat: item.sub_cat
+                    });
+                }
+            });
+
+            // Supabase requires upserting or looping updates. We will loop for safety.
+            let hasError = false;
+            for (const update of updates) {
+                const { error } = await supabaseClient
+                    .from('menu_items')
+                    .update({ 
+                        order_index: update.order_index,
+                        main_cat: update.main_cat,
+                        sub_cat: update.sub_cat 
+                    })
+                    .eq('id', update.id);
+                
+                if (error) hasError = true;
+            }
+
+            if (hasError) {
+                alert('Warning: Some items failed to save. Please refresh and try again.');
+            } else {
+                modifiedMenuIds.clear();
+                btn.classList.add('hidden');
+                btn.classList.remove('flex');
+                btn.innerHTML = `<i class="fas fa-save"></i> Save Order Changes`;
+                
+                // Refresh data to secure the new state
+                fetchMenu();
+            }
         }
 
         // --- MENU ITEM MODAL & SUPABASE STORAGE UPLOADS ---
@@ -676,10 +889,29 @@
         }
 
         async function deleteMenuItem(id) {
-            if (!confirm('Are you sure you want to delete this menu item?')) return;
+            if (!confirm('Are you sure you want to permanently delete this menu item?')) return;
+            
+            // 1. First, quickly grab the item_code before we delete it
+            const { data: item } = await supabaseClient
+                .from('menu_items')
+                .select('item_code')
+                .eq('id', id)
+                .maybeSingle();
+            
+            // 2. Delete the main item from the menu_items table
             const { error } = await supabaseClient.from('menu_items').delete().eq('id', id);
-            if (error) alert('Error: ' + error.message);
-            else fetchMenu();
+            
+            if (error) {
+                alert('Error: ' + error.message);
+            } else {
+                // 3. Auto-Cleanup: If it had an item_code, delete its Related Items map too!
+                if (item && item.item_code) {
+                    await supabaseClient.from('related_items_map').delete().eq('item_id', item.item_code);
+                }
+                
+                // Refresh the screen
+                fetchMenu();
+            }
         }
 
         // --- BULK JSON IMPORT ---
