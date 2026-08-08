@@ -512,10 +512,12 @@
 
         let allMenuItems = [];
         let allOrders = [];
+	let currentUser = null;
 
         // --- AUTH & TAB SWITCHING ---
         async function verifyAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
+            currentUser = session?.user || null; // <--- ADD THIS
             const overlay = document.getElementById('admin-login-overlay');
             const userMeta = session?.user?.app_metadata;
             const isAdmin = userMeta && userMeta.is_admin === true;
@@ -1289,7 +1291,6 @@ fetchOffers();
 
         // --- CUSTOMER DIRECTORY & ANALYTICS ---
         async function fetchUsersAndOrders(btnElement = null) {
-            // 1. Trigger visual spin animation if button was clicked
             let icon = null;
             if (btnElement) {
                 icon = btnElement.querySelector('.fa-sync-alt');
@@ -1297,97 +1298,97 @@ fetchOffers();
             }
 
             const tbody = document.getElementById('users-table-body');
-            tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500"><i class="fas fa-spinner fa-spin me-2"></i> Loading Customer Analytics...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500"><i class="fas fa-spinner fa-spin me-2"></i> Loading Customer Analytics...</td></tr>`;
 
-            // 2. Fetch fresh data directly to fix the blank-load issue
-            const { data: orders, error } = await supabaseClient
-                .from('orders')
-                .select('*')
-                .order('created_at', { ascending: false });
+            try {
+                const { data: orders, error } = await supabaseClient
+                    .from('orders')
+                    .select('*')
+                    .order('created_at', { ascending: false });
 
-            // Stop spin animation
-            if (icon) icon.classList.remove('fa-spin');
+                if (icon) icon.classList.remove('fa-spin');
 
-            if (error) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-red-500">Error loading customer data.</td></tr>`;
-                return;
+                if (error) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Error loading customer data: ${error.message}</td></tr>`;
+                    return;
+                }
+
+                window.allCustomerOrders = orders || [];
+                const userMap = {};
+
+                window.allCustomerOrders.forEach(order => {
+                    const phone = order.customer_phone || 'No Phone';
+                    const name = order.customer_name || 'Guest';
+                    const email = order.customer_email || (currentUser ? currentUser.email : '') || 'Guest';
+                    const address = order.delivery_address || '';
+                    const amount = parseFloat(order.total_amount) || 0;
+
+                    if (!userMap[phone]) {
+                        userMap[phone] = { 
+                            name: name, 
+                            phone: phone, 
+                            email: email,
+                            count: 0, 
+                            totalSpent: 0, 
+                            lastDate: order.created_at,
+                            address: address 
+                        };
+                    }
+                    
+                    userMap[phone].count += 1;
+                    userMap[phone].totalSpent += amount;
+                    
+                    if (new Date(order.created_at) >= new Date(userMap[phone].lastDate)) {
+                        userMap[phone].lastDate = order.created_at;
+                        if (address) userMap[phone].address = address;
+                        if (name !== 'Guest') userMap[phone].name = name;
+                        if (email && email !== 'Guest') userMap[phone].email = email;
+                    }
+                });
+
+                const users = Object.values(userMap).sort((a, b) => b.totalSpent - a.totalSpent);
+
+                tbody.innerHTML = '';
+
+                if (users.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No customer order records found.</td></tr>`;
+                    return;
+                }
+
+                users.forEach((u, index) => {
+                    let rankBadge = '';
+                    let rowBg = 'hover:bg-gray-50';
+                    
+                    if (index === 0) {
+                        rankBadge = '<i class="fas fa-trophy text-yellow-500 me-2" title="Top Spender"></i>';
+                        rowBg = 'bg-yellow-50/30 hover:bg-yellow-50';
+                    } else if (index === 1) {
+                        rankBadge = '<i class="fas fa-medal text-gray-400 me-2" title="2nd Place"></i>';
+                    } else if (index === 2) {
+                        rankBadge = '<i class="fas fa-medal text-orange-400 me-2" title="3rd Place"></i>';
+                    }
+
+                    tbody.innerHTML += `
+                        <tr class="${rowBg} transition">
+                            <td class="p-4 font-bold text-gray-900 flex items-center">${rankBadge} ${u.name}</td>
+                            <td class="p-4 text-blue-600 font-semibold"><a href="tel:${u.phone}">${u.phone}</a></td>
+                            <td class="p-4 text-gray-600 text-xs font-medium"><a href="mailto:${u.email}">${u.email || '<span class="text-gray-300 italic">No Email</span>'}</a></td>
+                            <td class="p-4 text-gray-500 text-xs truncate max-w-[150px]" title="${u.address}">${u.address || '<span class="text-gray-300 italic">No Address</span>'}</td>
+                            <td class="p-4 text-center"><span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg font-black text-xs border border-gray-200">${u.count}</span></td>
+                            <td class="p-4 font-black text-green-600">${u.totalSpent.toFixed(2)}</td>
+                            <td class="p-4 text-end">
+                                <button onclick="openCustomerHistory('${u.phone}')" class="bg-gray-900 text-white px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-800 transition shadow-sm flex items-center justify-center gap-2 ml-auto">
+                                    <i class="fas fa-list-ul"></i> History
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+            } catch (err) {
+                if (icon) icon.classList.remove('fa-spin');
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Script Error: ${err.message}</td></tr>`;
             }
-
-            // Save globally so the History Modal can read it instantly
-            window.allCustomerOrders = orders || [];
-            const userMap = {};
-
-            // 3. Process and aggregate the data
-            window.allCustomerOrders.forEach(order => {
-                const phone = order.customer_phone || 'No Phone';
-                const name = order.customer_name || 'Guest';
-                const email = order.customer_email || (currentUser ? currentUser.email : '') || 'Guest';
-                const address = order.delivery_address || '';
-                const amount = parseFloat(order.total_amount) || 0;
-
-                if (!userMap[phone]) {
-                    userMap[phone] = { 
-                        name: name, 
-                        phone: phone, 
-                        email: email,
-                        count: 0, 
-                        totalSpent: 0, 
-                        lastDate: order.created_at,
-                        address: address 
-                    };
-                }
-                
-                userMap[phone].count += 1;
-                userMap[phone].totalSpent += amount;
-                
-                if (new Date(order.created_at) >= new Date(userMap[phone].lastDate)) {
-                    userMap[phone].lastDate = order.created_at;
-                    if (address) userMap[phone].address = address;
-                    if (name !== 'Guest') userMap[phone].name = name;
-                    if (email && email !== 'Guest') userMap[phone].email = email;
-                }
-            });
-
-            // 4. Sort Customers by Total Spent (Highest Spenders at the top)
-            const users = Object.values(userMap).sort((a, b) => b.totalSpent - a.totalSpent);
-
-            tbody.innerHTML = '';
-
-            if (users.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">No customer order records found.</td></tr>`;
-                return;
-            }
-
-            // 5. Build the Table Rows with Top 3 Badges
-            users.forEach((u, index) => {
-                let rankBadge = '';
-                let rowBg = 'hover:bg-gray-50';
-                
-                if (index === 0) {
-                    rankBadge = '<i class="fas fa-trophy text-yellow-500 me-2" title="Top Spender"></i>';
-                    rowBg = 'bg-yellow-50/30 hover:bg-yellow-50';
-                } else if (index === 1) {
-                    rankBadge = '<i class="fas fa-medal text-gray-400 me-2" title="2nd Place"></i>';
-                } else if (index === 2) {
-                    rankBadge = '<i class="fas fa-medal text-orange-400 me-2" title="3rd Place"></i>';
-                }
-
-                tbody.innerHTML += `
-                    <tr class="${rowBg} transition">
-                        <td class="p-4 font-bold text-gray-900 flex items-center">${rankBadge} ${u.name}</td>
-                        <td class="p-4 text-blue-600 font-semibold"><a href="tel:${u.phone}">${u.phone}</a></td>
-                        <td class="p-4 text-gray-600 text-xs font-medium"><a href="mailto:${u.email}">${u.email || '<span class="text-gray-300 italic">No Email</span>'}</a></td>
-                        <td class="p-4 text-gray-500 text-xs truncate max-w-[150px]" title="${u.address}">${u.address || '<span class="text-gray-300 italic">No Address</span>'}</td>
-                        <td class="p-4 text-center"><span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg font-black text-xs border border-gray-200">${u.count}</span></td>
-                        <td class="p-4 font-black text-green-600">${u.totalSpent.toFixed(2)}</td>
-                        <td class="p-4 text-end">
-                            <button onclick="openCustomerHistory('${u.phone}')" class="bg-gray-900 text-white px-4 py-1.5 rounded-xl text-xs font-bold hover:bg-gray-800 transition shadow-sm flex items-center justify-center gap-2 ml-auto">
-                                <i class="fas fa-list-ul"></i> History
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
         }
 
         // ==========================================
