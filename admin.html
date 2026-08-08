@@ -584,6 +584,24 @@
             const btn = document.getElementById('btn-save-item');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
+            // ==========================================
+            // 🛑 NEW: SMART DUPLICATE CHECKER
+            // ==========================================
+            const { data: existingItem } = await supabaseClient
+                .from('menu_items')
+                .select('id')
+                .eq('item_code', itemCode)
+                .eq('language', language)
+                .maybeSingle();
+
+            // If an item exists with this code AND it's not the exact item we are currently editing:
+            if (existingItem && String(existingItem.id) !== String(id)) {
+                alert(`⚠️ WAIT! An item with the code "${itemCode}" already exists for ${language.toUpperCase()}. Please use a unique Item Code.`);
+                btn.innerHTML = 'Save Item';
+                return; // Stops the save immediately!
+            }
+            // ==========================================
+
             const fileInput = document.getElementById('form-image-file');
             if (fileInput.files && fileInput.files[0]) {
                 const file = fileInput.files[0];
