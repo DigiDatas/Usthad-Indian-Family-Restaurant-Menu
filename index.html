@@ -2726,6 +2726,7 @@ function toggleQuickCart(id) {
                         customer_id: currentUser ? currentUser.id : 'guest',
                         customer_name: customerName,
                         customer_phone: customerPhone,
+                        customer_email: currentUser ? currentUser.email : null, // <--- SAVES LOGGED-IN EMAIL
                         order_type: diningType,
                         table_number: diningType === 'Dine In' ? selectedTable : null,
                         delivery_address: addressInput || null,
