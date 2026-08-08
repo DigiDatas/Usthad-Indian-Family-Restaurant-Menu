@@ -579,7 +579,7 @@
             try {
                 const jsonData = JSON.parse(rawText);
                 if (typeof jsonData !== 'object' || Array.isArray(jsonData)) {
-                    throw new Error('JSON must be an object containing your sheets (Branding, Menu-English, Menu-Arabic, RelatedItems).');
+                    throw new Error('JSON must be an object containing your sheets.');
                 }
 
                 const btn = document.getElementById('btn-import-json');
@@ -588,8 +588,11 @@
                 let totalImported = 0;
 
                 // 1. IMPORT BRANDING SHEET INTO restaurant_settings
-                if (jsonData.Branding && Array.isArray(jsonData.Branding)) {
-                    const bRow = jsonData.Branding.find(r => r.B && r.B !== "Brand name");
+                const brandingKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('brand'));
+                if (brandingKey && Array.isArray(jsonData[brandingKey])) {
+                    const bRows = jsonData[brandingKey];
+                    // Find the first row that actually has brand details (skip header rows)
+                    const bRow = bRows.find(r => r.B && r.B !== "Brand name" && r.B !== "SL#");
                     if (bRow) {
                         const brandingPayload = {
                             brand_name: bRow.B || 'ShawarMax',
@@ -601,26 +604,30 @@
                             language: bRow.L || 'English',
                             delivery_charge: bRow.M || '',
                             logo_link: bRow.N || '',
-                            banner_images: bRow.O ? bRow.O.split(',').map(s => s.trim()) : [],
-                            game_enabled: bRow.P === true || bRow.P === "true"
+                            banner_images: bRow.O ? String(bRow.O).split(',').map(s => s.trim()) : [],
+                            game_enabled: bRow.P === true || String(bRow.P).toLowerCase() === "true"
                         };
                         const { error: bError } = await supabaseClient.from('restaurant_settings').insert([brandingPayload]);
                         if (!bError) totalImported++;
+                        else console.error("Branding insert error:", bError);
                     }
                 }
 
-                // 2. IMPORT MENU SHEETS (Separating English 'en' and Arabic 'ar')
+                // 2. IMPORT MENU SHEETS (Strict Separation of English 'en' and Arabic 'ar')
                 let menuRows = [];
                 Object.keys(jsonData).forEach(sheetKey => {
-                    if (sheetKey.toLowerCase().includes('menu')) {
-                        const isArabic = sheetKey.toLowerCase().includes('arabic');
-                        const itemLang = isArabic ? 'ar' : 'en'; // Explicitly tags English as 'en' and Arabic as 'ar'
+                    const lowerKey = sheetKey.toLowerCase();
+                    if (lowerKey.includes('menu')) {
+                        // Check if it's explicitly Arabic
+                        const isArabic = lowerKey.includes('arabic') || lowerKey.includes('ar');
+                        const itemLang = isArabic ? 'ar' : 'en';
 
                         jsonData[sheetKey].forEach((row, idx) => {
                             const name = row.name || row.D;
                             const price = row.price || row.F;
                             
-                            if (!name || String(name).toLowerCase() === 'items name' || String(name).toLowerCase() === 'name' || String(name).toLowerCase() === 'itemid') return;
+                            // Skip header rows or metadata descriptions
+                            if (!name || String(name).toLowerCase() === 'items name' || String(name).toLowerCase() === 'name' || String(name).toLowerCase() === 'itemid' || String(name).toLowerCase() === 'sl#') return;
                             const parsedPrice = parseFloat(price);
                             if (isNaN(parsedPrice)) return;
 
@@ -633,7 +640,7 @@
                                 description: row.description || row.G || '',
                                 is_today_special: String(row.is_today_special || row.J || '').toLowerCase().includes('special'),
                                 img_urls: row.img_urls ? (Array.isArray(row.img_urls) ? row.img_urls : [row.img_urls]) : (row.K ? [String(row.K)] : []),
-                                language: itemLang // Saves language correctly
+                                language: itemLang // Accurately tags 'en' or 'ar'
                             });
                         });
                     }
@@ -642,12 +649,14 @@
                 if (menuRows.length > 0) {
                     const { error: mError } = await supabaseClient.from('menu_items').insert(menuRows);
                     if (!mError) totalImported += menuRows.length;
+                    else console.error("Menu insert error:", mError);
                 }
 
                 // 3. IMPORT RELATED ITEMS SHEET INTO related_items_map
-                if (jsonData.RelatedItems && Array.isArray(jsonData.RelatedItems)) {
-                    const relatedRows = jsonData.RelatedItems
-                        .filter(r => (r.C || r.item_id) && (r.C !== "ItemID"))
+                const relatedKey = Object.keys(jsonData).find(k => k.toLowerCase().includes('related'));
+                if (relatedKey && Array.isArray(jsonData[relatedKey])) {
+                    const relatedRows = jsonData[relatedKey]
+                        .filter(r => (r.C || r.item_id) && String(r.C).toLowerCase() !== "itemid" && String(r.C).toLowerCase() !== "sl#")
                         .map(r => {
                             const itemId = String(r.C || r.item_id);
                             const rels = [];
@@ -660,6 +669,7 @@
                     if (relatedRows.length > 0) {
                         const { error: rError } = await supabaseClient.from('related_items_map').insert(relatedRows);
                         if (!rError) totalImported += relatedRows.length;
+                        else console.error("Related items insert error:", rError);
                     }
                 }
 
