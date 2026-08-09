@@ -597,12 +597,17 @@ fetchOffers();
                     });
                 }
 
+                const displayOrderNo = order.order_number || 'ORD-XXXX';
+
                 const card = document.createElement('div');
                 card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col";
                 card.innerHTML = `
                     <div class="flex justify-between items-start mb-4">
                         <div>
-                            <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusColor}">${order.status}</span>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-red-50 text-red-600 px-2 py-0.5 rounded font-black text-xs">${displayOrderNo}</span>
+                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusColor}">${order.status}</span>
+                            </div>
                             <h3 class="font-bold text-gray-900 mt-2 text-lg">${order.order_type}</h3>
                             <p class="text-xs text-gray-400 font-medium">${date}</p>
                         </div>
