@@ -543,6 +543,19 @@
             
             <!-- LOGIN FIELDS -->
             <div id="auth-login-fields" class="flex flex-col gap-3 mt-2">
+                
+                <!-- NEW GOOGLE BUTTON -->
+                <button onclick="handleGoogleLogin()" class="w-full bg-white border border-gray-200 text-gray-700 font-bold py-3 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center justify-center gap-3 mb-1">
+                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"> Continue with Google
+                </button>
+                
+                <div class="flex items-center gap-3 mb-1 opacity-50">
+                    <div class="flex-1 h-px bg-gray-400"></div>
+                    <span class="text-[10px] font-bold uppercase">OR EMAIL</span>
+                    <div class="flex-1 h-px bg-gray-400"></div>
+                </div>
+                <!-- END GOOGLE BUTTON -->
+
                 <input type="email" id="auth-email-login" placeholder="Email Address" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
                 <input type="password" id="auth-password-login" placeholder="Password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
                 
@@ -858,6 +871,20 @@
                 setAuthMode('login'); // Send them back to the login screen
             }
             btn.innerHTML = originalHtml;
+        }
+async function handleGoogleLogin() {
+            // This securely redirects the user to Google's login page
+            const { data, error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    // Redirects them exactly back to your live restaurant page after logging in
+                    redirectTo: 'https://digidatas.github.io/Usthad-Indian-Family-Restaurant-Menu/'
+                }
+            });
+
+            if (error) {
+                alert("Error connecting to Google: " + error.message);
+            }
         }
 
         async function handleForgotPassword() {
