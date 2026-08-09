@@ -1961,9 +1961,15 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
 
             // Fetch Banners from Settings
             const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').eq('id', 1).maybeSingle();
-            if (setDb && setDb.banner_images) currentAdminBanners = [...setDb.banner_images];
+            if (setDb && setDb.banner_images) {
+                // Properly splits the text string from the database back into individual images
+                currentAdminBanners = typeof setDb.banner_images === 'string' 
+                    ? setDb.banner_images.split(',').map(u => u.trim()).filter(Boolean) 
+                    : [...setDb.banner_images];
+            } else {
+                currentAdminBanners = [];
+            }
             renderGlobalGallery('banner');
-        }
 
         function renderGlobalGallery(type) {
             const arr = type === 'banner' ? currentAdminBanners : currentAdminFlashcards;
@@ -2013,8 +2019,11 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             const doEn = document.getElementById('banner-lang-en').checked;
             const doAr = document.getElementById('banner-lang-ar').checked;
 
-            if (doEn) await supabaseClient.from('restaurant_settings').update({ banner_images: currentAdminBanners }).eq('id', 1);
-            if (doAr) await supabaseClient.from('restaurant_settings').update({ banner_images: currentAdminBanners }).eq('id', 2);
+            // CRITICAL FIX: Joins the array into a comma-separated string before sending to Supabase!
+            const bannerString = currentAdminBanners.join(',');
+
+            if (doEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerString }).eq('id', 1);
+            if (doAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerString }).eq('id', 2);
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
             alert("Banners successfully updated!");
