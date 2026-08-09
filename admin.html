@@ -432,12 +432,15 @@
                         <!-- Dynamic image thumbnails with delete buttons will be injected here -->
                     </div>
 
-                    <!-- 2. File Upload Button (Storage) -->
+                    <!-- 2. File Upload & Browse Storage Buttons -->
                     <div class="flex gap-2 mb-2">
-                        <label class="flex-1 bg-red-50 text-red-600 border border-red-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-sm">
-                            <i class="fas fa-cloud-upload-alt"></i> Upload New Images
+                        <label class="flex-1 bg-red-50 text-red-600 border border-red-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-sm text-center">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload New
                             <input type="file" id="form-image-file" multiple accept="image/*" class="hidden" onchange="handleMultipleStorageUpload(event)">
                         </label>
+                        <button type="button" onclick="openMediaLibrary()" class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-sm text-center">
+                            <i class="fas fa-folder-open"></i> Browse Bucket
+                        </button>
                     </div>
 
                     <!-- 3. Direct URL Input (Comma-Separated) -->
@@ -514,6 +517,20 @@
                 <button onclick="processJsonImport()" id="btn-import-json" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-md">
                     Import to Database
                 </button>
+            </div>
+        </div>
+    </div>
+<!-- ================= MODAL: STORAGE MEDIA LIBRARY ================= -->
+    <div id="mediaLibraryModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col h-[70vh]">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="font-bold text-lg text-gray-900"><i class="fas fa-images text-blue-500 me-2"></i> Select from Storage</h3>
+                <button onclick="closeMediaLibrary()" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1">
+                <div id="media-library-gallery" class="flex flex-wrap gap-4 justify-center">
+                    <!-- Images will load here -->
+                </div>
             </div>
         </div>
     </div>
@@ -1382,6 +1399,62 @@ syncGalleryFromInput();
                 alert('Import Error: ' + err.message);
                 document.getElementById('btn-import-json').innerHTML = 'Import to Database';
             }
+        }
+async function openMediaLibrary() {
+            document.getElementById('mediaLibraryModal').classList.remove('hidden');
+            document.getElementById('mediaLibraryModal').classList.add('flex');
+            
+            const gallery = document.getElementById('media-library-gallery');
+            gallery.innerHTML = '<div class="text-blue-500 font-bold mt-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Loading images from bucket...</div>';
+            
+            // Fetch the list of files inside the 'menu-images' bucket
+            const { data, error } = await supabaseClient.storage.from('menu-images').list('', {
+                limit: 100,
+                sortBy: { column: 'created_at', order: 'desc' }
+            });
+
+            if (error) {
+                gallery.innerHTML = `<span class="text-red-500">Error: ${error.message}</span>`;
+                return;
+            }
+
+            gallery.innerHTML = '';
+            if (!data || data.length === 0) {
+                gallery.innerHTML = '<span class="text-gray-400">No images found in your storage bucket.</span>';
+                return;
+            }
+
+            data.forEach(file => {
+                // Ignore hidden empty folder placeholders
+                if (file.name === '.emptyFolderPlaceholder') return;
+                
+                // Get the permanent URL for the file
+                const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(file.name);
+                const publicUrl = publicData.publicUrl;
+
+                const imgCard = document.createElement('div');
+                imgCard.className = "relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-blue-500 hover:shadow-md transition group shrink-0";
+                imgCard.innerHTML = `
+                    <img src="${publicUrl}" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-blue-500/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                        <i class="fas fa-plus text-white text-2xl"></i>
+                        <span class="text-white text-[10px] font-bold mt-1">Select</span>
+                    </div>
+                `;
+                
+                // When clicked, add it to the edit screen
+                imgCard.onclick = () => {
+                    currentEditingImages.push(publicUrl);
+                    renderImageGallery();
+                    closeMediaLibrary();
+                };
+                gallery.appendChild(imgCard);
+            });
+        }
+
+        function closeMediaLibrary() {
+            document.getElementById('mediaLibraryModal').classList.add('hidden');
+            document.getElementById('mediaLibraryModal').classList.remove('flex');
         }
 
         // --- CUSTOMER DIRECTORY & ANALYTICS ---
