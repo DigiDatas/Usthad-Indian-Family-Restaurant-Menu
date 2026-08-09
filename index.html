@@ -1914,48 +1914,38 @@ function setupVerticalDraggable(elementId) {
                 items.sort((a, b) => a.order - b.order);
                 renderSection(subCat, items, container, false);
                 
-                // Category 1 matches rawBrandRows index 1 (which is Excel Row 2)
+                // Increase counter to track where we are in the menu
                 categoryCount++;
 
-                // 2. Row-by-Row Banner Logic
-                if (window.rawBrandRows && window.rawBrandRows.length > categoryCount) {
-                    const rowData = window.rawBrandRows[categoryCount];
+                // 2. Supabase Live Banner Slider (Shows after EVERY category block)
+                let activeSettings = currentLang === 'ar' && window.dbSettingsAr ? window.dbSettingsAr : window.dbSettingsEn;
+                
+                if (activeSettings && activeSettings.banner_images) {
                     
-                    // Smart check: Reads Column O (or falls back to N if you switch language templates)
-                    const cellValue = rowData['O'] || rowData['N']; 
+                    // Parse the database string back into a usable array of URLs
+                    const rawBanners = activeSettings.banner_images;
+                    const bannerUrls = typeof rawBanners === 'string' ? rawBanners.split(',').map(u => u.trim()).filter(Boolean) : rawBanners;
                     
-                    if (cellValue) {
-                        const bannerUrls = String(cellValue).split(',').map(u => {
-                            let clean = u.trim();
-                            if (!clean) return null;
-                            // If you typed a file name like "Banner01.jpg", auto-attach the GitHub directory!
-                            if (!clean.startsWith('http')) {
-                                return `https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/banner/${clean}`;
-                            }
-                            return clean; // If you typed http://..., leave it alone!
-                        }).filter(u => u !== null);
-
-                        if (bannerUrls.length > 0) {
-                            const bannerDiv = document.createElement('div');
-                            bannerDiv.className = "w-full aspect-[3/1] rounded-2xl overflow-hidden shadow-md relative mb-6";
-                            
-                            let imagesHtml = '';
-                            bannerUrls.forEach(url => {
-                                imagesHtml += `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="this.remove()">`;
-                            });
-                            
-                            // INFINITE LOOP FIX: Clone the first image
-                            if (bannerUrls.length > 1) {
-                                imagesHtml += `<img src="${bannerUrls[0]}" class="w-full h-full object-cover shrink-0 snap-center" data-is-clone="true" onerror="this.remove()">`;
-                            }
-
-                            bannerDiv.innerHTML = `
-                                <div class="excel-banner-slider flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
-                                    ${imagesHtml}
-                                </div>
-                            `;
-                            container.appendChild(bannerDiv);
+                    if (bannerUrls && bannerUrls.length > 0) {
+                        const bannerDiv = document.createElement('div');
+                        bannerDiv.className = "w-full aspect-[3/1] rounded-2xl overflow-hidden shadow-md relative mb-6";
+                        
+                        let imagesHtml = '';
+                        bannerUrls.forEach(url => {
+                            imagesHtml += `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="this.remove()">`;
+                        });
+                        
+                        // INFINITE LOOP FIX: Clone the first image for seamless scrolling
+                        if (bannerUrls.length > 1) {
+                            imagesHtml += `<img src="${bannerUrls[0]}" class="w-full h-full object-cover shrink-0 snap-center" data-is-clone="true" onerror="this.remove()">`;
                         }
+
+                        bannerDiv.innerHTML = `
+                            <div class="excel-banner-slider flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
+                                ${imagesHtml}
+                            </div>
+                        `;
+                        container.appendChild(bannerDiv);
                     }
                 }
             }
