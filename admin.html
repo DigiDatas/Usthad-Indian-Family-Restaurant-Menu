@@ -1044,8 +1044,31 @@ fetchOffers();
             const flash = document.getElementById('form-flash').value.trim();
             const isSpecial = document.getElementById('form-special').checked;
             const relatedInput = document.getElementById('form-related').value.trim();
-            
-            let imgUrlsArray = [...currentEditingImages];
+
+            if (!name || !mainCat || !subCat || isNaN(price) || !itemCode) {
+                alert('Please fill out all required fields (Item Code, Name, Main Category, Sub Category, Price).');
+                return;
+            }
+
+            const btn = document.getElementById('btn-save-item');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+
+            // ==========================================
+            // 🛑 SMART DUPLICATE CHECKER
+            // ==========================================
+            const { data: existingItem } = await supabaseClient
+                .from('menu_items')
+                .select('id')
+                .eq('item_code', itemCode)
+                .eq('language', language)
+                .maybeSingle();
+
+            if (existingItem && String(existingItem.id) !== String(id)) {
+                alert(`⚠️ WAIT! An item with the code "${itemCode}" already exists for ${language.toUpperCase()}. Please use a unique Item Code.`);
+                btn.innerHTML = 'Save Item';
+                return; 
+            }
+            // ==========================================
 
             // 1. Save Menu Item
             const payload = {
@@ -1063,7 +1086,8 @@ fetchOffers();
                 review_links: reviews,
                 flash_cards: flash,
                 is_today_special: isSpecial,
-                img_urls: imgUrlsArray
+                // THIS LINE GRABS YOUR EXACT DRAGGABLE GALLERY ORDER!
+                img_urls: [...currentEditingImages] 
             };
 
             let saveError;
