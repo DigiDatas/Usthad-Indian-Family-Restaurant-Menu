@@ -1929,9 +1929,18 @@ function setupVerticalDraggable(elementId) {
                 
                 if (activeSettings && activeSettings.banner_images) {
                     
-                    // Parse the database string back into a usable array of URLs
-                    const rawBanners = activeSettings.banner_images;
-                    const bannerUrls = typeof rawBanners === 'string' ? rawBanners.split(',').map(u => u.trim()).filter(Boolean) : rawBanners;
+                    // Extracts the array natively
+                    let rawBanners = activeSettings.banner_images;
+                    let parsedBanners = Array.isArray(rawBanners) ? rawBanners : (typeof rawBanners === 'string' ? rawBanners.split(',').map(u => u.trim()).filter(Boolean) : []);
+                    
+                    // Re-attaches your GitHub URL if you used a legacy filename like "Banner01.jpg"
+                    const bannerUrls = parsedBanners.map(u => {
+                        let clean = u.trim();
+                        if (!clean.startsWith('http')) {
+                            return `https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/banner/${clean}`;
+                        }
+                        return clean;
+                    }).filter(Boolean);
                     
                     if (bannerUrls && bannerUrls.length > 0) {
                         const bannerDiv = document.createElement('div');
