@@ -1962,10 +1962,10 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             // Fetch Banners from Settings
             const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').eq('id', 1).maybeSingle();
             if (setDb && setDb.banner_images) {
-                // Properly splits the text string from the database back into individual images
-                currentAdminBanners = typeof setDb.banner_images === 'string' 
-                    ? setDb.banner_images.split(',').map(u => u.trim()).filter(Boolean) 
-                    : [...setDb.banner_images];
+                // Extracts the native text[] array directly from Supabase
+                currentAdminBanners = Array.isArray(setDb.banner_images) 
+                    ? [...setDb.banner_images] 
+                    : setDb.banner_images.split(',').map(u => u.trim()).filter(Boolean);
             } else {
                 currentAdminBanners = [];
             }
@@ -2020,11 +2020,11 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             const doEn = document.getElementById('banner-lang-en').checked;
             const doAr = document.getElementById('banner-lang-ar').checked;
 
-            // CRITICAL FIX: Joins the array into a comma-separated string before sending to Supabase!
-            const bannerString = currentAdminBanners.join(',');
+            // Sends the native JavaScript array directly to the text[] column
+            const bannerArray = [...currentAdminBanners];
 
-            if (doEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerString }).eq('id', 1);
-            if (doAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerString }).eq('id', 2);
+            if (doEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', 1);
+            if (doAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', 2);
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
             alert("Banners successfully updated!");
