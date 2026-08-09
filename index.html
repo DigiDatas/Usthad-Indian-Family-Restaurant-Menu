@@ -801,6 +801,13 @@
             
             if (session) {
                 currentUser = session.user;
+
+                // NEW: Automatically redirect admins to the Admin Suite!
+                if (currentUser.app_metadata && currentUser.app_metadata.is_admin === true) {
+                    window.location.href = 'admin.html';
+                    return; // Stop running the rest of the customer logic
+                }
+
                 if(btnNavLogin) btnNavLogin.classList.replace('flex', 'hidden');
                 if(btnNavProfile) btnNavProfile.classList.replace('hidden', 'flex');
                 
