@@ -1100,6 +1100,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                 if (menuData && menuData.length > 0) {
                     activeMenuData = menuData.map(item => ({
                         id: item.id,
+			itemCode: item.item_code,
                         mainCat: item.main_cat,
                         subCat: item.sub_cat,
                         name: item.name,
@@ -1135,6 +1136,10 @@ let relatedItemsData = []; // (You did this perfectly!)
                     rawBranding.I = window.dbSettingsEn.location_url;
                     if(window.dbSettingsEn.logo_link) rawBranding.smartLogo = window.dbSettingsEn.logo_link;
                 }
+// --- NEW: FETCH LIVE RELATED ITEMS FROM DATABASE ---
+                const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
+                window.liveRelatedItems = relDbData || [];
+                // ----------------------------------------------
                 // ----------------------------------------------
 
                 document.getElementById('loading-state').classList.add('hidden');
@@ -2273,27 +2278,26 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
                 reviewArea.classList.remove('flex');
             }
 
-            // --- NEW: RELATED ITEMS LOGIC ---
+            // --- NEW: RELATED ITEMS LOGIC (Supabase Database) ---
             const relatedArea = document.getElementById('modalRelatedArea');
             const relatedSlider = document.getElementById('related-slider');
             relatedSlider.innerHTML = '';
             
-            const relatedRow = relatedItemsData.find(row => String(row['C']).trim() === String(item.id).trim());
+            // Find the mapped relation using the item's custom itemCode (e.g. ITM001)
+            const relatedRow = window.liveRelatedItems.find(row => String(row.item_id) === String(item.itemCode));
             
-            if (relatedRow) {
-                let relatedIDs = [];
-                ['D','E','F','G','H','I','J','K','L','M'].forEach(col => {
-                    if (relatedRow[col]) relatedIDs.push(String(relatedRow[col]).trim());
-                });
+            if (relatedRow && relatedRow.related_item_ids && relatedRow.related_item_ids.length > 0) {
+                const relatedIDs = relatedRow.related_item_ids; // Array of item codes like ["ITM002", "ITM005"]
 
-                const matchedItems = activeMenuData.filter(menuItem => relatedIDs.includes(String(menuItem.id))).slice(0, 10);
+                // Find the actual food items in the menu that match those codes
+                const matchedItems = activeMenuData.filter(menuItem => relatedIDs.includes(String(menuItem.itemCode))).slice(0, 10);
 
                 if (matchedItems.length > 0) {
                     matchedItems.forEach(relItem => {
                         relatedSlider.innerHTML += `
                             <div class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
                                 <div onclick="openModal('${relItem.id}')">
-                                    <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5" onerror="if(this.src.includes('.jpg')) { this.src=this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src=this.src.replace('.png', '.jpeg'); } else { this.onerror=null; this.src='${rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'}'; }">
+                                    <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
                                     <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1">${relItem.name}</h4>
                                 </div>
                                 <div class="flex justify-between items-center mt-1">
