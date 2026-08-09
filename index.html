@@ -1942,44 +1942,45 @@ function setupVerticalDraggable(elementId) {
                 // Increase counter to track where we are in the menu
                 categoryCount++;
 
-                // 2. Supabase Live Banner Slider (Shows after EVERY category block)
+                // 2. Supabase Live Banner Slider (Matches Slot Index to Category Count)
                 let activeSettings = currentLang === 'ar' && window.dbSettingsAr ? window.dbSettingsAr : window.dbSettingsEn;
                 
-                if (activeSettings && activeSettings.banner_images) {
+                // Subtract 1 because Arrays start at 0 (Category 1 gets Banner Slot 0)
+                const sectionIndex = categoryCount - 1;
+                
+                if (activeSettings && activeSettings.banner_images && Array.isArray(activeSettings.banner_images)) {
                     
-                    // Extracts the array natively
-                    let rawBanners = activeSettings.banner_images;
-                    let parsedBanners = Array.isArray(rawBanners) ? rawBanners : (typeof rawBanners === 'string' ? rawBanners.split(',').map(u => u.trim()).filter(Boolean) : []);
+                    // Grab the specific string of URLs for THIS category block
+                    const sectionBannerStr = activeSettings.banner_images[sectionIndex];
                     
-                    // Re-attaches your GitHub URL if you used a legacy filename like "Banner01.jpg"
-                    const bannerUrls = parsedBanners.map(u => {
-                        let clean = u.trim();
-                        if (!clean.startsWith('http')) {
-                            return `https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/banner/${clean}`;
-                        }
-                        return clean;
-                    }).filter(Boolean);
-                    
-                    if (bannerUrls && bannerUrls.length > 0) {
-                        const bannerDiv = document.createElement('div');
-                        bannerDiv.className = "w-full aspect-[3/1] rounded-2xl overflow-hidden shadow-md relative mb-6";
-                        
-                        let imagesHtml = '';
-                        bannerUrls.forEach(url => {
-                            imagesHtml += `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="this.remove()">`;
+                    // Check if this slot exists and actually contains URLs
+                    if (sectionBannerStr && sectionBannerStr.trim() !== "") {
+                        const bannerUrls = sectionBannerStr.split(',').map(u => u.trim()).filter(Boolean).map(u => {
+                            if (!u.startsWith('http')) return `https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/banner/${u}`;
+                            return u;
                         });
-                        
-                        // INFINITE LOOP FIX: Clone the first image for seamless scrolling
-                        if (bannerUrls.length > 1) {
-                            imagesHtml += `<img src="${bannerUrls[0]}" class="w-full h-full object-cover shrink-0 snap-center" data-is-clone="true" onerror="this.remove()">`;
-                        }
 
-                        bannerDiv.innerHTML = `
-                            <div class="excel-banner-slider flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
-                                ${imagesHtml}
-                            </div>
-                        `;
-                        container.appendChild(bannerDiv);
+                        if (bannerUrls.length > 0) {
+                            const bannerDiv = document.createElement('div');
+                            bannerDiv.className = "w-full aspect-[3/1] rounded-2xl overflow-hidden shadow-md relative mb-6";
+                            
+                            let imagesHtml = '';
+                            bannerUrls.forEach(url => {
+                                imagesHtml += `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="this.remove()">`;
+                            });
+                            
+                            // INFINITE LOOP FIX: Clone the first image for seamless scrolling
+                            if (bannerUrls.length > 1) {
+                                imagesHtml += `<img src="${bannerUrls[0]}" class="w-full h-full object-cover shrink-0 snap-center" data-is-clone="true" onerror="this.remove()">`;
+                            }
+
+                            bannerDiv.innerHTML = `
+                                <div class="excel-banner-slider flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
+                                    ${imagesHtml}
+                                </div>
+                            `;
+                            container.appendChild(bannerDiv);
+                        }
                     }
                 }
             }
