@@ -531,19 +531,59 @@
 <!-- Authentication Modal -->
     <div id="authModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
         <div class="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-center">
+            
+            <!-- Close Button for Guests -->
+            <button onclick="closeAuthModal()" class="absolute top-3 end-3 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition"><i class="fas fa-times"></i></button>
+
             <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2">
                 <i class="fas fa-user-circle text-3xl"></i>
             </div>
-            <h2 class="text-2xl font-black text-gray-900">Welcome!</h2>
-            <p class="text-sm text-gray-500 font-medium">Please sign in or continue as a guest to start ordering.</p>
+            <h2 id="auth-title" class="text-2xl font-black text-gray-900">Welcome Back!</h2>
+            <p id="auth-subtitle" class="text-sm text-gray-500 font-medium">Please sign in to continue.</p>
             
-            <div class="flex flex-col gap-3 mt-2">
-                <input type="email" id="auth-email" placeholder="Email Address" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
-                <input type="password" id="auth-password" placeholder="Password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+            <!-- LOGIN FIELDS -->
+            <div id="auth-login-fields" class="flex flex-col gap-3 mt-2">
+                <input type="email" id="auth-email-login" placeholder="Email Address" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                <input type="password" id="auth-password-login" placeholder="Password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
                 
-                <button onclick="handleEmailLogin()" id="btn-email-login" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-600 transition flex items-center justify-center gap-2">
-                    <i class="fas fa-envelope"></i> Login / Sign Up
+                <div class="text-end">
+                    <button onclick="setAuthMode('reset')" class="text-xs font-bold text-red-500 hover:text-red-600 transition">Forgot Password?</button>
+                </div>
+                
+                <button onclick="handleLogin()" id="btn-login" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-600 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i> Login
                 </button>
+                <p class="text-xs text-gray-500 mt-2">Don't have an account? <button onclick="setAuthMode('signup')" class="font-bold text-red-500">Sign Up</button></p>
+            </div>
+
+            <!-- SIGNUP FIELDS -->
+            <div id="auth-signup-fields" class="hidden flex-col gap-3 mt-2 text-start">
+                <input type="text" id="auth-name" placeholder="Full Name *" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                <input type="tel" id="auth-phone" placeholder="Phone Number / WhatsApp *" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                <div class="flex gap-3">
+                    <input type="number" id="auth-age" placeholder="Age" class="w-1/2 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                    <select id="auth-gender" class="w-1/2 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50 text-gray-500">
+                        <option value="">Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                    </select>
+                </div>
+                <input type="email" id="auth-email-signup" placeholder="Email Address *" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                <input type="password" id="auth-password-signup" placeholder="Create Password *" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                
+                <button onclick="handleSignUp()" id="btn-signup" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-600 transition flex items-center justify-center gap-2 mt-2">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+                <p class="text-xs text-gray-500 mt-2 text-center">Already have an account? <button onclick="setAuthMode('login')" class="font-bold text-red-500">Login</button></p>
+            </div>
+
+            <!-- RESET PASSWORD FIELDS -->
+            <div id="auth-reset-fields" class="hidden flex-col gap-3 mt-2">
+                <input type="email" id="auth-email-reset" placeholder="Enter your registered email" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
+                <button onclick="handleForgotPassword()" id="btn-reset" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition flex items-center justify-center gap-2">
+                    <i class="fas fa-envelope"></i> Send Reset Link
+                </button>
+                <p class="text-xs text-gray-500 mt-2">Remembered your password? <button onclick="setAuthMode('login')" class="font-bold text-red-500">Back to Login</button></p>
             </div>
 
             <div class="flex items-center gap-3 my-2 opacity-50">
@@ -552,8 +592,8 @@
                 <div class="flex-1 h-px bg-gray-400"></div>
             </div>
 
-            <button onclick="handleGuestLogin()" id="btn-guest-login" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition flex items-center justify-center gap-2">
-                <i class="fas fa-user-secret"></i> Continue as Guest
+            <button onclick="handleGuestLogin()" id="btn-guest-login" class="w-full bg-gray-100 text-gray-700 font-bold py-3 rounded-xl shadow-sm hover:bg-gray-200 transition flex items-center justify-center gap-2">
+                <i class="fas fa-eye"></i> Just Browsing (Guest)
             </button>
         </div>
     </div>
@@ -742,29 +782,101 @@
             btn.innerHTML = `<i class="fas fa-user-secret"></i> Continue as Guest`;
         }
 
-        async function handleEmailLogin() {
-            const email = document.getElementById('auth-email').value;
-            const password = document.getElementById('auth-password').value;
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.replace('flex', 'hidden');
+        }
+
+        function setAuthMode(mode) {
+            document.getElementById('auth-login-fields').classList.replace('flex', 'hidden');
+            document.getElementById('auth-signup-fields').classList.replace('flex', 'hidden');
+            document.getElementById('auth-reset-fields').classList.replace('flex', 'hidden');
+
+            if (mode === 'login') {
+                document.getElementById('auth-login-fields').classList.replace('hidden', 'flex');
+                document.getElementById('auth-title').textContent = "Welcome Back!";
+                document.getElementById('auth-subtitle').textContent = "Please sign in to continue.";
+            } else if (mode === 'signup') {
+                document.getElementById('auth-signup-fields').classList.replace('hidden', 'flex');
+                document.getElementById('auth-title').textContent = "Create Account";
+                document.getElementById('auth-subtitle').textContent = "Join us to save your details.";
+            } else if (mode === 'reset') {
+                document.getElementById('auth-reset-fields').classList.replace('hidden', 'flex');
+                document.getElementById('auth-title').textContent = "Reset Password";
+                document.getElementById('auth-subtitle').textContent = "We'll send you a recovery link.";
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('auth-email-login').value;
+            const password = document.getElementById('auth-password-login').value;
             if (!email || !password) return alert("Please enter both email and password.");
             
-            const btn = document.getElementById('btn-email-login');
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Loading...`;
+            const btn = document.getElementById('btn-login');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Logging in...`;
             
-            // Try to sign in first
-            let { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             
-            // If the account doesn't exist, create it instantly!
-            if (error && error.message.includes("Invalid login")) {
-                const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
-                if (signUpError) alert("Error: " + signUpError.message);
-                else checkSession();
-            } else if (error) {
+            if (error) alert("Error: " + error.message);
+            else checkSession();
+            
+            btn.innerHTML = originalHtml;
+        }
+
+        async function handleSignUp() {
+            const name = document.getElementById('auth-name').value;
+            const phone = document.getElementById('auth-phone').value;
+            const age = document.getElementById('auth-age').value;
+            const gender = document.getElementById('auth-gender').value;
+            const email = document.getElementById('auth-email-signup').value;
+            const password = document.getElementById('auth-password-signup').value;
+
+            if (!name || !phone || !email || !password) return alert("Please fill all required fields (*).");
+
+            const btn = document.getElementById('btn-signup');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Creating...`;
+
+            // Registers user and saves custom profile details into Supabase Auth Meta Data
+            const { error } = await supabaseClient.auth.signUp({
+                email: email,
+                password: password,
+                options: {
+                    data: {
+                        name: name,
+                        phone: phone,
+                        age: age,
+                        gender: gender
+                    }
+                }
+            });
+
+            if (error) {
                 alert("Error: " + error.message);
             } else {
-                checkSession();
+                alert("Success! Please check your email inbox to verify your account before logging in.");
+                setAuthMode('login'); // Send them back to the login screen
             }
-            
-            btn.innerHTML = `<i class="fas fa-envelope"></i> Login / Sign Up`;
+            btn.innerHTML = originalHtml;
+        }
+
+        async function handleForgotPassword() {
+            const email = document.getElementById('auth-email-reset').value;
+            if (!email) return alert("Please enter your registered email address.");
+
+            const btn = document.getElementById('btn-reset');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending...`;
+
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+
+            if (error) {
+                alert("Error: " + error.message);
+            } else {
+                alert("Password reset link sent! Please check your email.");
+                setAuthMode('login');
+            }
+            btn.innerHTML = originalHtml;
         }
 
         // Trigger the check when the page finishes loading
@@ -2623,6 +2735,12 @@ function toggleQuickCart(id) {
                 logo.classList.remove('hidden');
             }
 
+            // AUTO-FILL LOGGED-IN CUSTOMER DATA
+            if (currentUser && currentUser.user_metadata) {
+                document.getElementById('order-customer-name').value = currentUser.user_metadata.name || '';
+                document.getElementById('order-customer-phone').value = currentUser.user_metadata.phone || '';
+            }
+
             const modal = document.getElementById('cartModal');
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -2667,6 +2785,15 @@ function toggleQuickCart(id) {
         // UPDATED: Sends order to Supabase AND WhatsApp
         async function sendOrderViaWhatsApp() {
             if(cart.length === 0 || !rawBranding.D) return;
+            
+            // BLOCK GUESTS FROM ORDERING: Only real accounts have an email attached
+            if (!currentUser || !currentUser.email) {
+                alert("Please log in or register a free account to complete your order.");
+                closeCartModal();
+                setAuthMode('signup');
+                document.getElementById('authModal').classList.replace('hidden', 'flex');
+                return; // Stop the order process
+            }
             
             const restaurantName = rawBranding.B || 'Our Store';
             const orderDate = new Date().toLocaleString('en-US', { 
