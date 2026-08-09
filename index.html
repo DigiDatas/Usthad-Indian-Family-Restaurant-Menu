@@ -2711,6 +2711,9 @@ function toggleQuickCart(id) {
                 return;
             }
 
+            // Generate a unique order number (e.g. ORD-8492)
+            const uniqueOrderNo = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+
             // ==========================================
             // 🔒 SAVE ORDER TO SUPABASE DATABASE
             // ==========================================
@@ -2719,14 +2722,14 @@ function toggleQuickCart(id) {
                 const originalBtnHtml = btn.innerHTML;
                 btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Saving Order...`;
                 
-                // Insert into the 'orders' table including customer name & phone
                 const { error } = await supabaseClient
                     .from('orders')
                     .insert([{
+                        order_number: uniqueOrderNo, // <--- SAVES UNIQUE ORDER NUMBER
                         customer_id: currentUser ? currentUser.id : 'guest',
                         customer_name: customerName,
                         customer_phone: customerPhone,
-                        customer_email: currentUser ? currentUser.email : null, // <--- SAVES LOGGED-IN EMAIL
+                        customer_email: currentUser ? currentUser.email : null,
                         order_type: diningType,
                         table_number: diningType === 'Dine In' ? selectedTable : null,
                         delivery_address: addressInput || null,
@@ -2748,7 +2751,7 @@ function toggleQuickCart(id) {
             // ==========================================
             // BUILD WHATSAPP MESSAGE
             // ==========================================
-            let msg = `🧾 *NEW ORDER*\n`;
+            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; // <--- SHOWS ORDER NUMBER IN WHATSAPP
             msg += `👤 Name: *${customerName}*\n`;
             msg += `📞 Phone: ${customerPhone}\n`;
             msg += `📅 Date: ${orderDate}\n`;
@@ -2772,12 +2775,10 @@ function toggleQuickCart(id) {
 
             closeCartModal();
             
-            // Empty the cart after ordering
             cart = [];
             updateCartUI();
 
             window.location.href = `https://wa.me/${rawBranding.D}?text=${encodeURIComponent(msg)}`;
-        }
 
         // --- REWORKED: DEDICATED CATEGORY POPUP LOGIC ---
         function openCategoryPage(title, isHighlight) {
