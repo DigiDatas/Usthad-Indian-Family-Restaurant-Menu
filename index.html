@@ -2711,7 +2711,7 @@ function toggleQuickCart(id) {
                 return;
             }
 
-            // Generate a unique order number (e.g. ORD-8492)
+            // 1. GENERATE UNIQUE ORDER NUMBER HERE
             const uniqueOrderNo = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
 
             // ==========================================
@@ -2725,7 +2725,7 @@ function toggleQuickCart(id) {
                 const { error } = await supabaseClient
                     .from('orders')
                     .insert([{
-                        order_number: uniqueOrderNo, // <--- SAVES UNIQUE ORDER NUMBER
+                        order_number: uniqueOrderNo, // <--- SAVES TO DATABASE COLUMN
                         customer_id: currentUser ? currentUser.id : 'guest',
                         customer_name: customerName,
                         customer_phone: customerPhone,
@@ -2751,7 +2751,7 @@ function toggleQuickCart(id) {
             // ==========================================
             // BUILD WHATSAPP MESSAGE
             // ==========================================
-            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; // <--- SHOWS ORDER NUMBER IN WHATSAPP
+            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; // <--- SHOWS IN WHATSAPP
             msg += `👤 Name: *${customerName}*\n`;
             msg += `📞 Phone: ${customerPhone}\n`;
             msg += `📅 Date: ${orderDate}\n`;
@@ -2779,6 +2779,7 @@ function toggleQuickCart(id) {
             updateCartUI();
 
             window.location.href = `https://wa.me/${rawBranding.D}?text=${encodeURIComponent(msg)}`;
+        }
 
         // --- REWORKED: DEDICATED CATEGORY POPUP LOGIC ---
         function openCategoryPage(title, isHighlight) {
