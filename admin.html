@@ -249,16 +249,16 @@
                     <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer"><input type="checkbox" id="banner-lang-ar" checked class="w-4 h-4 text-red-600 rounded"> Arabic App</label>
                 </div>
 
-                <div id="banner-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[80px] p-3 bg-gray-50 border border-gray-200 rounded-xl"></div>
-                
-                <div class="flex gap-2">
-                    <button type="button" onclick="openMediaLibrary('banner')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-100 transition shadow-sm">
-                        <i class="fas fa-folder-open"></i> Browse Storage
-                    </button>
-                    <input type="text" id="form-banner-input" placeholder="Paste external image URL..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="addExternalGalleryUrl('banner')" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition">Add URL</button>
+                <!-- Dynamic Banner Sections Container -->
+                <div id="banner-sections-container" class="space-y-4 mt-4">
+                    <!-- Javascript will automatically inject the banner sections here -->
                 </div>
-            </div>
+                
+                <!-- NEW ADD SECTION BUTTON -->
+                <button type="button" onclick="addBannerSection()" class="w-full mt-4 bg-white text-blue-600 border-2 border-blue-200 border-dashed rounded-xl px-4 py-3 text-sm font-bold hover:bg-blue-50 transition shadow-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-plus-circle text-lg"></i> Add New Banner Section
+                </button>
+            </div> <!-- 🔴 YOU JUST NEED TO ADD THIS CLOSING DIV HERE! 🔴 -->
 
             <!-- 3. FLASH CARDS MANAGER -->
             <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
@@ -1469,10 +1469,12 @@ fetchOffers();
                 document.getElementById('btn-import-json').innerHTML = 'Import to Database';
             }
         }
-let currentMediaTarget = 'product'; // Tracks which gallery requested storage
+let currentMediaTarget = 'product'; 
+        let currentBannerIndex = 0; // NEW tracker
         
-        async function openMediaLibrary(target = 'product') {
+        async function openMediaLibrary(target = 'product', sectionIndex = 0) {
             currentMediaTarget = target;
+            currentBannerIndex = sectionIndex; 
             document.getElementById('mediaLibraryModal').classList.remove('hidden');
             document.getElementById('mediaLibraryModal').classList.add('flex');
             
@@ -1501,10 +1503,10 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
                 `;
                 
                 imgCard.onclick = () => {
-                    // Route the image to the correct array
+                    // Route the image to the correct array and section
                     if (currentMediaTarget === 'product') { currentEditingImages.push(publicUrl); renderImageGallery(); }
                     else if (currentMediaTarget === 'related') { currentEditingRelated.push(publicUrl); renderRelatedGallery(); }
-                    else if (currentMediaTarget === 'banner') { currentAdminBanners.push(publicUrl); renderGlobalGallery('banner'); }
+                    else if (currentMediaTarget === 'banner') { currentAdminBanners[currentBannerIndex].push(publicUrl); renderGlobalGallery('banner', currentBannerIndex); }
                     else if (currentMediaTarget === 'flashcard') { currentAdminFlashcards.push(publicUrl); renderGlobalGallery('flashcard'); }
                     closeMediaLibrary();
                 };
@@ -1906,8 +1908,78 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
         // NEW GALLERIES ENGINE (Related, Banners, Flashcards)
         // ==========================================
         let currentEditingRelated = [];
-        let currentAdminBanners = [];
+        let currentAdminBanners = []; // Starts empty, fills dynamically!
         let currentAdminFlashcards = [];
+
+        function renderBannerSectionsUI() {
+            const container = document.getElementById('banner-sections-container');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            // Loops dynamically based on how many arrays exist!
+            for(let i = 0; i < currentAdminBanners.length; i++) {
+                container.innerHTML += `
+                    <div class="banner-section-block border border-gray-200 rounded-xl p-4 bg-gray-50 shadow-sm relative group">
+                        <div class="flex justify-between items-center mb-2 border-b border-gray-200 pb-2">
+                            <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
+                                <i class="fas fa-grip-vertical text-gray-400 hover:text-blue-500 cursor-grab section-drag-handle transition"></i>
+                                <i class="fas fa-layer-group text-blue-500"></i> Section ${i + 1} 
+                                <span class="text-xs text-gray-400 font-normal hidden sm:inline">(Displays below Category ${i + 1})</span>
+                            </h4>
+                            <button type="button" onclick="deleteBannerSection(${i})" class="text-red-400 hover:text-red-600 transition" title="Delete Entire Section">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div id="banner-preview-gallery-${i}" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl"></div>
+                        <div class="flex gap-2">
+                            <button type="button" onclick="openMediaLibrary('banner', ${i})" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-100 transition shadow-sm whitespace-nowrap">
+                                <i class="fas fa-folder-open"></i> Browse
+                            </button>
+                            <input type="text" id="form-banner-input-${i}" placeholder="Paste URLs here..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                            <button type="button" onclick="addExternalGalleryUrl('banner', ${i})" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition whitespace-nowrap">Add URL</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Make the entire sections draggable up and down!
+            if (window.sectionsSortable) window.sectionsSortable.destroy();
+            window.sectionsSortable = new Sortable(container, {
+                animation: 150,
+                handle: '.section-drag-handle',
+                ghostClass: 'opacity-50',
+                onEnd: function (evt) {
+                    // Swap the arrays natively in JavaScript
+                    const movedItem = currentAdminBanners.splice(evt.oldIndex, 1)[0];
+                    currentAdminBanners.splice(evt.newIndex, 0, movedItem);
+                    
+                    // Re-render everything so the UI numbering stays accurate
+                    renderBannerSectionsUI();
+                    for(let k = 0; k < currentAdminBanners.length; k++) {
+                        renderGlobalGallery('banner', k);
+                    }
+                }
+            });
+        }
+
+        // Feature: Add a new Section Box
+        function addBannerSection() {
+            currentAdminBanners.push([]); 
+            renderBannerSectionsUI(); 
+            for(let i = 0; i < currentAdminBanners.length; i++) {
+                renderGlobalGallery('banner', i);
+            }
+        }
+        
+        // Feature: Delete a Section Box
+        function deleteBannerSection(index) {
+            if(!confirm("Are you sure you want to delete this entire banner section?")) return;
+            currentAdminBanners.splice(index, 1);
+            renderBannerSectionsUI();
+            for(let i = 0; i < currentAdminBanners.length; i++) {
+                renderGlobalGallery('banner', i);
+            }
+        }
 
         function renderRelatedGallery() {
             const gallery = document.getElementById('related-preview-gallery');
@@ -1936,45 +2008,59 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             input.value = ''; renderRelatedGallery();
         }
 
-        // BANNERS & FLASHCARDS LOGIC
         async function fetchOffers() {
-            // Original offers fetch (Keep this)
             const tbody = document.getElementById('offers-table-body');
             const { data, error } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
             allOffers = data || [];
             
-            // Render Special Offers Table
             tbody.innerHTML = '';
             if (allOffers.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No active offers.</td></tr>`;
             else {
-                allOffers.forEach(o => {
+                allOffers.filter(o => o.offer_name !== 'Hidden System Row').forEach(o => {
                     const img = o.image_url ? `<img src="${o.image_url}" class="w-12 h-8 object-cover rounded shadow-sm">` : `<div class="w-12 h-8 bg-gray-100 rounded text-center text-[10px] text-gray-400 pt-1">No Img</div>`;
                     tbody.innerHTML += `<tr class="hover:bg-gray-50 transition"><td class="p-3">${img}</td><td class="p-3 font-bold text-gray-900">${o.offer_name}</td><td class="p-3 text-gray-400 line-through">${o.price_before || '-'}</td><td class="p-3 font-black text-green-600">${o.price_after || '-'}</td><td class="p-3 text-end"><button onclick="openOfferModal('edit', '${o.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 me-1"><i class="fas fa-pen text-xs"></i></button><button onclick="deleteOffer('${o.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600"><i class="fas fa-trash-alt text-xs"></i></button></td></tr>`;
                 });
             }
 
-            // FETCH FLASHCARDS: Look for the first row that actually contains flashcards
             const flashcardRow = allOffers.find(o => o.flashcard);
             if (flashcardRow) {
                 currentAdminFlashcards = flashcardRow.flashcard.split(',').map(u=>u.trim()).filter(Boolean);
             } else { currentAdminFlashcards = []; }
             renderGlobalGallery('flashcard');
 
-            // FETCH BANNERS: Uses dynamic fetching instead of hardcoding "ID 1"
+            // FETCH BANNERS: Unlimited Dynamic Sections Strategy
             const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').order('id', { ascending: true }).limit(1).maybeSingle();
-            if (setDb && setDb.banner_images) {
-                currentAdminBanners = Array.isArray(setDb.banner_images) 
-                    ? [...setDb.banner_images] 
-                    : setDb.banner_images.split(',').map(u => u.trim()).filter(Boolean);
-            } else {
-                currentAdminBanners = [];
+            
+            currentAdminBanners = []; // Reset clean
+            
+            if (setDb && setDb.banner_images && Array.isArray(setDb.banner_images)) {
+                for(let i = 0; i < setDb.banner_images.length; i++) {
+                    if (setDb.banner_images[i]) {
+                        currentAdminBanners.push(setDb.banner_images[i].split(',').map(u => u.trim()).filter(Boolean));
+                    } else {
+                        currentAdminBanners.push([]); // Keep empty slots intact
+                    }
+                }
             }
-            renderGlobalGallery('banner');
+            
+            // Start with exactly 5 sections by default if the database has less than 5!
+            while (currentAdminBanners.length < 5) {
+                currentAdminBanners.push([]);
+            }
+
+            renderBannerSectionsUI(); // Draw UI
+            for(let i = 0; i < currentAdminBanners.length; i++) {
+                renderGlobalGallery('banner', i); // Load the images into the sections
+            }
         }
 
-        function renderGlobalGallery(type) {
-            const arr = type === 'banner' ? currentAdminBanners : currentAdminFlashcards;
-            const gallery = document.getElementById(`${type}-preview-gallery`);
+        // Updated Render Engine to handle multiple section indexes
+        function renderGlobalGallery(type, sectionIndex = 0) {
+            const arr = type === 'banner' ? currentAdminBanners[sectionIndex] : currentAdminFlashcards;
+            const galleryId = type === 'banner' ? `banner-preview-gallery-${sectionIndex}` : `flashcard-preview-gallery`;
+            const gallery = document.getElementById(galleryId);
+            if (!gallery) return;
+
             gallery.innerHTML = '';
             
             if (arr.length === 0) {
@@ -1985,32 +2071,48 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
                 const thumb = document.createElement('div');
                 thumb.className = "relative w-20 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 cursor-grab sortable-thumb";
                 thumb.dataset.url = url; 
-                thumb.innerHTML = `<img src="${url}" class="w-full h-full object-cover"> <button type="button" onclick="removeGlobalImage('${type}', ${index})" class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow z-10"><i class="fas fa-times"></i></button>`;
+                thumb.innerHTML = `<img src="${url}" class="w-full h-full object-cover"> <button type="button" onclick="removeGlobalImage('${type}', ${index}, ${sectionIndex})" class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow z-10"><i class="fas fa-times"></i></button>`;
                 gallery.appendChild(thumb);
             });
 
             if (type === 'banner') {
-                if (window.bannerSortable) window.bannerSortable.destroy();
-                window.bannerSortable = new Sortable(gallery, { animation: 150, filter: '.empty-gallery-text', onEnd: () => { currentAdminBanners = Array.from(gallery.children).map(el => el.dataset.url); }});
+                if (!window.bannerSortables) window.bannerSortables = {};
+                if (window.bannerSortables[sectionIndex]) window.bannerSortables[sectionIndex].destroy();
+                
+                window.bannerSortables[sectionIndex] = new Sortable(gallery, { 
+                    animation: 150, filter: '.empty-gallery-text', 
+                    onEnd: () => { currentAdminBanners[sectionIndex] = Array.from(gallery.children).map(el => el.dataset.url); }
+                });
             } else {
                 if (window.flashcardSortable) window.flashcardSortable.destroy();
                 window.flashcardSortable = new Sortable(gallery, { animation: 150, filter: '.empty-gallery-text', onEnd: () => { currentAdminFlashcards = Array.from(gallery.children).map(el => el.dataset.url); }});
             }
         }
 
-        function removeGlobalImage(type, index) {
-            if (type === 'banner') currentAdminBanners.splice(index, 1);
-            else currentAdminFlashcards.splice(index, 1);
-            renderGlobalGallery(type);
+        function removeGlobalImage(type, index, sectionIndex = 0) {
+            if (type === 'banner') {
+                currentAdminBanners[sectionIndex].splice(index, 1);
+                renderGlobalGallery(type, sectionIndex);
+            } else {
+                currentAdminFlashcards.splice(index, 1);
+                renderGlobalGallery(type);
+            }
         }
 
-        function addExternalGalleryUrl(type) {
-            const input = document.getElementById(`form-${type}-input`);
+        function addExternalGalleryUrl(type, sectionIndex = 0) {
+            const inputId = type === 'banner' ? `form-banner-input-${sectionIndex}` : `form-flashcard-input`;
+            const input = document.getElementById(inputId);
             if (!input.value.trim()) return;
             const urls = input.value.split(',').map(u => u.trim()).filter(Boolean);
-            if (type === 'banner') currentAdminBanners.push(...urls);
-            else currentAdminFlashcards.push(...urls);
-            input.value = ''; renderGlobalGallery(type);
+            
+            if (type === 'banner') {
+                currentAdminBanners[sectionIndex].push(...urls);
+                renderGlobalGallery(type, sectionIndex);
+            } else {
+                currentAdminFlashcards.push(...urls);
+                renderGlobalGallery(type);
+            }
+            input.value = ''; 
         }
 
         async function saveAdminBanners() {
@@ -2020,14 +2122,14 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             const doEn = document.getElementById('banner-lang-en').checked;
             const doAr = document.getElementById('banner-lang-ar').checked;
 
-            // CRITICAL FIX: Grab the LIVE dynamic IDs from the hidden inputs
             const idEn = document.getElementById('setting-id').value;
             const idAr = document.getElementById('setting-id-ar').value;
 
-            const bannerArray = [...currentAdminBanners];
+            // CRITICAL FIX: Map the array of 5 arrays into an array of 5 comma-separated strings!
+            const bannerPayload = currentAdminBanners.map(section => section.join(','));
 
-            if (doEn && idEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', idEn);
-            if (doAr && idAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', idAr);
+            if (doEn && idEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerPayload }).eq('id', idEn);
+            if (doAr && idAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerPayload }).eq('id', idAr);
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
             alert("Banners successfully updated!");
@@ -2039,7 +2141,6 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             
             const flashString = currentAdminFlashcards.join(',');
             
-            // CRITICAL FIX: Check if the table is empty. If it is, insert a hidden row so flashcards have a place to save!
             const { data: existing } = await supabaseClient.from('special_offers').select('id').limit(1);
             if (existing && existing.length > 0) {
                 await supabaseClient.from('special_offers').update({ flashcard: flashString }).neq('id', -1);
