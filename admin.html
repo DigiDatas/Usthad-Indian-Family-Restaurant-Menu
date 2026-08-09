@@ -423,14 +423,28 @@
                     </div>
                 </div>
 
-                <!-- IMAGE UPLOAD SECTION -->
+                <!-- MULTI-IMAGE UPLOAD SECTION -->
                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
-                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2"><i class="fas fa-image text-red-500 me-1"></i> Product Image</label>
-                    <div class="flex flex-col gap-2">
-                        <input type="file" id="form-image-file" accept="image/*" class="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer">
-                        <span class="text-[10px] text-gray-400 font-medium text-center">- OR PASTE EXTERNAL URL -</span>
-                        <input type="text" id="form-img" placeholder="https://..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white">
+                    <label class="block text-xs font-bold text-gray-700 uppercase mb-2"><i class="fas fa-images text-red-500 me-1"></i> Product Images</label>
+                    
+                    <!-- 1. Thumbnail Preview Gallery -->
+                    <div id="image-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl">
+                        <!-- Dynamic image thumbnails with delete buttons will be injected here -->
                     </div>
+
+                    <!-- 2. File Upload Button (Storage) -->
+                    <div class="flex gap-2 mb-2">
+                        <label class="flex-1 bg-red-50 text-red-600 border border-red-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-sm">
+                            <i class="fas fa-cloud-upload-alt"></i> Upload New Images
+                            <input type="file" id="form-image-file" multiple accept="image/*" class="hidden" onchange="handleMultipleStorageUpload(event)">
+                        </label>
+                    </div>
+
+                    <!-- 3. Direct URL Input (Comma-Separated) -->
+                    <span class="text-[10px] text-gray-400 font-medium text-center block mb-1">- OR PASTE EXTERNAL URLS -</span>
+                    <input type="text" id="form-img" placeholder="Paste image URLs separated by commas..." 
+                           class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white"
+                           oninput="syncGalleryFromInput()">
                 </div>
 
                 <div class="flex items-center gap-2 mt-2">
@@ -979,6 +993,7 @@ fetchOffers();
                     }
                     document.getElementById('form-img').value = existingImgs;
                     document.getElementById('form-special').checked = item.is_today_special || false;
+syncGalleryFromInput();
 
                     // FETCH RELATED ITEMS MAP FROM DATABASE USING ITEM_CODE
                     if (item.item_code) {
@@ -1147,6 +1162,79 @@ fetchOffers();
                 // Refresh the screen
                 fetchMenu();
             }
+        }
+// ==========================================
+        // MULTI-IMAGE MANAGER LOGIC
+        // ==========================================
+        let currentEditingImages = [];
+
+        function renderImageGallery() {
+            const gallery = document.getElementById('image-preview-gallery');
+            const urlInput = document.getElementById('form-img');
+            
+            gallery.innerHTML = '';
+
+            if (currentEditingImages.length === 0) {
+                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto">No images added yet</span>`;
+                urlInput.value = '';
+                return;
+            }
+
+            currentEditingImages.forEach((url, index) => {
+                const thumb = document.createElement('div');
+                thumb.className = "relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 group";
+                thumb.innerHTML = `
+                    <img src="${url}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/60?text=Error'">
+                    <button type="button" onclick="removeImageFromGallery(${index})" 
+                            class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow hover:bg-red-700 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                gallery.appendChild(thumb);
+            });
+
+            // Update the text box with comma-separated URLs
+            urlInput.value = currentEditingImages.join(', ');
+        }
+
+        function removeImageFromGallery(index) {
+            currentEditingImages.splice(index, 1);
+            renderImageGallery();
+        }
+
+        function syncGalleryFromInput() {
+            const rawVal = document.getElementById('form-img').value;
+            currentEditingImages = rawVal.split(',').map(u => u.trim()).filter(Boolean);
+            renderImageGallery();
+        }
+
+        async function handleMultipleStorageUpload(event) {
+            const files = Array.from(event.target.files);
+            if (files.length === 0) return;
+
+            const fileInputLabel = event.target.parentElement;
+            const originalLabelHtml = fileInputLabel.innerHTML;
+            fileInputLabel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${files.length} images...`;
+
+            for (const file of files) {
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+                
+                const { error: uploadError } = await supabaseClient.storage.from('menu-images').upload(fileName, file);
+
+                if (uploadError) {
+                    alert(`Failed to upload ${file.name}: ${uploadError.message}`);
+                    continue;
+                }
+
+                const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(fileName);
+                if (publicData && publicData.publicUrl) {
+                    currentEditingImages.push(publicData.publicUrl);
+                }
+            }
+
+            fileInputLabel.innerHTML = originalLabelHtml;
+            renderImageGallery(); 
         }
 
         // --- BULK JSON IMPORT ---
