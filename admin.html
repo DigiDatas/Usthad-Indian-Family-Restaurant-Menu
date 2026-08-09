@@ -1138,17 +1138,19 @@ fetchOffers();
 
             if (currentEditingImages.length === 0) {
                 gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto empty-gallery-text">No images added yet</span>`;
-                return; // Do not initialize sortable if empty
+                return; 
             }
 
-            currentEditingImages.forEach((url) => {
+            // We are passing the 'index' again to ensure exact targeting
+            currentEditingImages.forEach((url, index) => {
                 const thumb = document.createElement('div');
-                // Added drag cursor classes
                 thumb.className = "relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 group cursor-grab active:cursor-grabbing sortable-thumb";
-                thumb.dataset.url = url; // Save URL in the element for sorting
+                thumb.dataset.url = url; 
+                
+                // FIX: onclick now passes the specific index number instead of the URL string
                 thumb.innerHTML = `
                     <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='https://via.placeholder.com/60?text=Error'">
-                    <button type="button" onclick="removeImageFromGallery('${url}')" 
+                    <button type="button" onclick="removeImageFromGallery(${index})" 
                             class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow hover:bg-red-700 transition z-10">
                         <i class="fas fa-times"></i>
                     </button>
@@ -1156,14 +1158,13 @@ fetchOffers();
                 gallery.appendChild(thumb);
             });
 
-            // Initialize SortableJS on the gallery
+            // Initialize SortableJS
             if (window.gallerySortable) window.gallerySortable.destroy();
             window.gallerySortable = new Sortable(gallery, {
                 animation: 150,
                 ghostClass: 'opacity-50',
                 filter: '.empty-gallery-text',
                 onEnd: function () {
-                    // Rebuild the array based on the new dragged order
                     const newOrder = [];
                     gallery.querySelectorAll('.sortable-thumb').forEach(el => {
                         newOrder.push(el.dataset.url);
@@ -1173,9 +1174,9 @@ fetchOffers();
             });
         }
 
-        // Updated to remove by exact URL instead of array index (safer for drag & drop)
-        function removeImageFromGallery(urlToRemove) {
-            currentEditingImages = currentEditingImages.filter(url => url !== urlToRemove);
+        // FIX: Reverted to splicing by exact index position
+        function removeImageFromGallery(index) {
+            currentEditingImages.splice(index, 1);
             renderImageGallery();
         }
 
