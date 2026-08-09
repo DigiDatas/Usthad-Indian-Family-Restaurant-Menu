@@ -2711,21 +2711,45 @@ function toggleQuickCart(id) {
                 return;
             }
 
-            // 1. GENERATE UNIQUE ORDER NUMBER
-            const uniqueOrderNo = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
+            // Lock the button early so the user doesn't double-click
+            const btn = document.querySelector('button[onclick="sendOrderViaWhatsApp()"]');
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Processing...`;
+
+            // 1. SMART SEQUENTIAL ORDER NUMBER GENERATOR
+            let uniqueOrderNo = 'ORD-1001'; // Default starting number if database is empty
+            
+            try {
+                // Fetch the absolute newest order from the database
+                const { data: lastOrder } = await supabaseClient
+                    .from('orders')
+                    .select('order_number')
+                    .not('order_number', 'is', null)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                // If an order exists, extract the number and add 1
+                if (lastOrder && lastOrder.order_number) {
+                    const lastNum = parseInt(lastOrder.order_number.replace('ORD-', ''));
+                    if (!isNaN(lastNum)) {
+                        uniqueOrderNo = 'ORD-' + (lastNum + 1);
+                    }
+                }
+            } catch (e) {
+                console.error("Order number generation error:", e);
+                // Safe fallback just in case the internet blinks
+                uniqueOrderNo = 'ORD-' + Math.floor(1000 + Math.random() * 9000); 
+            }
 
             // ==========================================
             // 🔒 SAVE ORDER TO SUPABASE DATABASE
             // ==========================================
             try {
-                const btn = document.querySelector('button[onclick="sendOrderViaWhatsApp()"]');
-                const originalBtnHtml = btn.innerHTML;
-                btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Saving Order...`;
-                
                 const { error } = await supabaseClient
                     .from('orders')
                     .insert([{
-                        order_number: uniqueOrderNo, // <--- SAVES TO DATABASE
+                        order_number: uniqueOrderNo, // <--- SAVES SEQUENTIAL NUMBER
                         customer_id: currentUser ? currentUser.id : 'guest',
                         customer_name: customerName,
                         customer_phone: customerPhone,
@@ -2751,7 +2775,7 @@ function toggleQuickCart(id) {
             // ==========================================
             // BUILD WHATSAPP MESSAGE
             // ==========================================
-            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; // <--- SHOWS ORDER NUMBER IN WHATSAPP
+            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; 
             msg += `👤 Name: *${customerName}*\n`;
             msg += `📞 Phone: ${customerPhone}\n`;
             msg += `📅 Date: ${orderDate}\n`;
