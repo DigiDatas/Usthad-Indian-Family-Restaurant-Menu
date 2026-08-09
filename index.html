@@ -837,14 +837,20 @@
         }
 
         async function handleSignUp() {
-            const name = document.getElementById('auth-name').value;
-            const phone = document.getElementById('auth-phone').value;
-            const age = document.getElementById('auth-age').value;
+            const name = document.getElementById('auth-name').value.trim();
+            const phone = document.getElementById('auth-phone').value.trim();
+            const age = document.getElementById('auth-age').value.trim();
             const gender = document.getElementById('auth-gender').value;
-            const email = document.getElementById('auth-email-signup').value;
+            const email = document.getElementById('auth-email-signup').value.trim();
             const password = document.getElementById('auth-password-signup').value;
 
             if (!name || !phone || !email || !password) return alert("Please fill all required fields (*).");
+
+            // NEW: Strict Email Format Validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                return alert("Please enter a valid email address format (e.g., name@example.com).");
+            }
 
             const btn = document.getElementById('btn-signup');
             const originalHtml = btn.innerHTML;
@@ -867,10 +873,17 @@
             if (error) {
                 alert("Error: " + error.message);
             } else {
-                alert("Success! Please check your email inbox to verify your account before logging in.");
+                // NEW: Updated success message since email confirmation is turned off in Supabase
+                alert("Success! Your account has been created. You can now log in.");
                 setAuthMode('login'); // Send them back to the login screen
             }
             btn.innerHTML = originalHtml;
+        }
+
+        async function handleForgotPassword() {
+            // NEW: Show a message to contact admin and suggest Google Login instead of sending an email
+            alert("To reset your password, please contact the restaurant admin.\n\nAlternatively, you can go back and use 'Continue with Google' to sign in instantly!");
+            setAuthMode('login');
         }
 async function handleGoogleLogin() {
             // This securely redirects the user to Google's login page
@@ -887,24 +900,7 @@ async function handleGoogleLogin() {
             }
         }
 
-        async function handleForgotPassword() {
-            const email = document.getElementById('auth-email-reset').value;
-            if (!email) return alert("Please enter your registered email address.");
-
-            const btn = document.getElementById('btn-reset');
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Sending...`;
-
-            const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-
-            if (error) {
-                alert("Error: " + error.message);
-            } else {
-                alert("Password reset link sent! Please check your email.");
-                setAuthMode('login');
-            }
-            btn.innerHTML = originalHtml;
-        }
+        
 
         // Trigger the check when the page finishes loading
         window.addEventListener('load', checkSession);
@@ -2764,7 +2760,9 @@ function toggleQuickCart(id) {
 
             // AUTO-FILL LOGGED-IN CUSTOMER DATA
             if (currentUser && currentUser.user_metadata) {
-                document.getElementById('order-customer-name').value = currentUser.user_metadata.name || '';
+                // Looks for standard name OR Google's "full_name"
+                const displayName = currentUser.user_metadata.name || currentUser.user_metadata.full_name || '';
+                document.getElementById('order-customer-name').value = displayName;
                 document.getElementById('order-customer-phone').value = currentUser.user_metadata.phone || '';
             }
 
