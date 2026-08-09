@@ -426,10 +426,11 @@
                 <!-- MULTI-IMAGE UPLOAD SECTION -->
                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-2"><i class="fas fa-images text-red-500 me-1"></i> Product Images</label>
+                    <p class="text-[10px] text-gray-500 mb-2 font-medium">Drag and drop thumbnails to reorder them.</p>
                     
-                    <!-- 1. Thumbnail Preview Gallery -->
+                    <!-- 1. Thumbnail Preview Gallery (Now Draggable!) -->
                     <div id="image-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl">
-                        <!-- Dynamic image thumbnails with delete buttons will be injected here -->
+                        <!-- Dynamic image thumbnails will be injected here -->
                     </div>
 
                     <!-- 2. File Upload & Browse Storage Buttons -->
@@ -443,24 +444,15 @@
                         </button>
                     </div>
 
-                    <!-- 3. Direct URL Input (Comma-Separated) -->
-                    <span class="text-[10px] text-gray-400 font-medium text-center block mb-1">- OR PASTE EXTERNAL URLS -</span>
-                    <input type="text" id="form-img" placeholder="Paste image URLs separated by commas..." 
-                           class="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white"
-                           oninput="syncGalleryFromInput()">
+                    <!-- 3. Direct URL Input (Now acts as an Add button) -->
+                    <span class="text-[10px] text-gray-400 font-medium text-center block mb-1 mt-3">- OR ADD EXTERNAL URL -</span>
+                    <div class="flex gap-2">
+                        <input type="text" id="form-img-input" placeholder="Paste image URL here..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white">
+                        <button type="button" onclick="addExternalImageUrl()" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition shadow-sm">
+                            Add URL
+                        </button>
+                    </div>
                 </div>
-
-                <div class="flex items-center gap-2 mt-2">
-                    <input type="checkbox" id="form-special" class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
-                    <label for="form-special" class="text-xs font-bold text-gray-700 uppercase">Mark as Today's Special</label>
-                </div>
-
-                <button onclick="saveMenuItem()" id="btn-save-item" class="w-full bg-red-600 text-white py-3 rounded-xl font-bold hover:bg-red-700 transition shadow-md mt-2">
-                    Save Item
-                </button>
-            </div>
-        </div>
-    </div>
 <!-- ================= MODAL: ADD / EDIT OFFER ================= -->
     <div id="offerModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div class="bg-white rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl flex flex-col">
@@ -1004,13 +996,13 @@ fetchOffers();
                     document.getElementById('form-reviews').value = item.review_links || '';
                     document.getElementById('form-flash').value = item.flash_cards || '';
                     
-                    let existingImgs = '';
+                    document.getElementById('form-img-input').value = '';
                     if (item.img_urls) {
-                        existingImgs = Array.isArray(item.img_urls) ? item.img_urls.join(', ') : item.img_urls;
+                        currentEditingImages = Array.isArray(item.img_urls) ? [...item.img_urls] : item.img_urls.split(',').map(u=>u.trim()).filter(Boolean);
+                    } else {
+                        currentEditingImages = [];
                     }
-                    document.getElementById('form-img').value = existingImgs;
-                    document.getElementById('form-special').checked = item.is_today_special || false;
-syncGalleryFromInput();
+                    renderImageGallery();
 
                     // FETCH RELATED ITEMS MAP FROM DATABASE USING ITEM_CODE
                     if (item.item_code) {
@@ -1053,52 +1045,7 @@ syncGalleryFromInput();
             const isSpecial = document.getElementById('form-special').checked;
             const relatedInput = document.getElementById('form-related').value.trim();
             
-            let rawImgInput = document.getElementById('form-img').value.trim();
-            let imgUrlsArray = rawImgInput ? rawImgInput.split(',').map(u => u.trim()).filter(Boolean) : [];
-
-            if (!name || !mainCat || !subCat || isNaN(price) || !itemCode) {
-                alert('Please fill out all required fields (Item Code, Name, Main Category, Sub Category, Price).');
-                return;
-            }
-
-            const btn = document.getElementById('btn-save-item');
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
-
-            // ==========================================
-            // 🛑 NEW: SMART DUPLICATE CHECKER
-            // ==========================================
-            const { data: existingItem } = await supabaseClient
-                .from('menu_items')
-                .select('id')
-                .eq('item_code', itemCode)
-                .eq('language', language)
-                .maybeSingle();
-
-            // If an item exists with this code AND it's not the exact item we are currently editing:
-            if (existingItem && String(existingItem.id) !== String(id)) {
-                alert(`⚠️ WAIT! An item with the code "${itemCode}" already exists for ${language.toUpperCase()}. Please use a unique Item Code.`);
-                btn.innerHTML = 'Save Item';
-                return; // Stops the save immediately!
-            }
-            // ==========================================
-
-            const fileInput = document.getElementById('form-image-file');
-            if (fileInput.files && fileInput.files[0]) {
-                const file = fileInput.files[0];
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-                
-                const { error: uploadError } = await supabaseClient.storage.from('menu-images').upload(fileName, file);
-
-                if (uploadError) {
-                    alert('Image Upload Failed: ' + uploadError.message);
-                    btn.innerHTML = 'Save Item';
-                    return;
-                }
-
-                const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(fileName);
-                imgUrlsArray.unshift(publicData.publicUrl);
-            }
+            let imgUrlsArray = [...currentEditingImages];
 
             // 1. Save Menu Item
             const payload = {
@@ -1181,50 +1128,70 @@ syncGalleryFromInput();
             }
         }
 // ==========================================
-        // MULTI-IMAGE MANAGER LOGIC
+        // MULTI-IMAGE MANAGER LOGIC (With Drag & Drop)
         // ==========================================
         let currentEditingImages = [];
 
         function renderImageGallery() {
             const gallery = document.getElementById('image-preview-gallery');
-            const urlInput = document.getElementById('form-img');
-            
             gallery.innerHTML = '';
 
             if (currentEditingImages.length === 0) {
-                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto">No images added yet</span>`;
-                urlInput.value = '';
-                return;
+                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto empty-gallery-text">No images added yet</span>`;
+                return; // Do not initialize sortable if empty
             }
 
-            currentEditingImages.forEach((url, index) => {
+            currentEditingImages.forEach((url) => {
                 const thumb = document.createElement('div');
-                thumb.className = "relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 group";
+                // Added drag cursor classes
+                thumb.className = "relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 group cursor-grab active:cursor-grabbing sortable-thumb";
+                thumb.dataset.url = url; // Save URL in the element for sorting
                 thumb.innerHTML = `
-                    <img src="${url}" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/60?text=Error'">
-                    <button type="button" onclick="removeImageFromGallery(${index})" 
-                            class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow hover:bg-red-700 transition">
+                    <img src="${url}" class="w-full h-full object-cover pointer-events-none" onerror="this.src='https://via.placeholder.com/60?text=Error'">
+                    <button type="button" onclick="removeImageFromGallery('${url}')" 
+                            class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow hover:bg-red-700 transition z-10">
                         <i class="fas fa-times"></i>
                     </button>
                 `;
                 gallery.appendChild(thumb);
             });
 
-            // Update the text box with comma-separated URLs
-            urlInput.value = currentEditingImages.join(', ');
+            // Initialize SortableJS on the gallery
+            if (window.gallerySortable) window.gallerySortable.destroy();
+            window.gallerySortable = new Sortable(gallery, {
+                animation: 150,
+                ghostClass: 'opacity-50',
+                filter: '.empty-gallery-text',
+                onEnd: function () {
+                    // Rebuild the array based on the new dragged order
+                    const newOrder = [];
+                    gallery.querySelectorAll('.sortable-thumb').forEach(el => {
+                        newOrder.push(el.dataset.url);
+                    });
+                    currentEditingImages = newOrder;
+                }
+            });
         }
 
-        function removeImageFromGallery(index) {
-            currentEditingImages.splice(index, 1);
+        // Updated to remove by exact URL instead of array index (safer for drag & drop)
+        function removeImageFromGallery(urlToRemove) {
+            currentEditingImages = currentEditingImages.filter(url => url !== urlToRemove);
             renderImageGallery();
         }
 
-        function syncGalleryFromInput() {
-            const rawVal = document.getElementById('form-img').value;
-            currentEditingImages = rawVal.split(',').map(u => u.trim()).filter(Boolean);
-            renderImageGallery();
+        // Replaces the old sync logic
+        function addExternalImageUrl() {
+            const input = document.getElementById('form-img-input');
+            const rawVal = input.value.trim();
+            if (!rawVal) return;
+            
+            // Allow pasting multiple URLs separated by commas
+            const urls = rawVal.split(',').map(u => u.trim()).filter(Boolean);
+            currentEditingImages.push(...urls);
+            
+            input.value = ''; // Clear the input box instantly
+            renderImageGallery(); // Add the new thumbnail to the screen
         }
-
         async function handleMultipleStorageUpload(event) {
             const files = Array.from(event.target.files);
             if (files.length === 0) return;
