@@ -201,34 +201,85 @@
                 </div>
             </div>
         </section>
-<!-- ================= TAB 5: SPECIAL OFFERS ================= -->
+<!-- ================= TAB 5: OFFERS, BANNERS & FLASHCARDS ================= -->
         <section id="section-offers" class="tab-section hidden">
-            <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Special Offers Manager</h2>
-                    <p class="text-sm text-gray-500">Manage your promotional banners and discounts.</p>
+            
+            <!-- 1. SPECIAL OFFERS MANAGER -->
+            <div class="mb-8">
+                <div class="flex justify-between items-end mb-4">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800">1. Special Offers Manager</h2>
+                        <p class="text-sm text-gray-500">Manage promotional cards shown at the top of the app.</p>
+                    </div>
+                    <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center gap-2">
+                        <i class="fas fa-plus"></i> Add Offer
+                    </button>
                 </div>
-                <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center gap-2">
-                    <i class="fas fa-plus"></i> Add Offer
-                </button>
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    <th class="p-4">Image</th><th class="p-4">Offer Name</th><th class="p-4">Old Price</th><th class="p-4">New Price</th><th class="p-4 text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="offers-table-body" class="divide-y divide-gray-100 text-sm">
+                                <tr><td colspan="5" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="p-4">Image</th>
-                                <th class="p-4">Offer Name</th>
-                                <th class="p-4">Old Price</th>
-                                <th class="p-4">New Price</th>
-                                <th class="p-4 text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="offers-table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr><td colspan="5" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
-                        </tbody>
-                    </table>
+            <!-- 2. BANNERS MANAGER -->
+            <div class="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-end mb-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-800"><i class="fas fa-images text-blue-500"></i> 2. Homepage Banners</h2>
+                        <p class="text-sm text-gray-500 mt-1">Manage sliding banners. Select target languages and drag to reorder.</p>
+                    </div>
+                    <button onclick="saveAdminBanners()" id="btn-save-banners" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
+                        <i class="fas fa-save"></i> Save Banners
+                    </button>
+                </div>
+                
+                <div class="flex gap-4 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200 w-fit">
+                    <span class="text-xs font-bold text-gray-500 uppercase">Apply to:</span>
+                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer"><input type="checkbox" id="banner-lang-en" checked class="w-4 h-4 text-red-600 rounded"> English App</label>
+                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer"><input type="checkbox" id="banner-lang-ar" checked class="w-4 h-4 text-red-600 rounded"> Arabic App</label>
+                </div>
+
+                <div id="banner-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[80px] p-3 bg-gray-50 border border-gray-200 rounded-xl"></div>
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="openMediaLibrary('banner')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-100 transition shadow-sm">
+                        <i class="fas fa-folder-open"></i> Browse Storage
+                    </button>
+                    <input type="text" id="form-banner-input" placeholder="Paste external image URL..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="addExternalGalleryUrl('banner')" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition">Add URL</button>
+                </div>
+            </div>
+
+            <!-- 3. FLASH CARDS MANAGER -->
+            <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+                <div class="flex justify-between items-end mb-4 border-b border-gray-100 pb-4">
+                    <div>
+                        <h2 class="text-xl font-black text-gray-800"><i class="fas fa-clone text-purple-500"></i> 3. Flash Cards Manager</h2>
+                        <p class="text-sm text-gray-500 mt-1">Manage pop-up flashcards globally for the app.</p>
+                    </div>
+                    <button onclick="saveAdminFlashcards()" id="btn-save-flashcards" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
+                        <i class="fas fa-save"></i> Save Flashcards
+                    </button>
+                </div>
+
+                <div id="flashcard-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[80px] p-3 bg-gray-50 border border-gray-200 rounded-xl"></div>
+                
+                <div class="flex gap-2">
+                    <button type="button" onclick="openMediaLibrary('flashcard')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-100 transition shadow-sm">
+                        <i class="fas fa-folder-open"></i> Browse Storage
+                    </button>
+                    <input type="text" id="form-flashcard-input" placeholder="Paste external image URL..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
+                    <button type="button" onclick="addExternalGalleryUrl('flashcard')" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition">Add URL</button>
                 </div>
             </div>
         </section>
@@ -412,12 +463,24 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-link text-blue-500 me-1"></i> Related Items IDs</label>
-                        <input type="text" id="form-related" placeholder="e.g. ITM008, ITM009" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                <!-- NEW DRAG & DROP RELATED ITEMS GALLERY -->
+                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                    <label class="block text-xs font-bold text-blue-800 uppercase mb-2"><i class="fas fa-link text-blue-500 me-1"></i> Related Items (URLs / IDs)</label>
+                    <p class="text-[10px] text-gray-500 mb-2 font-medium">Drag thumbnails to reorder. Add images from storage or paste URLs/IDs.</p>
+                    
+                    <div id="related-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl"></div>
+                    
+                    <div class="flex gap-2 mb-2">
+                        <button type="button" onclick="openMediaLibrary('related')" class="flex-1 bg-blue-100 text-blue-700 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-200 transition shadow-sm">
+                            <i class="fas fa-folder-open"></i> Browse Storage
+                        </button>
                     </div>
-                    <div>
+                    <div class="flex gap-2">
+                        <input type="text" id="form-related-input" placeholder="Paste URL or Item ID here..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500 bg-white">
+                        <button type="button" onclick="addExternalRelatedUrl()" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition shadow-sm">Add</button>
+                    </div>
+                    <input type="hidden" id="form-related">
+                </div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-images text-purple-500 me-1"></i> Flash Cards</label>
                         <input type="text" id="form-flash" placeholder="Comma separated URLs" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
                     </div>
@@ -438,7 +501,8 @@
                             <i class="fas fa-cloud-upload-alt"></i> Upload New
                             <input type="file" id="form-image-file" multiple accept="image/*" class="hidden" onchange="handleMultipleStorageUpload(event)">
                         </label>
-                        <button type="button" onclick="openMediaLibrary()" class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-sm text-center">
+                        <!-- We added 'product' inside the parentheses below -->
+                        <button type="button" onclick="openMediaLibrary('product')" class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-sm text-center">
                             <i class="fas fa-folder-open"></i> Browse Bucket
                         </button>
                     </div>
@@ -983,10 +1047,15 @@ fetchOffers();
                 document.getElementById('form-recipe').value = '';
                 document.getElementById('form-video').value = '';
                 document.getElementById('form-reviews').value = '';
-                document.getElementById('form-flash').value = '';
+                // Flash cards removed from here
                 document.getElementById('form-img').value = '';
                 document.getElementById('form-image-file').value = '';
                 document.getElementById('form-special').checked = false;
+                
+                // NEW: Reset the Related Items Gallery when adding a new item
+                currentEditingRelated = [];
+                renderRelatedGallery();
+                
             } else {
                 document.getElementById('menu-modal-title').textContent = 'Edit Menu Item';
                 
@@ -1006,7 +1075,7 @@ fetchOffers();
                     document.getElementById('form-recipe').value = item.recipe || '';
                     document.getElementById('form-video').value = item.video_url || '';
                     document.getElementById('form-reviews').value = item.review_links || '';
-                    document.getElementById('form-flash').value = item.flash_cards || '';
+                    // Flash cards removed from here
                     
                     document.getElementById('form-img-input').value = '';
                     if (item.img_urls) {
@@ -1016,7 +1085,8 @@ fetchOffers();
                     }
                     renderImageGallery();
 
-                    // FETCH RELATED ITEMS MAP FROM DATABASE USING ITEM_CODE
+                    // UPDATED: FETCH RELATED ITEMS MAP AND LOAD INTO DRAG & DROP GALLERY
+                    currentEditingRelated = [];
                     if (item.item_code) {
                         const { data: relData } = await supabaseClient
                             .from('related_items_map')
@@ -1025,9 +1095,10 @@ fetchOffers();
                             .maybeSingle();
 
                         if (relData && relData.related_item_ids) {
-                            document.getElementById('form-related').value = relData.related_item_ids.join(', ');
+                            currentEditingRelated = [...relData.related_item_ids];
                         }
                     }
+                    renderRelatedGallery();
                 }
             }
             modal.classList.remove('hidden');
@@ -1053,9 +1124,7 @@ fetchOffers();
             const recipe = document.getElementById('form-recipe').value.trim();
             const video = document.getElementById('form-video').value.trim();
             const reviews = document.getElementById('form-reviews').value.trim();
-            const flash = document.getElementById('form-flash').value.trim();
             const isSpecial = document.getElementById('form-special').checked;
-            const relatedInput = document.getElementById('form-related').value.trim();
 
             if (!name || !mainCat || !subCat || isNaN(price) || !itemCode) {
                 alert('Please fill out all required fields (Item Code, Name, Main Category, Sub Category, Price).');
@@ -1096,7 +1165,6 @@ fetchOffers();
                 recipe: recipe,
                 video_url: video,
                 review_links: reviews,
-                flash_cards: flash,
                 is_today_special: isSpecial,
                 // THIS LINE GRABS YOUR EXACT DRAGGABLE GALLERY ORDER!
                 img_urls: [...currentEditingImages] 
@@ -1113,7 +1181,8 @@ fetchOffers();
 
             // 2. Save Related Items Map Connection
             if (!saveError && itemCode) {
-                const relArr = relatedInput ? relatedInput.split(',').map(s => s.trim()).filter(Boolean) : [];
+                // CHANGED: Reading directly from the visual drag-and-drop gallery!
+                const relArr = [...currentEditingRelated];
                 
                 const { data: existRel } = await supabaseClient.from('related_items_map').select('id').eq('item_id', itemCode).maybeSingle();
                 
@@ -1404,35 +1473,25 @@ fetchOffers();
                 document.getElementById('btn-import-json').innerHTML = 'Import to Database';
             }
         }
-async function openMediaLibrary() {
+let currentMediaTarget = 'product'; // Tracks which gallery requested storage
+        
+        async function openMediaLibrary(target = 'product') {
+            currentMediaTarget = target;
             document.getElementById('mediaLibraryModal').classList.remove('hidden');
             document.getElementById('mediaLibraryModal').classList.add('flex');
             
             const gallery = document.getElementById('media-library-gallery');
             gallery.innerHTML = '<div class="text-blue-500 font-bold mt-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Loading images from bucket...</div>';
             
-            // Fetch the list of files inside the 'menu-images' bucket
-            const { data, error } = await supabaseClient.storage.from('menu-images').list('', {
-                limit: 100,
-                sortBy: { column: 'created_at', order: 'desc' }
-            });
+            const { data, error } = await supabaseClient.storage.from('menu-images').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
 
-            if (error) {
-                gallery.innerHTML = `<span class="text-red-500">Error: ${error.message}</span>`;
-                return;
-            }
+            if (error) { gallery.innerHTML = `<span class="text-red-500">Error: ${error.message}</span>`; return; }
 
             gallery.innerHTML = '';
-            if (!data || data.length === 0) {
-                gallery.innerHTML = '<span class="text-gray-400">No images found in your storage bucket.</span>';
-                return;
-            }
+            if (!data || data.length === 0) { gallery.innerHTML = '<span class="text-gray-400">No images found.</span>'; return; }
 
             data.forEach(file => {
-                // Ignore hidden empty folder placeholders
                 if (file.name === '.emptyFolderPlaceholder') return;
-                
-                // Get the permanent URL for the file
                 const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(file.name);
                 const publicUrl = publicData.publicUrl;
 
@@ -1441,15 +1500,16 @@ async function openMediaLibrary() {
                 imgCard.innerHTML = `
                     <img src="${publicUrl}" class="w-full h-full object-cover">
                     <div class="absolute inset-0 bg-blue-500/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                        <i class="fas fa-plus text-white text-2xl"></i>
-                        <span class="text-white text-[10px] font-bold mt-1">Select</span>
+                        <i class="fas fa-plus text-white text-2xl"></i><span class="text-white text-[10px] font-bold mt-1">Select</span>
                     </div>
                 `;
                 
-                // When clicked, add it to the edit screen
                 imgCard.onclick = () => {
-                    currentEditingImages.push(publicUrl);
-                    renderImageGallery();
+                    // Route the image to the correct array
+                    if (currentMediaTarget === 'product') { currentEditingImages.push(publicUrl); renderImageGallery(); }
+                    else if (currentMediaTarget === 'related') { currentEditingRelated.push(publicUrl); renderRelatedGallery(); }
+                    else if (currentMediaTarget === 'banner') { currentAdminBanners.push(publicUrl); renderGlobalGallery('banner'); }
+                    else if (currentMediaTarget === 'flashcard') { currentAdminFlashcards.push(publicUrl); renderGlobalGallery('flashcard'); }
                     closeMediaLibrary();
                 };
                 gallery.appendChild(imgCard);
@@ -1845,6 +1905,135 @@ async function openMediaLibrary() {
                 alert("Restaurant settings updated successfully!");
                 fetchSettings(); // Refresh to ensure IDs are synced
             }
+        }
+// ==========================================
+        // NEW GALLERIES ENGINE (Related, Banners, Flashcards)
+        // ==========================================
+        let currentEditingRelated = [];
+        let currentAdminBanners = [];
+        let currentAdminFlashcards = [];
+
+        function renderRelatedGallery() {
+            const gallery = document.getElementById('related-preview-gallery');
+            gallery.innerHTML = '';
+            if (currentEditingRelated.length === 0) {
+                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto empty-gallery-text">No related items added</span>`; return; 
+            }
+            currentEditingRelated.forEach((url, index) => {
+                const isImage = url.includes('http');
+                const displayHtml = isImage ? `<img src="${url}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center bg-gray-100 text-[9px] font-bold text-gray-500 break-words p-1 text-center">${url}</div>`;
+                
+                const thumb = document.createElement('div');
+                thumb.className = "relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 cursor-grab sortable-thumb";
+                thumb.dataset.url = url; 
+                thumb.innerHTML = `${displayHtml} <button type="button" onclick="currentEditingRelated.splice(${index}, 1); renderRelatedGallery();" class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow z-10"><i class="fas fa-times"></i></button>`;
+                gallery.appendChild(thumb);
+            });
+            if (window.relatedSortable) window.relatedSortable.destroy();
+            window.relatedSortable = new Sortable(gallery, { animation: 150, filter: '.empty-gallery-text', onEnd: () => { currentEditingRelated = Array.from(gallery.children).map(el => el.dataset.url); }});
+        }
+
+        function addExternalRelatedUrl() {
+            const input = document.getElementById('form-related-input');
+            if (!input.value.trim()) return;
+            currentEditingRelated.push(...input.value.split(',').map(u => u.trim()).filter(Boolean));
+            input.value = ''; renderRelatedGallery();
+        }
+
+        // BANNERS & FLASHCARDS LOGIC
+        async function fetchOffers() {
+            // Original offers fetch (Keep this)
+            const tbody = document.getElementById('offers-table-body');
+            const { data, error } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
+            allOffers = data || [];
+            
+            // Render Special Offers Table
+            tbody.innerHTML = '';
+            if (allOffers.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No active offers.</td></tr>`;
+            else {
+                allOffers.forEach(o => {
+                    const img = o.image_url ? `<img src="${o.image_url}" class="w-12 h-8 object-cover rounded shadow-sm">` : `<div class="w-12 h-8 bg-gray-100 rounded text-center text-[10px] text-gray-400 pt-1">No Img</div>`;
+                    tbody.innerHTML += `<tr class="hover:bg-gray-50 transition"><td class="p-3">${img}</td><td class="p-3 font-bold text-gray-900">${o.offer_name}</td><td class="p-3 text-gray-400 line-through">${o.price_before || '-'}</td><td class="p-3 font-black text-green-600">${o.price_after || '-'}</td><td class="p-3 text-end"><button onclick="openOfferModal('edit', '${o.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 me-1"><i class="fas fa-pen text-xs"></i></button><button onclick="deleteOffer('${o.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600"><i class="fas fa-trash-alt text-xs"></i></button></td></tr>`;
+                });
+            }
+
+            // Fetch Flashcards from Row 1
+            if (allOffers.length > 0 && allOffers[0].flashcard) {
+                currentAdminFlashcards = allOffers[0].flashcard.split(',').map(u=>u.trim()).filter(Boolean);
+            } else { currentAdminFlashcards = []; }
+            renderGlobalGallery('flashcard');
+
+            // Fetch Banners from Settings
+            const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').eq('id', 1).maybeSingle();
+            if (setDb && setDb.banner_images) currentAdminBanners = [...setDb.banner_images];
+            renderGlobalGallery('banner');
+        }
+
+        function renderGlobalGallery(type) {
+            const arr = type === 'banner' ? currentAdminBanners : currentAdminFlashcards;
+            const gallery = document.getElementById(`${type}-preview-gallery`);
+            gallery.innerHTML = '';
+            
+            if (arr.length === 0) {
+                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto empty-gallery-text">No images added</span>`; return; 
+            }
+            
+            arr.forEach((url, index) => {
+                const thumb = document.createElement('div');
+                thumb.className = "relative w-20 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 cursor-grab sortable-thumb";
+                thumb.dataset.url = url; 
+                thumb.innerHTML = `<img src="${url}" class="w-full h-full object-cover"> <button type="button" onclick="removeGlobalImage('${type}', ${index})" class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow z-10"><i class="fas fa-times"></i></button>`;
+                gallery.appendChild(thumb);
+            });
+
+            if (type === 'banner') {
+                if (window.bannerSortable) window.bannerSortable.destroy();
+                window.bannerSortable = new Sortable(gallery, { animation: 150, filter: '.empty-gallery-text', onEnd: () => { currentAdminBanners = Array.from(gallery.children).map(el => el.dataset.url); }});
+            } else {
+                if (window.flashcardSortable) window.flashcardSortable.destroy();
+                window.flashcardSortable = new Sortable(gallery, { animation: 150, filter: '.empty-gallery-text', onEnd: () => { currentAdminFlashcards = Array.from(gallery.children).map(el => el.dataset.url); }});
+            }
+        }
+
+        function removeGlobalImage(type, index) {
+            if (type === 'banner') currentAdminBanners.splice(index, 1);
+            else currentAdminFlashcards.splice(index, 1);
+            renderGlobalGallery(type);
+        }
+
+        function addExternalGalleryUrl(type) {
+            const input = document.getElementById(`form-${type}-input`);
+            if (!input.value.trim()) return;
+            const urls = input.value.split(',').map(u => u.trim()).filter(Boolean);
+            if (type === 'banner') currentAdminBanners.push(...urls);
+            else currentAdminFlashcards.push(...urls);
+            input.value = ''; renderGlobalGallery(type);
+        }
+
+        async function saveAdminBanners() {
+            const btn = document.getElementById('btn-save-banners');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+            
+            const doEn = document.getElementById('banner-lang-en').checked;
+            const doAr = document.getElementById('banner-lang-ar').checked;
+
+            if (doEn) await supabaseClient.from('restaurant_settings').update({ banner_images: currentAdminBanners }).eq('id', 1);
+            if (doAr) await supabaseClient.from('restaurant_settings').update({ banner_images: currentAdminBanners }).eq('id', 2);
+
+            btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
+            alert("Banners successfully updated!");
+        }
+
+        async function saveAdminFlashcards() {
+            const btn = document.getElementById('btn-save-flashcards');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
+            
+            const flashString = currentAdminFlashcards.join(',');
+            // Updates Flashcards on all Special Offer rows so the frontend can easily read it
+            await supabaseClient.from('special_offers').update({ flashcard: flashString }).neq('id', -1);
+            
+            btn.innerHTML = `<i class="fas fa-save"></i> Save Flashcards`;
+            alert("Flashcards globally updated!");
         }
 
         window.onload = verifyAdmin;
