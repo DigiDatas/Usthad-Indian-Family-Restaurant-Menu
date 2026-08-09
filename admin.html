@@ -1953,16 +1953,16 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
                 });
             }
 
-            // Fetch Flashcards from Row 1
-            if (allOffers.length > 0 && allOffers[0].flashcard) {
-                currentAdminFlashcards = allOffers[0].flashcard.split(',').map(u=>u.trim()).filter(Boolean);
+            // FETCH FLASHCARDS: Look for the first row that actually contains flashcards
+            const flashcardRow = allOffers.find(o => o.flashcard);
+            if (flashcardRow) {
+                currentAdminFlashcards = flashcardRow.flashcard.split(',').map(u=>u.trim()).filter(Boolean);
             } else { currentAdminFlashcards = []; }
             renderGlobalGallery('flashcard');
 
-            // Fetch Banners from Settings
-            const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').eq('id', 1).maybeSingle();
+            // FETCH BANNERS: Uses dynamic fetching instead of hardcoding "ID 1"
+            const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').order('id', { ascending: true }).limit(1).maybeSingle();
             if (setDb && setDb.banner_images) {
-                // Extracts the native text[] array directly from Supabase
                 currentAdminBanners = Array.isArray(setDb.banner_images) 
                     ? [...setDb.banner_images] 
                     : setDb.banner_images.split(',').map(u => u.trim()).filter(Boolean);
@@ -2020,11 +2020,14 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             const doEn = document.getElementById('banner-lang-en').checked;
             const doAr = document.getElementById('banner-lang-ar').checked;
 
-            // Sends the native JavaScript array directly to the text[] column
+            // CRITICAL FIX: Grab the LIVE dynamic IDs from the hidden inputs
+            const idEn = document.getElementById('setting-id').value;
+            const idAr = document.getElementById('setting-id-ar').value;
+
             const bannerArray = [...currentAdminBanners];
 
-            if (doEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', 1);
-            if (doAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', 2);
+            if (doEn && idEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', idEn);
+            if (doAr && idAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerArray }).eq('id', idAr);
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
             alert("Banners successfully updated!");
@@ -2035,8 +2038,14 @@ let currentMediaTarget = 'product'; // Tracks which gallery requested storage
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
             
             const flashString = currentAdminFlashcards.join(',');
-            // Updates Flashcards on all Special Offer rows so the frontend can easily read it
-            await supabaseClient.from('special_offers').update({ flashcard: flashString }).neq('id', -1);
+            
+            // CRITICAL FIX: Check if the table is empty. If it is, insert a hidden row so flashcards have a place to save!
+            const { data: existing } = await supabaseClient.from('special_offers').select('id').limit(1);
+            if (existing && existing.length > 0) {
+                await supabaseClient.from('special_offers').update({ flashcard: flashString }).neq('id', -1);
+            } else {
+                await supabaseClient.from('special_offers').insert([{ offer_name: 'Hidden System Row', flashcard: flashString }]);
+            }
             
             btn.innerHTML = `<i class="fas fa-save"></i> Save Flashcards`;
             alert("Flashcards globally updated!");
