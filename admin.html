@@ -557,6 +557,8 @@ fetchOffers();
         // --- FETCH & RENDER ORDERS ---
         async function fetchOrders() {
             const container = document.getElementById('orders-container');
+            
+            // SORT CRITICAL FIX: .order('created_at', { ascending: false }) puts newest on top!
             const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select('*')
