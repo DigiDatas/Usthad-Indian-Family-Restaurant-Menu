@@ -2711,7 +2711,7 @@ function toggleQuickCart(id) {
                 return;
             }
 
-            // 1. GENERATE UNIQUE ORDER NUMBER HERE
+            // 1. GENERATE UNIQUE ORDER NUMBER
             const uniqueOrderNo = 'ORD-' + Math.floor(1000 + Math.random() * 9000);
 
             // ==========================================
@@ -2725,7 +2725,7 @@ function toggleQuickCart(id) {
                 const { error } = await supabaseClient
                     .from('orders')
                     .insert([{
-                        order_number: uniqueOrderNo, // <--- SAVES TO DATABASE COLUMN
+                        order_number: uniqueOrderNo, // <--- SAVES TO DATABASE
                         customer_id: currentUser ? currentUser.id : 'guest',
                         customer_name: customerName,
                         customer_phone: customerPhone,
@@ -2751,7 +2751,7 @@ function toggleQuickCart(id) {
             // ==========================================
             // BUILD WHATSAPP MESSAGE
             // ==========================================
-            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; // <--- SHOWS IN WHATSAPP
+            let msg = `🧾 *NEW ORDER (${uniqueOrderNo})*\n`; // <--- SHOWS ORDER NUMBER IN WHATSAPP
             msg += `👤 Name: *${customerName}*\n`;
             msg += `📞 Phone: ${customerPhone}\n`;
             msg += `📅 Date: ${orderDate}\n`;
