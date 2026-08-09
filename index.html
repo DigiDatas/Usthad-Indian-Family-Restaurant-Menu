@@ -71,12 +71,18 @@
     </button>
 <!-- NEW SIGN OUT BUTTON -->
                     <div class="flex items-center gap-2">
-                    <!-- NEW: Display Logged-in User Email -->
-                    <span id="logged-in-user-email" class="text-xs font-bold text-gray-600 hidden sm:inline"></span>
-                    
-                    <button id="btn-signout" onclick="handleSignOut()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-red-100 hover:bg-red-200 text-red-600 font-bold text-sm transition shadow-sm">
-                        <i class="fas fa-sign-out-alt me-1"></i> Out
-                    </button>
+                    <!-- USER AUTH NAVIGATION -->
+                    <div class="flex items-center gap-2">
+                        <!-- Show when logged OUT (Click to open login) -->
+                        <button id="btn-nav-login" onclick="document.getElementById('authModal').classList.replace('hidden', 'flex')" class="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition shadow-sm">
+                            <i class="fas fa-user text-sm"></i>
+                        </button>
+                        
+                        <!-- Show when logged IN (Click to view profile) -->
+                        <button id="btn-nav-profile" onclick="openProfileModal()" class="hidden items-center justify-center w-9 h-9 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition shadow-sm">
+                            <i class="fas fa-user-check text-sm"></i>
+                        </button>
+                    </div>
                 </div>
     
     <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-10 h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
@@ -527,7 +533,34 @@
         <i class="fas fa-arrow-up"></i>
     </button>
 
-    
+    <!-- User Profile Modal -->
+    <div id="profileModal" class="fixed inset-0 z-[130] hidden items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
+        <div class="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-center">
+            <button onclick="closeProfileModal()" class="absolute top-3 end-3 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition"><i class="fas fa-times"></i></button>
+
+            <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mt-2 shadow-inner">
+                <i class="fas fa-user-circle text-5xl"></i>
+            </div>
+            
+            <div>
+                <h2 id="profile-name-display" class="text-2xl font-black text-gray-900 leading-tight">Name</h2>
+                <p id="profile-email-display" class="text-sm text-gray-500 font-medium">Email</p>
+            </div>
+
+            <div class="bg-gray-50 rounded-2xl p-4 text-start mt-2 border border-gray-100">
+                <p class="text-xs font-bold text-gray-400 uppercase mb-1">Phone Number</p>
+                <p class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2"><i class="fas fa-phone text-green-500 w-4"></i> <span id="profile-phone-display"></span></p>
+                
+                <p class="text-xs font-bold text-gray-400 uppercase mb-1">Gender / Age</p>
+                <p class="text-sm font-bold text-gray-800 flex items-center gap-2"><i class="fas fa-info-circle text-blue-500 w-4"></i> <span id="profile-details-display"></span></p>
+            </div>
+
+            <!-- The new Logout Button! -->
+            <button onclick="handleSignOut()" class="w-full bg-gray-900 text-white font-bold py-3 rounded-xl shadow-md hover:bg-gray-800 transition flex items-center justify-center gap-2 mt-2">
+                <i class="fas fa-sign-out-alt"></i> Log Out
+            </button>
+        </div>
+    </div>
 <!-- Authentication Modal -->
     <div id="authModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
         <div class="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-center">
@@ -560,7 +593,8 @@
                 <input type="password" id="auth-password-login" placeholder="Password" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50">
                 
                 <div class="text-end">
-                    <button onclick="setAuthMode('reset')" class="text-xs font-bold text-red-500 hover:text-red-600 transition">Forgot Password?</button>
+                    <!-- Changed the onclick to directly trigger the alert -->
+                    <button onclick="handleForgotPassword()" class="text-xs font-bold text-red-500 hover:text-red-600 transition">Forgot Password?</button>
                 </div>
                 
                 <button onclick="handleLogin()" id="btn-login" class="w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-600 transition flex items-center justify-center gap-2">
@@ -761,26 +795,58 @@
 
         async function checkSession() {
             const { data: { session } } = await supabaseClient.auth.getSession();
+            const btnNavLogin = document.getElementById('btn-nav-login');
+            const btnNavProfile = document.getElementById('btn-nav-profile');
             const authModal = document.getElementById('authModal');
-            const signOutBtn = document.getElementById('btn-signout');
-            const userEmailSpan = document.getElementById('logged-in-user-email');
             
             if (session) {
                 currentUser = session.user;
-                authModal.classList.replace('flex', 'hidden'); // Hide login modal
-                if(signOutBtn) signOutBtn.classList.replace('hidden', 'flex'); // Show sign out button
-                if(userEmailSpan) userEmailSpan.textContent = currentUser.email || 'Guest User'; // Show email
+                if(btnNavLogin) btnNavLogin.classList.replace('flex', 'hidden');
+                if(btnNavProfile) btnNavProfile.classList.replace('hidden', 'flex');
+                
+                // Hide auth modal if they successfully logged in
+                if(authModal) authModal.classList.replace('flex', 'hidden'); 
             } else {
                 currentUser = null;
-                authModal.classList.replace('hidden', 'flex'); // Show login modal
-                if(signOutBtn) signOutBtn.classList.replace('flex', 'hidden'); // Hide sign out button
-                if(userEmailSpan) userEmailSpan.textContent = ''; // Clear email
+                if(btnNavLogin) btnNavLogin.classList.replace('hidden', 'flex');
+                if(btnNavProfile) btnNavProfile.classList.replace('flex', 'hidden');
+                
+                // Notice we NO LONGER force the authModal to open here!
+                // The user stays on the menu page peacefully.
             }
         }
 
         async function handleSignOut() {
+            // Add a spinner to the logout button
+            const btn = document.querySelector('#profileModal button[onclick="handleSignOut()"]');
+            if(btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Logging out...`;
+            
             await supabaseClient.auth.signOut();
-            checkSession(); // This will automatically pop the login modal back up!
+            closeProfileModal(); // Close the profile card
+            checkSession();      // Reset UI to logged-out state
+            
+            if(btn) btn.innerHTML = `<i class="fas fa-sign-out-alt"></i> Log Out`;
+        }
+
+        function openProfileModal() {
+            if(!currentUser) return;
+            const meta = currentUser.user_metadata || {};
+            const displayName = meta.name || meta.full_name || 'Guest User';
+            
+            document.getElementById('profile-name-display').textContent = displayName;
+            document.getElementById('profile-email-display').textContent = currentUser.email || '';
+            document.getElementById('profile-phone-display').textContent = meta.phone || 'Not Provided';
+            
+            const age = meta.age ? `${meta.age} Yrs` : '';
+            const gender = meta.gender || '';
+            const details = [gender, age].filter(Boolean).join(' / ') || 'Not Provided';
+            document.getElementById('profile-details-display').textContent = details;
+            
+            document.getElementById('profileModal').classList.replace('hidden', 'flex');
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.replace('flex', 'hidden');
         }
 
         async function handleGuestLogin() {
@@ -797,6 +863,13 @@
 
         function closeAuthModal() {
             document.getElementById('authModal').classList.replace('flex', 'hidden');
+        }
+async function logoutAdmin() {
+            // 1. Securely log out of Supabase
+            await supabaseClient.auth.signOut();
+            
+            // 2. Redirect back to the main app homepage
+            window.location.href = 'index.html';
         }
 
         function setAuthMode(mode) {
@@ -846,7 +919,7 @@
 
             if (!name || !phone || !email || !password) return alert("Please fill all required fields (*).");
 
-            // NEW: Strict Email Format Validation
+            // Strict Email Format Validation
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
                 return alert("Please enter a valid email address format (e.g., name@example.com).");
@@ -856,7 +929,7 @@
             const originalHtml = btn.innerHTML;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Creating...`;
 
-            // Registers user and saves custom profile details into Supabase Auth Meta Data
+            // Registers user and saves custom profile details
             const { error } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password,
@@ -872,18 +945,18 @@
 
             if (error) {
                 alert("Error: " + error.message);
+                btn.innerHTML = originalHtml;
             } else {
-                // NEW: Updated success message since email confirmation is turned off in Supabase
-                alert("Success! Your account has been created. You can now log in.");
-                setAuthMode('login'); // Send them back to the login screen
+                alert("Success! Your account has been created.");
+                // NEW: Since email confirmation is off, the user is instantly logged in!
+                // Calling checkSession() will automatically recognize them and close the login popup.
+                checkSession(); 
             }
-            btn.innerHTML = originalHtml;
         }
 
-        async function handleForgotPassword() {
-            // NEW: Show a message to contact admin and suggest Google Login instead of sending an email
-            alert("To reset your password, please contact the restaurant admin.\n\nAlternatively, you can go back and use 'Continue with Google' to sign in instantly!");
-            setAuthMode('login');
+        // NEW: Removed "async" because it just shows an instant popup now
+        function handleForgotPassword() {
+            alert("To reset your password, please contact the restaurant admin.\n\nAlternatively, you can use 'Continue with Google' to sign in instantly without a password!");
         }
 async function handleGoogleLogin() {
             // This securely redirects the user to Google's login page
