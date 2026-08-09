@@ -2717,7 +2717,7 @@ function toggleQuickCart(id) {
             btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Processing...`;
 
             // 1. SMART SEQUENTIAL ORDER NUMBER GENERATOR
-            let uniqueOrderNo = 'ORD-1001'; // Default starting number if database is empty
+            let uniqueOrderNo = 'ORD-0125'; // Default starting number 
             
             try {
                 // Fetch the absolute newest order from the database
@@ -2733,13 +2733,13 @@ function toggleQuickCart(id) {
                 if (lastOrder && lastOrder.order_number) {
                     const lastNum = parseInt(lastOrder.order_number.replace('ORD-', ''));
                     if (!isNaN(lastNum)) {
-                        uniqueOrderNo = 'ORD-' + (lastNum + 1);
+                        // Add 1 and force 4 digits (turns 124 into 0125)
+                        uniqueOrderNo = 'ORD-' + String(lastNum + 1).padStart(4, '0');
                     }
                 }
             } catch (e) {
                 console.error("Order number generation error:", e);
-                // Safe fallback just in case the internet blinks
-                uniqueOrderNo = 'ORD-' + Math.floor(1000 + Math.random() * 9000); 
+                uniqueOrderNo = 'ORD-' + String(Math.floor(1000 + Math.random() * 9000)); 
             }
 
             // ==========================================
