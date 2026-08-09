@@ -1146,6 +1146,24 @@ let relatedItemsData = []; // (You did this perfectly!)
 // --- NEW: FETCH LIVE RELATED ITEMS FROM DATABASE ---
                 const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
                 window.liveRelatedItems = relDbData || [];
+// --- NEW: FETCH LIVE SPECIAL OFFERS & FLASHCARDS FROM DATABASE ---
+                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
+                if (dbOffers && dbOffers.length > 0) {
+                    // Populate the Top Slider Offers (Ignoring our hidden system row)
+                    rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
+                        B: o.offer_name,
+                        C: o.description,
+                        D: o.price_before,
+                        E: o.price_after,
+                        F: o.image_url
+                    }));
+                    
+                    // Grab the Flashcards and securely pass them to the window
+                    const flashcardRow = dbOffers.find(o => o.flashcard);
+                    if (flashcardRow) {
+                        window.liveFlashcards = flashcardRow.flashcard.split(',').map(u => u.trim()).filter(Boolean);
+                    }
+                }
                 // ----------------------------------------------
                 // ----------------------------------------------
 
@@ -3205,20 +3223,18 @@ function toggleQuickCart(id) {
 
         function gatherFlashCards() {
             validFlashCards = []; 
-            activeMenuData.forEach(item => {
-                if (item.flashCards) {
-                    const files = item.flashCards.split(',').map(u => u.trim()).filter(u => u !== "");
-                    files.forEach(file => {
-                        if (file.startsWith('http')) validFlashCards.push(file);
-                    });
+            
+            // Check if we found live flashcards in the Supabase database
+            if (window.liveFlashcards && window.liveFlashcards.length > 0) {
+                validFlashCards = [...window.liveFlashcards];
+                buildPromo();
+            } else {
+                // Fallback to checking the static GitHub directory if the database is empty
+                const baseUrl = 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/FlashCard/FlashCard';
+                for (let i = 1; i <= 15; i++) {
+                    probeImageExtensions(`${baseUrl}${String(i).padStart(2, '0')}`);
                 }
-            });
-
-            const baseUrl = 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/FlashCard/FlashCard';
-            for (let i = 1; i <= 15; i++) {
-                probeImageExtensions(`${baseUrl}${String(i).padStart(2, '0')}`);
             }
-            buildPromo();
         }
 
         function probeImageExtensions(basePath) {
