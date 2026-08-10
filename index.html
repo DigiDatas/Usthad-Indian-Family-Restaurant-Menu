@@ -2083,9 +2083,10 @@ function setupVerticalDraggable(elementId) {
             const item = activeMenuData.find(i => i.id === id);
             if (!item) return;
             currentOpenItemId = id;
-// FIX: Instantly scroll the modal back to the top (fixes related items click issue)
-            const modalContentScroll = document.querySelector('#modalContent .overflow-y-auto');
-            if (modalContentScroll) modalContentScroll.scrollTop = 0;
+
+            // FIX 1: Instantly scroll to the top of the modal (Fixes the Related Items click issue!)
+            const modalScrollContainer = document.querySelector('#modalContent .overflow-y-auto');
+            if (modalScrollContainer) modalScrollContainer.scrollTop = 0;
 
             const t = staticText[currentLang];
 
@@ -2115,42 +2116,38 @@ function setupVerticalDraggable(elementId) {
                 if (v.endsWith('.mp4') || v.endsWith('.webm') || v.endsWith('.ogg')) {
                     videoHtml = `<video src="${v}" controls playsinline class="w-full h-full object-cover shrink-0 snap-center bg-black"></video>`;
                 } else {
-                    videoHtml = `<iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen" class="w-full h-full object-cover shrink-0 snap-center bg-black"></iframe>`;
+                    videoHtml = `<iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen" class="w-full h-full object-cover shrink-0 snap-center bg-black pointer-events-auto"></iframe>`;
                 }
                 
-                // Inject the video as the FIRST slide
                 slider.insertAdjacentHTML('beforeend', videoHtml);
             }
 
             const urls = item.imgUrls || [item.img];
             urls.forEach((url, i) => {
-                const imgHtml = `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="if(this.src.includes('.jpg')) { this.src=this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src=this.src.replace('.png', '.jpeg'); } else { if(this.parentElement && this.parentElement.children.length > 1) { this.remove(); let d = document.getElementById('dot-img-${i}'); if(d) d.remove(); } else { this.onerror=null; this.classList.replace('object-cover', 'object-contain'); this.classList.add('p-8'); this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}'; } }">`;
+                const imgHtml = `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center pointer-events-none" onerror="if(this.src.includes('.jpg')) { this.src=this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src=this.src.replace('.png', '.jpeg'); } else { if(this.parentElement && this.parentElement.children.length > 1) { this.remove(); let d = document.getElementById('dot-img-${i}'); if(d) d.remove(); } else { this.onerror=null; this.classList.replace('object-cover', 'object-contain'); this.classList.add('p-8'); this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}'; } }">`;
                 slider.insertAdjacentHTML('beforeend', imgHtml);
             });
 
             const totalSlides = hasVideo ? urls.length + 1 : urls.length;
             
-            // Create the dots (First dot gets a tiny Play Icon if there's a video)
             for(let i = 0; i < totalSlides; i++) {
                 let dotContent = (hasVideo && i === 0) ? '<i class="fas fa-play text-[6px] text-white ms-0.5"></i>' : '';
                 let dotClass = i === 0 ? 'bg-red-500 scale-125 w-3 h-3' : 'bg-white/80 shadow-sm w-2 h-2';
-                // We use 'dot-img-' ID for images so the auto-delete logic above works
                 let dotId = (hasVideo && i === 0) ? 'dot-video' : `dot-img-${hasVideo ? i - 1 : i}`;
                 dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass}">${dotContent}</div>`);
             }
-// FIX: Add Navigation Arrows if there's more than 1 slide (helps skip the video!)
-            document.querySelectorAll('.modal-nav-arrow').forEach(el => el.remove()); // Clear old arrows
+
+            // FIX 2: Add Smart Navigation Arrows using the new math-based scroll function
+            document.querySelectorAll('.modal-nav-arrow').forEach(el => el.remove()); 
             if (totalSlides > 1) {
-                const prevArrow = `<button onclick="document.getElementById('modal-image-slider').scrollBy({left: document.documentElement.dir === 'rtl' ? document.getElementById('modal-image-slider').clientWidth : -document.getElementById('modal-image-slider').clientWidth, behavior: 'smooth'})" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-left"></i></button>`;
-                const nextArrow = `<button onclick="document.getElementById('modal-image-slider').scrollBy({left: document.documentElement.dir === 'rtl' ? -document.getElementById('modal-image-slider').clientWidth : document.getElementById('modal-image-slider').clientWidth, behavior: 'smooth'})" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-right"></i></button>`;
+                const prevArrow = `<button onclick="scrollModalSlider(-1)" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-left"></i></button>`;
+                const nextArrow = `<button onclick="scrollModalSlider(1)" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-right"></i></button>`;
                 slider.insertAdjacentHTML('afterend', prevArrow + nextArrow);
             }
 
             clearInterval(window.modalCarouselTimer);
             
-            // DUAL-LOGIC: Handle auto-scrolling
             if (hasVideo) {
-                // If there is a video, DISABLE the infinite looping auto-scroll so they can watch in peace!
                 slider.dataset.infiniteSetup = "true"; 
                 slider.dataset.realCount = totalSlides;
                 
@@ -2166,11 +2163,10 @@ function setupVerticalDraggable(elementId) {
                     });
                 };
             } else {
-                // NO VIDEO: Use standard infinite looping logic
                 slider.dataset.infiniteSetup = "false";
                 const realImgCount = urls.length;
                 if (realImgCount > 1) {
-                    slider.insertAdjacentHTML('beforeend', `<img src="${urls[0]}" data-is-clone="true" class="w-full h-full object-cover shrink-0 snap-center">`);
+                    slider.insertAdjacentHTML('beforeend', `<img src="${urls[0]}" data-is-clone="true" class="w-full h-full object-cover shrink-0 snap-center pointer-events-none">`);
                 }
                 
                 slider.onscroll = () => {
@@ -2218,15 +2214,14 @@ function setupVerticalDraggable(elementId) {
             document.getElementById('label-share').textContent = t.share;
 
             const delCharge = rawBranding.smartDelivery ? rawBranding.smartDelivery : 'Free';
-document.getElementById('modalDeliveryText').textContent = `${t.deliveryPrefix} ${delCharge}`;
+            document.getElementById('modalDeliveryText').textContent = `${t.deliveryPrefix} ${delCharge}`;
 
-// Restore the logic to display the correct currency symbol!
-let modalCurrencyDisplay = getSmartCurrency(globalCurrency, "text-sm md:text-base font-normal mx-1 text-red-400");
+            let modalCurrencyDisplay = getSmartCurrency(globalCurrency, "text-sm md:text-base font-normal mx-1 text-red-400");
 
-const priceHtml = currentLang === 'en' 
-    ? `<span class="text-red-400 flex items-baseline justify-end">${modalCurrencyDisplay}<span class="text-3xl text-red-500">${item.price}</span></span>`
-    : `<span class="text-red-400 flex items-baseline justify-end"><span class="text-3xl text-red-500">${item.price}</span>${modalCurrencyDisplay}</span>`;
-document.getElementById('modalPrice').innerHTML = priceHtml;
+            const priceHtml = currentLang === 'en' 
+                ? `<span class="text-red-400 flex items-baseline justify-end">${modalCurrencyDisplay}<span class="text-3xl text-red-500">${item.price}</span></span>`
+                : `<span class="text-red-400 flex items-baseline justify-end"><span class="text-3xl text-red-500">${item.price}</span>${modalCurrencyDisplay}</span>`;
+            document.getElementById('modalPrice').innerHTML = priceHtml;
 
             if(item.calories) {
                 document.getElementById('modalCalories').textContent = item.calories;
@@ -2241,10 +2236,8 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
             if(item.recipe) {
                 document.getElementById('modalRecipe').textContent = item.recipe;
                 recipeArea.classList.remove('hidden');
+                window.toggleRecipe(true); 
                 
-                window.toggleRecipe(true); // Reset to collapsed state
-                
-                // Smart check if text needs clamping
                 setTimeout(() => {
                     const p = document.getElementById('modalRecipe');
                     if (p.scrollHeight <= p.clientHeight + 5) {
@@ -2259,15 +2252,12 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
                 recipeArea.classList.add('hidden');
             }
 
-            
-
             // Parse and Add Review/Social Icons
             const reviewArea = document.getElementById('modalReviewArea');
             const reviewIconsContainer = document.getElementById('modalReviewIcons');
             reviewIconsContainer.innerHTML = ''; 
 
             if (item.reviewLinks) {
-                // Keep the exact upper/lower case for the real link so it doesn't break
                 const links = String(item.reviewLinks).split(',').map(l => l.trim());
                 
                 const platforms = [
@@ -2280,34 +2270,20 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
 
                 links.forEach(link => {
                     if (!link) return;
-                    
-                    // We only use lowercase to search for platform names, we don't change the actual link
                     const lowerLink = link.toLowerCase(); 
-                    
-                    // If it's not a social media link, automatically assume it's Google
                     let matchedPlatform = platforms.find(p => lowerLink.includes(p.name)) || { name: 'google' };
                     
                     const a = document.createElement('a');
                     a.href = lowerLink.startsWith('http') ? link : `https://${link}`;
                     a.target = '_blank';
 
-                    // --- The Custom Google Reviews Pill Button ---
                     if (matchedPlatform.name === 'google') {
                         a.className = `h-10 px-4 rounded-full border border-gray-200 bg-white flex items-center justify-center gap-2 transition-all duration-300 hover:bg-gray-50 shadow-sm`;
-                        a.innerHTML = `
-                            <i class="fab fa-google text-blue-500 text-lg"></i>
-                            <span class="font-bold text-gray-700 text-sm">Reviews</span>
-                            <div class="flex text-yellow-400 text-xs gap-0.5">
-                                <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i>
-                            </div>
-                        `;
-                    } 
-                    // --- Standard Social Media Circle Buttons ---
-                    else {
+                        a.innerHTML = `<i class="fab fa-google text-blue-500 text-lg"></i><span class="font-bold text-gray-700 text-sm">Reviews</span><div class="flex text-yellow-400 text-xs gap-0.5"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>`;
+                    } else {
                         a.className = `w-10 h-10 rounded-full border border-gray-200 bg-gray-50 flex items-center justify-center ${matchedPlatform.color} transition-all duration-300 ${matchedPlatform.hover} hover:text-white shadow-sm`;
                         a.innerHTML = `<i class="${matchedPlatform.icon}"></i>`;
                     }
-                    
                     reviewIconsContainer.appendChild(a);
                 });
                 
@@ -2318,18 +2294,15 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
                 reviewArea.classList.remove('flex');
             }
 
-            // --- NEW: RELATED ITEMS LOGIC (Supabase Database) ---
+            // --- RELATED ITEMS LOGIC ---
             const relatedArea = document.getElementById('modalRelatedArea');
             const relatedSlider = document.getElementById('related-slider');
             relatedSlider.innerHTML = '';
             
-            // Find the mapped relation using the item's custom itemCode (e.g. ITM001)
             const relatedRow = window.liveRelatedItems.find(row => String(row.item_id) === String(item.itemCode));
             
             if (relatedRow && relatedRow.related_item_ids && relatedRow.related_item_ids.length > 0) {
-                const relatedIDs = relatedRow.related_item_ids; // Array of item codes like ["ITM002", "ITM005"]
-
-                // Find the actual food items in the menu that match those codes
+                const relatedIDs = relatedRow.related_item_ids; 
                 const matchedItems = activeMenuData.filter(menuItem => relatedIDs.includes(String(menuItem.itemCode))).slice(0, 10);
 
                 if (matchedItems.length > 0) {
@@ -2361,7 +2334,6 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
                 relatedArea.classList.add('hidden');
                 relatedArea.classList.remove('flex');
             }
-            // ---------------------------------
 
             const modal = document.getElementById('productModal');
             const backdrop = document.getElementById('modalBackdrop');
@@ -2373,29 +2345,24 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
             
             backdrop.classList.remove('opacity-0');
             backdrop.classList.add('opacity-100');
-            
             content.classList.remove('translate-y-full', 'md:scale-95', 'opacity-0');
             content.classList.add('translate-y-0', 'md:scale-100', 'opacity-100');
-
             document.body.style.overflow = 'hidden';
 
-            // --- NEW: Sticky Footer Magic ---
+            // FIX 3: Isolated Footer Variables to prevent SyntaxErrors!
             const actionFooter = document.getElementById('modal-action-footer');
-            const scrollArea = actionFooter.parentElement;
+            const footerScrollArea = actionFooter.parentElement;
             
-            // 1. Force the footer to stick to the bottom
             actionFooter.classList.add('sticky', 'bottom-0', 'bg-white', 'z-20', 'shadow-[0_-15px_20px_-15px_rgba(0,0,0,0.15)]', 'pb-4');
             
-            // 2. Function to remove stickiness
             function releaseSticky() {
                 actionFooter.classList.remove('sticky', 'bottom-0', 'bg-white', 'z-20', 'shadow-[0_-15px_20px_-15px_rgba(0,0,0,0.15)]', 'pb-4');
-                scrollArea.removeEventListener('scroll', releaseSticky);
-                scrollArea.removeEventListener('touchmove', releaseSticky);
+                footerScrollArea.removeEventListener('scroll', releaseSticky);
+                footerScrollArea.removeEventListener('touchmove', releaseSticky);
             }
             
-            // 3. The exact moment they swipe or scroll, release it!
-            scrollArea.addEventListener('scroll', releaseSticky, {once: true});
-            scrollArea.addEventListener('touchmove', releaseSticky, {once: true});
+            footerScrollArea.addEventListener('scroll', releaseSticky, {once: true});
+            footerScrollArea.addEventListener('touchmove', releaseSticky, {once: true});
         }
 
         function closeModal() {
@@ -3717,6 +3684,33 @@ function toggleQuickCart(id) {
                 executeFilter();
             });
         }
+// NEW: Smart Math-based Carousel Scroller for Desktop Arrows
+        window.scrollModalSlider = function(direction) {
+            const slider = document.getElementById('modal-image-slider');
+            if(!slider) return;
+            
+            const isRTL = document.documentElement.dir === 'rtl';
+            const slideWidth = slider.clientWidth;
+            const currentScroll = Math.abs(slider.scrollLeft);
+            
+            // Figure out exactly which slide we are on
+            let currentIndex = Math.round(currentScroll / slideWidth);
+            let targetIndex = currentIndex + direction;
+            
+            // Loop around if we hit the ends
+            const totalSlides = slider.children.length;
+            if (targetIndex < 0) targetIndex = totalSlides - 1;
+            if (targetIndex >= totalSlides) targetIndex = 0;
+            
+            const targetScroll = targetIndex * slideWidth;
+            
+            slider.scrollTo({
+                left: isRTL ? -targetScroll : targetScroll,
+                behavior: 'smooth'
+            });
+            
+            lastSliderInteraction = Date.now(); // Pause auto-swipe while user is clicking
+        };
 
         window.onload = init;
         setupSearch(); 
