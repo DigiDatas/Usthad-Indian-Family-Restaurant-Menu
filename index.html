@@ -1788,11 +1788,17 @@ function setupVerticalDraggable(elementId) {
                 const subContainer = document.getElementById('sub-category-filters');
                 
                 if (activeBtn && subContainer) {
-                    // Smoothly auto-scroll left so the user doesn't have to!
-                    subContainer.scrollTo({
-                        left: activeBtn.offsetLeft - 10,
-                        behavior: 'smooth'
+                    // 1. Visually update all buttons to inactive state
+                    const allBtns = subContainer.querySelectorAll('button');
+                    allBtns.forEach(b => {
+                        b.className = "shrink-0 px-3 py-1 rounded-full border text-xs font-bold transition-colors bg-white text-gray-600 border-gray-200 hover:bg-gray-100";
                     });
+                    
+                    // 2. Highlight the active one in dark gray!
+                    activeBtn.className = "shrink-0 px-3 py-1 rounded-full border text-xs font-bold transition-colors bg-gray-800 text-white border-gray-800 shadow-sm";
+
+                    // 3. Smoothly center the button on the screen (works flawlessly in both LTR and RTL!)
+                    activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                 }
             }
             // -----------------------------------------
@@ -2077,6 +2083,8 @@ function setupVerticalDraggable(elementId) {
             const item = activeMenuData.find(i => i.id === id);
             if (!item) return;
             currentOpenItemId = id;
+const scrollArea = document.querySelector('#modalContent .overflow-y-auto');
+            if (scrollArea) scrollArea.scrollTop = 0;
 
             const t = staticText[currentLang];
 
@@ -2128,6 +2136,13 @@ function setupVerticalDraggable(elementId) {
                 // We use 'dot-img-' ID for images so the auto-delete logic above works
                 let dotId = (hasVideo && i === 0) ? 'dot-video' : `dot-img-${hasVideo ? i - 1 : i}`;
                 dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass}">${dotContent}</div>`);
+            }
+// FIX: Add Navigation Arrows if there's more than 1 slide (helps skip the video!)
+            document.querySelectorAll('.modal-nav-arrow').forEach(el => el.remove()); // Clear old arrows
+            if (totalSlides > 1) {
+                const prevArrow = `<button onclick="document.getElementById('modal-image-slider').scrollBy({left: document.documentElement.dir === 'rtl' ? document.getElementById('modal-image-slider').clientWidth : -document.getElementById('modal-image-slider').clientWidth, behavior: 'smooth'})" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-left"></i></button>`;
+                const nextArrow = `<button onclick="document.getElementById('modal-image-slider').scrollBy({left: document.documentElement.dir === 'rtl' ? -document.getElementById('modal-image-slider').clientWidth : document.getElementById('modal-image-slider').clientWidth, behavior: 'smooth'})" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-right"></i></button>`;
+                slider.insertAdjacentHTML('afterend', prevArrow + nextArrow);
             }
 
             clearInterval(window.modalCarouselTimer);
@@ -3701,6 +3716,7 @@ function toggleQuickCart(id) {
                 executeFilter();
             });
         }
+
         window.onload = init;
         setupSearch(); 
 
