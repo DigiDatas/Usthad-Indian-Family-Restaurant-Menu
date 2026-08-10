@@ -2083,8 +2083,9 @@ function setupVerticalDraggable(elementId) {
             const item = activeMenuData.find(i => i.id === id);
             if (!item) return;
             currentOpenItemId = id;
-const scrollArea = document.querySelector('#modalContent .overflow-y-auto');
-            if (scrollArea) scrollArea.scrollTop = 0;
+// FIX: Instantly scroll the modal back to the top (fixes related items click issue)
+            const modalContentScroll = document.querySelector('#modalContent .overflow-y-auto');
+            if (modalContentScroll) modalContentScroll.scrollTop = 0;
 
             const t = staticText[currentLang];
 
