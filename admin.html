@@ -15,6 +15,7 @@
     </style>
 </head>
 <body class="text-gray-800 antialiased">
+
     <!-- Login Protection Overlay -->
     <div id="admin-login-overlay" class="fixed inset-0 z-50 bg-gray-900 flex flex-col items-center justify-center text-white px-4">
         <i class="fas fa-lock text-6xl text-red-500 mb-6"></i>
@@ -507,11 +508,18 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Recipe / Ingredients</label>
+                    <textarea id="form-recipe" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500"></textarea>
+                </div>
+
+                <!-- 1. VIDEO URL -->
+                <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-play text-red-500 me-1"></i> Video URL</label>
                     <input type="text" id="form-video" placeholder="https://youtube.com/..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 mb-4">
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <!-- 2. SPLIT REVIEWS -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fab fa-google text-blue-500 me-1"></i> Google Map Review</label>
                         <input type="text" id="form-review-google" placeholder="Paste Google Link..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
@@ -522,26 +530,8 @@
                     </div>
                 </div>
 
-                <!-- NEW DRAG & DROP RELATED ITEMS GALLERY -->
-                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                    <label class="block text-xs font-bold text-blue-800 uppercase mb-2"><i class="fas fa-link text-blue-500 me-1"></i> Related Items (URLs / IDs)</label>
-                    <p class="text-[10px] text-gray-500 mb-2 font-medium">Drag thumbnails to reorder. Add images from storage or paste URLs/IDs.</p>
-                    
-                    <div id="related-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl"></div>
-                    
-                    <div class="flex gap-2 mb-2">
-                        <button type="button" onclick="openMediaLibrary('related')" class="flex-1 bg-blue-100 text-blue-700 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-200 transition shadow-sm">
-                            <i class="fas fa-folder-open"></i> Browse Storage
-                        </button>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="form-related-input" placeholder="Paste URL or Item ID here..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500 bg-white">
-                        <button type="button" onclick="addExternalRelatedUrl()" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition shadow-sm">Add</button>
-                    </div>
-                    <input type="hidden" id="form-related">
-                </div>
-<!-- MULTI-IMAGE UPLOAD SECTION (MOVED TO TOP) -->
-                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
+                <!-- 3. PRODUCT IMAGES (MOVED UP) -->
+                <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200 mb-4">
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-2"><i class="fas fa-images text-red-500 me-1"></i> Product Images</label>
                     <p class="text-[10px] text-gray-500 mb-2 font-medium">Drag and drop thumbnails to reorder them.</p>
                     
@@ -566,7 +556,7 @@
                     </div>
                 </div>
 
-                <!-- NEW: MENU-LINKED RELATED ITEMS GALLERY (MOVED TO BOTTOM) -->
+                <!-- 4. RELATED ITEMS (MOVED DOWN, URL INPUT REMOVED) -->
                 <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
                     <label class="block text-xs font-bold text-blue-800 uppercase mb-2"><i class="fas fa-link text-blue-500 me-1"></i> Related Items</label>
                     <p class="text-[10px] text-gray-500 mb-2 font-medium">Click "Browse Menu" to select existing food items. Drag thumbnails to reorder.</p>
@@ -580,8 +570,7 @@
                     </div>
                     <input type="hidden" id="form-related">
                 </div>
-
-                <!-- ⬇️ ADD THESE MISSING ELEMENTS HERE ⬇️ -->
+<!-- ⬇️ ADD THESE MISSING ELEMENTS HERE ⬇️ -->
                 <div class="flex items-center gap-2 mt-4">
                     <input type="checkbox" id="form-special" class="w-4 h-4 text-red-600 rounded focus:ring-red-500">
                     <label for="form-special" class="text-xs font-bold text-gray-700 uppercase">Mark as Today's Special</label>
