@@ -536,29 +536,23 @@
                     </div>
                     <input type="hidden" id="form-related">
                 </div>
-<!-- MULTI-IMAGE UPLOAD SECTION -->
+<!-- MULTI-IMAGE UPLOAD SECTION (MOVED TO TOP) -->
                 <div class="bg-gray-50 p-4 rounded-2xl border border-gray-200">
                     <label class="block text-xs font-bold text-gray-700 uppercase mb-2"><i class="fas fa-images text-red-500 me-1"></i> Product Images</label>
                     <p class="text-[10px] text-gray-500 mb-2 font-medium">Drag and drop thumbnails to reorder them.</p>
                     
-                    <!-- 1. Thumbnail Preview Gallery (Now Draggable!) -->
-                    <div id="image-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl">
-                        <!-- Dynamic image thumbnails will be injected here -->
-                    </div>
+                    <div id="image-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl"></div>
 
-                    <!-- 2. File Upload & Browse Storage Buttons -->
                     <div class="flex gap-2 mb-2">
                         <label class="flex-1 bg-red-50 text-red-600 border border-red-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-red-100 transition flex items-center justify-center gap-2 shadow-sm text-center">
                             <i class="fas fa-cloud-upload-alt"></i> Upload New
                             <input type="file" id="form-image-file" multiple accept="image/*" class="hidden" onchange="handleMultipleStorageUpload(event)">
                         </label>
-                        <!-- We added 'product' inside the parentheses below -->
                         <button type="button" onclick="openMediaLibrary('product')" class="flex-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold cursor-pointer hover:bg-blue-100 transition flex items-center justify-center gap-2 shadow-sm text-center">
                             <i class="fas fa-folder-open"></i> Browse Bucket
                         </button>
                     </div>
 
-                    <!-- 3. Direct URL Input (Now acts as an Add button) -->
                     <span class="text-[10px] text-gray-400 font-medium text-center block mb-1 mt-3">- OR ADD EXTERNAL URL -</span>
                     <div class="flex gap-2">
                         <input type="text" id="form-img-input" placeholder="Paste image URL here..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-red-500 bg-white">
@@ -566,6 +560,21 @@
                             Add URL
                         </button>
                     </div>
+                </div>
+
+                <!-- NEW: MENU-LINKED RELATED ITEMS GALLERY (MOVED TO BOTTOM) -->
+                <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                    <label class="block text-xs font-bold text-blue-800 uppercase mb-2"><i class="fas fa-link text-blue-500 me-1"></i> Related Items</label>
+                    <p class="text-[10px] text-gray-500 mb-2 font-medium">Click "Browse Menu" to select existing food items. Drag thumbnails to reorder.</p>
+                    
+                    <div id="related-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl"></div>
+                    
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openMediaLibrary('related')" class="w-full bg-blue-100 text-blue-700 border border-blue-200 rounded-xl px-4 py-3 text-xs font-bold hover:bg-blue-200 transition shadow-sm flex items-center justify-center gap-2">
+                            <i class="fas fa-utensils text-lg"></i> Browse Menu Items
+                        </button>
+                    </div>
+                    <input type="hidden" id="form-related">
                 </div>
 
                 <!-- ⬇️ ADD THESE MISSING ELEMENTS HERE ⬇️ -->
@@ -1580,10 +1589,52 @@ let currentMediaTarget = 'product';
         async function openMediaLibrary(target = 'product', sectionIndex = 0) {
             currentMediaTarget = target;
             currentBannerIndex = sectionIndex; 
-            document.getElementById('mediaLibraryModal').classList.remove('hidden');
-            document.getElementById('mediaLibraryModal').classList.add('flex');
-            
+            const modal = document.getElementById('mediaLibraryModal');
             const gallery = document.getElementById('media-library-gallery');
+            const headerTitle = modal.querySelector('h3');
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            // SMART HIJACK: If targeting Related Items, show the Menu Database instead of Storage!
+            if (target === 'related') {
+                headerTitle.innerHTML = `<i class="fas fa-utensils text-blue-500 me-2"></i> Select Related Item`;
+                gallery.innerHTML = '';
+                
+                const menuItems = allMenuItems.filter(i => i.language === currentAdminLang);
+                if (menuItems.length === 0) {
+                    gallery.innerHTML = '<span class="text-gray-400">No menu items found. Please add items first.</span>';
+                    return;
+                }
+                
+                menuItems.forEach(item => {
+                    const currentEditId = document.getElementById('edit-item-id').value;
+                    if (String(item.id) === String(currentEditId)) return; // Don't show the item currently being edited
+                    
+                    const imgUrl = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
+                    const imgCard = document.createElement('div');
+                    imgCard.className = "relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 cursor-pointer hover:border-blue-500 hover:shadow-md transition group shrink-0";
+                    imgCard.innerHTML = `
+                        <img src="${imgUrl}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition">
+                        <div class="absolute inset-0 flex flex-col items-center justify-center p-1 text-center bg-black/40 group-hover:bg-transparent transition">
+                            <span class="text-white text-[9px] font-bold truncate w-full drop-shadow-md">${item.name}</span>
+                            <span class="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded mt-1">${item.item_code}</span>
+                        </div>
+                    `;
+                    imgCard.onclick = () => {
+                        if (!currentEditingRelated.includes(item.item_code)) {
+                            currentEditingRelated.push(item.item_code);
+                            renderRelatedGallery();
+                        }
+                        closeMediaLibrary();
+                    };
+                    gallery.appendChild(imgCard);
+                });
+                return;
+            }
+
+            // Normal Flow: Load Storage Bucket Images
+            headerTitle.innerHTML = `<i class="fas fa-images text-blue-500 me-2"></i> Select from Storage`;
             gallery.innerHTML = '<div class="text-blue-500 font-bold mt-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Loading images from bucket...</div>';
             
             const { data, error } = await supabaseClient.storage.from('menu-images').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
@@ -1608,9 +1659,7 @@ let currentMediaTarget = 'product';
                 `;
                 
                 imgCard.onclick = () => {
-                    // Route the image to the correct array and section (INCLUDES FIX A)
                     if (currentMediaTarget === 'product') { currentEditingImages.push(publicUrl); renderImageGallery(); }
-                    else if (currentMediaTarget === 'related') { currentEditingRelated.push(publicUrl); renderRelatedGallery(); }
                     else if (currentMediaTarget === 'banner') { currentAdminBanners[currentBannerIndex].urls.push(publicUrl); renderGlobalGallery('banner', currentBannerIndex); }
                     else if (currentMediaTarget === 'flashcard') { currentAdminFlashcards.push(publicUrl); renderGlobalGallery('flashcard'); }
                     closeMediaLibrary();
@@ -2148,27 +2197,33 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const gallery = document.getElementById('related-preview-gallery');
             gallery.innerHTML = '';
             if (currentEditingRelated.length === 0) {
-                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto empty-gallery-text">No related items added</span>`; return; 
+                gallery.innerHTML = `<span class="text-xs text-gray-400 font-medium my-auto mx-auto empty-gallery-text">No related items selected</span>`; return; 
             }
-            currentEditingRelated.forEach((url, index) => {
-                const isImage = url.includes('http');
-                const displayHtml = isImage ? `<img src="${url}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center bg-gray-100 text-[9px] font-bold text-gray-500 break-words p-1 text-center">${url}</div>`;
+            currentEditingRelated.forEach((itemCode, index) => {
+                // Find the actual item from the database using its item_code
+                const item = allMenuItems.find(i => String(i.item_code) === String(itemCode) && i.language === currentAdminLang);
+                
+                let displayHtml = '';
+                if (item) {
+                    const imgUrl = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
+                    displayHtml = `
+                        <img src="${imgUrl}" class="w-full h-full object-cover opacity-80">
+                        <div class="absolute bottom-0 inset-x-0 bg-black/70 p-0.5 text-center">
+                            <p class="text-[8px] text-white font-bold truncate">${item.name}</p>
+                        </div>
+                    `;
+                } else {
+                    displayHtml = `<div class="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-center p-1"><i class="fas fa-link text-gray-400 mb-1"></i><span class="text-[7px] font-bold text-gray-500 break-all">${itemCode}</span></div>`;
+                }
                 
                 const thumb = document.createElement('div');
-                thumb.className = "relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 cursor-grab sortable-thumb";
-                thumb.dataset.url = url; 
-                thumb.innerHTML = `${displayHtml} <button type="button" onclick="currentEditingRelated.splice(${index}, 1); renderRelatedGallery();" class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow z-10"><i class="fas fa-times"></i></button>`;
+                thumb.className = "relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm shrink-0 cursor-grab sortable-thumb";
+                thumb.dataset.url = itemCode; 
+                thumb.innerHTML = `${displayHtml} <button type="button" onclick="currentEditingRelated.splice(${index}, 1); renderRelatedGallery();" class="absolute top-1 end-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] shadow z-10 hover:bg-red-700 transition"><i class="fas fa-times"></i></button>`;
                 gallery.appendChild(thumb);
             });
             if (window.relatedSortable) window.relatedSortable.destroy();
             window.relatedSortable = new Sortable(gallery, { animation: 150, filter: '.empty-gallery-text', onEnd: () => { currentEditingRelated = Array.from(gallery.children).map(el => el.dataset.url); }});
-        }
-
-        function addExternalRelatedUrl() {
-            const input = document.getElementById('form-related-input');
-            if (!input.value.trim()) return;
-            currentEditingRelated.push(...input.value.split(',').map(u => u.trim()).filter(Boolean));
-            input.value = ''; renderRelatedGallery();
         }
 
         async function fetchOffers() {
