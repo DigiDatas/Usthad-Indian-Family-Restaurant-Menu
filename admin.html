@@ -328,18 +328,19 @@
             </div>
 
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <!-- Hidden IDs to track Row 1 (English) and Row 2 (Arabic) -->
+                <!-- Hidden IDs -->
                 <input type="hidden" id="setting-id">
                 <input type="hidden" id="setting-id-ar">
                 
+                <!-- Grid 1: Brand & Currency -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (EN) *</label>
-                        <input type="text" id="set-brand" placeholder="e.g. ShawarMax" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                        <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (AR)</label>
-                        <input type="text" id="set-brand-ar" placeholder="e.g. شاور ماكس" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
+                        <input type="text" id="set-brand-ar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Currency</label>
@@ -347,47 +348,73 @@
                     </div>
                 </div>
 
+                <!-- Grid 2: Contacts -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone text-blue-500"></i> Primary Contact</label>
                         <input type="text" id="set-contact" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
                     </div>
                     <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone-alt text-orange-500"></i> Secondary Contact</label>
+                        <input type="text" id="set-other-number" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
+                    <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp</label>
                         <input type="text" id="set-wa" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
                     </div>
+                </div>
+
+                <!-- Grid 3: Web & Email -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-envelope text-red-500"></i> Email</label>
                         <input type="email" id="set-email" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-globe text-blue-600"></i> Website URL</label>
+                        <input type="text" id="set-website" placeholder="https://..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    </div>
                 </div>
 
+                <!-- Address & Maps -->
                 <div class="mb-6">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map-marker-alt text-red-500"></i> Address</label>
                     <textarea id="set-address" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"></textarea>
                 </div>
-                
                 <div class="mb-6">
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map text-blue-500"></i> Google Maps URL</label>
                     <input type="text" id="set-map" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
                 </div>
 
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-images text-purple-500"></i> Banner Images (Comma separated URLs)</label>
-                    <textarea id="set-banners" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"></textarea>
+                <!-- NEW: Social Media Manager -->
+                <div class="mb-6 p-5 bg-gray-50 border border-gray-200 rounded-2xl">
+                    <div class="flex justify-between items-end mb-4 border-b border-gray-200 pb-3">
+                        <div>
+                            <h3 class="font-bold text-gray-800"><i class="fas fa-share-nodes text-purple-500 me-2"></i>Social Media Links</h3>
+                            <p class="text-[10px] text-gray-500">Toggle platforms ON/OFF and paste your profile URLs.</p>
+                        </div>
+                        <button type="button" onclick="addCustomSocial()" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-200 transition shadow-sm">
+                            <i class="fas fa-plus"></i> Add Platform
+                        </button>
+                    </div>
+                    <div id="admin-social-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Javascript will inject social inputs here -->
+                    </div>
                 </div>
 
+                <!-- Logo & Delivery -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logo Link</label>
                         <input type="text" id="set-logo" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Charge</label>
-                        <input type="text" id="set-delivery" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Charge text</label>
+                        <input type="text" id="set-delivery" placeholder="e.g. 5 Riyal Around 3 Km" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
                     </div>
                 </div>
 
+                <!-- Game Feature -->
                 <div class="flex items-center gap-2">
                     <input type="checkbox" id="set-game" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
                     <label for="set-game" class="text-sm font-bold text-gray-700">Enable Arcade Game Feature</label>
@@ -1833,44 +1860,102 @@ let currentMediaTarget = 'product';
         // ==========================================
         // RESTAURANT SETTINGS LOGIC
         // ==========================================
+        let adminSocials = [];
+        const defaultSocials = [
+            { id: 'instagram', name: 'Instagram', icon: 'fab fa-instagram', color: 'text-pink-600' },
+            { id: 'facebook', name: 'Facebook', icon: 'fab fa-facebook-f', color: 'text-blue-600' },
+            { id: 'snapchat', name: 'Snapchat', icon: 'fab fa-snapchat-ghost', color: 'text-yellow-500' },
+            { id: 'tiktok', name: 'TikTok', icon: 'fab fa-tiktok', color: 'text-gray-800' },
+            { id: 'youtube', name: 'YouTube', icon: 'fab fa-youtube', color: 'text-red-600' },
+            { id: 'linkedin', name: 'LinkedIn', icon: 'fab fa-linkedin-in', color: 'text-blue-700' }
+        ];
+
+        function renderAdminSocials() {
+            const container = document.getElementById('admin-social-container');
+            container.innerHTML = '';
+            adminSocials.forEach((soc, index) => {
+                container.innerHTML += `
+                <div class="flex items-center gap-3 bg-white p-3 rounded-xl border border-gray-200 shadow-sm transition-all focus-within:border-purple-400">
+                    <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center shrink-0 ${soc.color}">
+                        <i class="${soc.icon} text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <input type="text" id="soc-name-${index}" value="${soc.name}" class="w-full bg-transparent text-xs font-bold text-gray-700 uppercase mb-0.5 focus:outline-none placeholder-gray-300">
+                        <input type="text" id="soc-url-${index}" value="${soc.url || ''}" placeholder="Paste URL..." class="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex flex-col items-center gap-1 shrink-0 ml-1">
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="soc-en-${index}" ${soc.enabled ? 'checked' : ''} onchange="updateSocText(${index})" class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                        <span id="soc-txt-${index}" class="text-[9px] font-bold ${soc.enabled ? 'text-green-500' : 'text-gray-400'} uppercase">${soc.enabled ? 'ON' : 'OFF'}</span>
+                    </div>
+                    <button type="button" onclick="removeAdminSocial(${index})" class="text-gray-300 hover:text-red-600 p-2 transition"><i class="fas fa-trash"></i></button>
+                </div>`;
+            });
+        }
+
+        function updateSocText(idx) {
+            const isChecked = document.getElementById(`soc-en-${idx}`).checked;
+            const txt = document.getElementById(`soc-txt-${idx}`);
+            txt.textContent = isChecked ? 'ON' : 'OFF';
+            txt.className = `text-[9px] font-bold uppercase ${isChecked ? 'text-green-500' : 'text-gray-400'}`;
+        }
+
+        function addCustomSocial() {
+            adminSocials.push({ id: 'custom-' + Date.now(), name: 'Custom Link', icon: 'fas fa-link', color: 'text-blue-500', url: '', enabled: true });
+            renderAdminSocials();
+        }
+
+        function removeAdminSocial(index) {
+            if(confirm("Remove this social media link?")) {
+                adminSocials.splice(index, 1);
+                renderAdminSocials();
+            }
+        }
+
         async function fetchSettings() {
-            // Fetch all settings rows, ordered by ID so Row 1 is English, Row 2 is Arabic
             const { data, error } = await supabaseClient.from('restaurant_settings').select('*').order('id', { ascending: true });
             
             if (data && data.length > 0) {
-                const mainRow = data[0]; // First row (English)
-                const arRow = data.length > 1 ? data[1] : null; // Second row (Arabic)
+                const mainRow = data[0]; 
+                const arRow = data.length > 1 ? data[1] : null; 
 
                 document.getElementById('setting-id').value = mainRow.id;
                 document.getElementById('set-brand').value = mainRow.brand_name || '';
                 
-                // Safely load Arabic brand name from the second row
                 if (arRow) {
                     document.getElementById('setting-id-ar').value = arRow.id;
                     document.getElementById('set-brand-ar').value = arRow.brand_name || '';
-                } else {
-                    document.getElementById('setting-id-ar').value = '';
-                    document.getElementById('set-brand-ar').value = '';
                 }
 
                 document.getElementById('set-currency').value = mainRow.currency || '';
                 document.getElementById('set-contact').value = mainRow.contact || '';
+                document.getElementById('set-other-number').value = mainRow.other_number || '';
                 document.getElementById('set-wa').value = mainRow.whatsapp || '';
                 document.getElementById('set-email').value = mainRow.email || '';
+                document.getElementById('set-website').value = mainRow.website || '';
                 document.getElementById('set-address').value = mainRow.address || '';
                 document.getElementById('set-map').value = mainRow.location_url || '';
                 document.getElementById('set-logo').value = mainRow.logo_link || '';
                 document.getElementById('set-delivery').value = mainRow.delivery_charge || '';
                 document.getElementById('set-game').checked = mainRow.game_enabled || false;
                 
-                // Combine all banner images from all rows into the text area
-                let allBanners = [];
-                data.forEach(row => {
-                    if (row.banner_images && Array.isArray(row.banner_images)) {
-                        allBanners.push(...row.banner_images);
-                    }
+                // Merge Database Socials with Defaults
+                const savedSocials = mainRow.social_links || [];
+                adminSocials = defaultSocials.map(def => {
+                    const found = savedSocials.find(s => s.id === def.id);
+                    return { ...def, url: found ? found.url : '', enabled: found ? found.enabled : false };
                 });
-                document.getElementById('set-banners').value = [...new Set(allBanners)].join(',\n');
+                
+                savedSocials.forEach(s => {
+                    if (!defaultSocials.find(d => d.id === s.id)) adminSocials.push(s);
+                });
+                
+                renderAdminSocials();
+            } else {
+                adminSocials = [...defaultSocials];
+                renderAdminSocials();
             }
         }
 
@@ -1881,54 +1966,49 @@ let currentMediaTarget = 'product';
             const btn = document.getElementById('btn-save-settings');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
-            const rawBanners = document.getElementById('set-banners').value;
-            const bannerArray = rawBanners ? rawBanners.split(',').map(b => b.trim()).filter(Boolean) : [];
+            // Gather live social media input values
+            adminSocials.forEach((soc, i) => {
+                const nameEl = document.getElementById(`soc-name-${i}`);
+                const urlEl = document.getElementById(`soc-url-${i}`);
+                const enEl = document.getElementById(`soc-en-${i}`);
+                if(nameEl) soc.name = nameEl.value;
+                if(urlEl) soc.url = urlEl.value;
+                if(enEl) soc.enabled = enEl.checked;
+            });
 
-            // Payload for the First Row (English + Master Settings)
             const payloadEn = {
                 brand_name: document.getElementById('set-brand').value.trim(),
                 currency: document.getElementById('set-currency').value.trim(),
                 contact: document.getElementById('set-contact').value.trim(),
+                other_number: document.getElementById('set-other-number').value.trim(),
                 whatsapp: document.getElementById('set-wa').value.trim(),
                 email: document.getElementById('set-email').value.trim(),
+                website: document.getElementById('set-website').value.trim(),
                 address: document.getElementById('set-address').value.trim(),
                 location_url: document.getElementById('set-map').value.trim(),
                 logo_link: document.getElementById('set-logo').value.trim(),
                 delivery_charge: document.getElementById('set-delivery').value.trim(),
-                banner_images: bannerArray, 
-                game_enabled: document.getElementById('set-game').checked
+                game_enabled: document.getElementById('set-game').checked,
+                social_links: adminSocials 
             };
 
-            // Payload for the Second Row (Arabic Brand Name only)
-            const payloadAr = {
-                brand_name: document.getElementById('set-brand-ar').value.trim()
-            };
+            const payloadAr = { brand_name: document.getElementById('set-brand-ar').value.trim() };
 
             let hasError = false;
-
-            // Update Row 1 (English)
             if (idEn) {
                 const { error: err1 } = await supabaseClient.from('restaurant_settings').update(payloadEn).eq('id', idEn);
                 if (err1) hasError = true;
             }
-
-            // Update Row 2 (Arabic)
             if (idAr) {
                 const { error: err2 } = await supabaseClient.from('restaurant_settings').update(payloadAr).eq('id', idAr);
                 if (err2) hasError = true;
             } else if (payloadAr.brand_name) {
-                // If row 2 was missing from the DB, create it dynamically
                 await supabaseClient.from('restaurant_settings').insert([payloadAr]);
             }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;
-            
-            if (hasError) {
-                alert("Warning: There was an issue saving some settings.");
-            } else {
-                alert("Restaurant settings updated successfully!");
-                fetchSettings(); // Refresh to ensure IDs are synced
-            }
+            if (hasError) alert("Warning: There was an issue saving some settings.");
+            else alert("Restaurant settings updated successfully!");
         }
 // ==========================================
         // NEW GALLERIES ENGINE (Related, Banners, Flashcards)
