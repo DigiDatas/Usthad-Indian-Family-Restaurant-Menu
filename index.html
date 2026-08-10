@@ -1008,14 +1008,24 @@ let langSetup = 'English&Arabic';
 
 let globalCurrency = ""; 
 const newRiyalIcon = `<svg class="inline-block w-[0.8em] h-[0.8em] mx-0.5 fill-current" viewBox="0 0 202.03 220.76" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M3.62,190.51c1.85-3.4,4.63-11.11,8.33-12.04l62.35-13.27v-30.87l-63.28,13.58c-1.23,0,3.09-13.27,3.4-13.89,1.54-3.4,4.32-11.11,8.03-12.04l51.86-11.11V20.42c0-4.94,8.64-11.73,11.42-14.51.93-.62,9.88-8.64,9.88-4.94v105.57l24.69-5.56V31.84c0-4.94,8.64-11.73,11.73-14.2.62-.93,9.57-8.64,9.57-5.25v84.27l58.34-12.35h.31l1.23-.31c.93-.31-3.09,12.96-3.7,13.89-1.54,3.09-4.32,11.11-8.03,11.73l-48.15,10.5v24.39l60.19-12.66c1.23-.31-2.78,13.27-3.4,13.89-1.54,3.4-4.32,11.11-8.03,12.04l-68.53,14.82c-.93,0-1.54,0-1.54-1.23v-46.61l-24.69,5.25v31.79c0,6.79-13.27,25-20.06,26.86v-.31L.22,204.4c-1.23.31,3.09-12.96,3.4-13.89ZM196.55,194.83c-1.54,3.09-4.32,11.11-8.33,12.04l-68.84,13.89c-.93.31,3.09-12.96,3.7-13.89,1.54-3.4,4.32-11.11,8.03-12.04l68.84-13.89c1.54-.31-3.09,12.96-3.4,13.89Z"/></svg>`;
+
 function getSmartCurrency(currStr, customClass = "") {
     const c = String(currStr).trim().toLowerCase();
-    if (c === 'sr' || c === 'sar') return newRiyalIcon; // Loads custom Saudi Riyal SVG
+    
+    // Custom SVG mapping
+    if (c === 'sr' || c === 'sar') return newRiyalIcon; 
+    
+    // Standard Text Symbols
     if (c === 'dollar' || c === 'usd') return `<span class="${customClass}">$</span>`;
     if (c === 'euro' || c === 'eur') return `<span class="${customClass}">€</span>`;
     if (c === 'pound' || c === 'gbp') return `<span class="${customClass}">£</span>`;
-    return `<span class="${customClass}">${currStr}</span>`; // Defaults to whatever text you type
+    if (c === 'inr' || c === 'rupee') return `<span class="${customClass}">₹</span>`;
+    if (c === 'aed') return `<span class="${customClass}">د.إ</span>`;
+    
+    // Fallback if none match
+    return `<span class="${customClass}">${currStr}</span>`; 
 }
+
 let activeMenuData = []; 
 let mainCategories = []; 
 let allSubCategories = []; // NEW: Stores subcategories 
@@ -1049,8 +1059,7 @@ let relatedItemsData = []; // (You did this perfectly!)
             }
         };
 
-        /// --- Master Initialization (JSON Upgraded) ---
-        /// --- Master Initialization ---
+        /// --- Master DB-Only Initialization Engine ---
         async function init() {
             try {
                 // ==========================================
@@ -1063,276 +1072,178 @@ let relatedItemsData = []; // (You did this perfectly!)
                     
                     const authData = await authResponse.json();
                     let isValidCustomer = false;
-                    
                     for (const sheet in authData) {
                         const rows = authData[sheet];
                         if (Array.isArray(rows)) {
                             const match = rows.find(row => String(row.C || "").trim() === String(CUSTOMER_ID).trim());
                             if (match && String(match.E || "").trim().toLowerCase() === "active") {
-                                isValidCustomer = true;
-                                break;
+                                isValidCustomer = true; break;
                             }
                         }
                     }
                     if (!isValidCustomer) throw new Error("Not Active");
                 } catch (authError) {
-                    document.body.innerHTML = `
-                        <div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#f8fafc; font-family:sans-serif; color:#ef4444; text-align:center; padding: 20px;">
-                            <i class="fas fa-store-slash text-6xl mb-4 text-gray-300"></i>
-                            <h2 class="text-3xl font-extrabold text-gray-800">Temporarily Not Available</h2>
-                            <p class="text-gray-500 mt-2 font-bold">This menu is currently inactive. Please contact the administrator.</p>
-                        </div>`;
+                    document.body.innerHTML = `<div style="display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh; background-color:#f8fafc; font-family:sans-serif; color:#ef4444; text-align:center; padding: 20px;"><i class="fas fa-store-slash text-6xl mb-4 text-gray-300"></i><h2 class="text-3xl font-extrabold text-gray-800">Temporarily Not Available</h2><p class="text-gray-500 mt-2 font-bold">This menu is currently inactive. Please contact the administrator.</p></div>`;
                     return; 
                 }
-                // ==========================================
 
-                // 1. FETCH BRANDING & OFFERS FROM JSON
-                const fileUrl = "MenuMasterData.json?v=" + new Date().getTime();
-                const response = await fetch(fileUrl);
-                if (response.ok) {
-                    const jsonData = await response.json();
-                    const sNames = Object.keys(jsonData);
-                    
-                    const sBrand = sNames.find(n => n.includes("01") || n.includes("Brand") || n.replace(/\s/g,'') === "Sheet1") || sNames[0];
-                    const sOffer = sNames.find(n => n.includes("2") || n.includes("Offer")) || sNames[1];
-                    const sRelated = sNames.find(n => n.toLowerCase().includes("relateditems"));
+                document.getElementById('loading-text').textContent = 'Loading Live Database...';
 
-                    if(sBrand && jsonData[sBrand]) {
-                        window.rawBrandRows = jsonData[sBrand];
-                        rawBranding = window.rawBrandRows.find((r, i) => i > 0 && (r.K || r.B || r.L)) || window.rawBrandRows[1] || window.rawBrandRows[0] || {};
-                    }
-                    if(sOffer && jsonData[sOffer]) {
-                        const offerRows = jsonData[sOffer];
-                        if(offerRows.length > 1) rawOffers = offerRows.slice(1);
-                    }
-                    if(sRelated && Array.isArray(jsonData[sRelated])) {
-                        relatedItemsData = jsonData[sRelated];
-                    } else {
-                        relatedItemsData = [];
-                    }
-                }
-
-                // 2. FETCH LIVE MENU ITEMS FROM SUPABASE
-                const activeLang = typeof currentLanguage !== 'undefined' ? currentLanguage : 'en';
-
-                const { data: menuData, error: menuError } = await supabaseClient
-                    .from('menu_items')
-                    .select('*')
-                    .eq('language', activeLang) // <--- Filters items to match EN or AR automatically
-                    .order('order_index', { ascending: true });
-
-                if (menuError) throw menuError;
-
-                if (menuData && menuData.length > 0) {
-                    activeMenuData = menuData.map(item => ({
-                        id: item.id,
-			itemCode: item.item_code,
-                        mainCat: item.main_cat,
-                        subCat: item.sub_cat,
-                        name: item.name,
-                        order: item.order_index || 999,
-                        price: item.price || 0,
-                        desc: item.description || "",
-                        calories: item.calories || "",
-                        recipe: item.recipe || "",
-                        isTodaySpecial: item.is_today_special || false,
-                        imgUrls: item.img_urls && item.img_urls.length > 0 ? item.img_urls : [rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'],
-                        img: item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : (rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'),
-                        video: item.video_url || "",
-                        reviewLinks: item.review_links || "",
-                        flashCards: item.flash_cards || ""
-                    }));
-
-                    mainCategories = [...new Set(activeMenuData.map(i => i.mainCat))];
-                    allSubCategories = [...new Set(activeMenuData.map(i => i.subCat))];
-                }
-
-                // --- NEW: FETCH LIVE SETTINGS FROM DATABASE ---
+                // 1. FETCH LIVE BRANDING (Bypassing JSON Completely!)
                 const { data: dbSettings } = await supabaseClient.from('restaurant_settings').select('*').order('id', { ascending: true });
                 if (dbSettings && dbSettings.length > 0) {
-                    window.dbSettingsEn = dbSettings[0]; // Row 1 (English)
-                    window.dbSettingsAr = dbSettings.length > 1 ? dbSettings[1] : dbSettings[0]; // Row 2 (Arabic)
+                    window.dbSettingsEn = dbSettings[0]; 
+                    window.dbSettingsAr = dbSettings.length > 1 ? dbSettings[1] : dbSettings[0]; 
                     
-                    // Override old JSON branding with Live Database Settings
-                    rawBranding.B = window.dbSettingsEn.brand_name;
-                    rawBranding.C = window.dbSettingsEn.contact;
-                    rawBranding.D = window.dbSettingsEn.whatsapp;
-                    rawBranding.F = window.dbSettingsEn.email;
-                    rawBranding.H = window.dbSettingsEn.address;
-                    rawBranding.I = window.dbSettingsEn.location_url;
-                    
-                    // NEW ADDITIONS:
-                    rawBranding.other_number = window.dbSettingsEn.other_number;
-                    rawBranding.website = window.dbSettingsEn.website;
-                    rawBranding.social_links = window.dbSettingsEn.social_links;
-                    
-                    if(window.dbSettingsEn.logo_link) rawBranding.smartLogo = window.dbSettingsEn.logo_link;
+                    // Map live database directly to the app's global variables
+                    rawBranding = {
+                        B: window.dbSettingsEn.brand_name,
+                        C: window.dbSettingsEn.contact,
+                        D: window.dbSettingsEn.whatsapp,
+                        other_number: window.dbSettingsEn.other_number,
+                        F: window.dbSettingsEn.email,
+                        website: window.dbSettingsEn.website,
+                        H: window.dbSettingsEn.address,
+                        I: window.dbSettingsEn.location_url,
+                        smartLogo: window.dbSettingsEn.logo_link,
+                        smartDelivery: window.dbSettingsEn.delivery_charge,
+                        smartCurrency: window.dbSettingsEn.currency,
+                        social_links: window.dbSettingsEn.social_links,
+                        language: window.dbSettingsEn.language,
+                        P: window.dbSettingsEn.game_enabled ? 'true' : 'false'
+                    };
+                    globalCurrency = rawBranding.smartCurrency || "";
+                } else {
+                    rawBranding = {};
                 }
-// --- NEW: FETCH LIVE RELATED ITEMS FROM DATABASE ---
-                const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
-                window.liveRelatedItems = relDbData || [];
-// --- NEW: FETCH LIVE SPECIAL OFFERS & FLASHCARDS FROM DATABASE ---
+
+                // 2. FETCH LIVE OFFERS & FLASHCARDS
                 const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
                 if (dbOffers && dbOffers.length > 0) {
-                    // Populate the Top Slider Offers (Ignoring our hidden system row)
                     rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
-                        B: o.offer_name,
-                        C: o.description,
-                        D: o.price_before,
-                        E: o.price_after,
-                        F: o.image_url
+                        B: o.offer_name, C: o.description, D: o.price_before, E: o.price_after, F: o.image_url
                     }));
-                    
-                    // Grab the Flashcards and securely pass them to the window
                     const flashcardRow = dbOffers.find(o => o.flashcard);
-                    if (flashcardRow) {
-                        window.liveFlashcards = flashcardRow.flashcard.split(',').map(u => u.trim()).filter(Boolean);
-                    }
+                    if (flashcardRow) window.liveFlashcards = flashcardRow.flashcard.split(',').map(u => u.trim()).filter(Boolean);
                 }
-                // ----------------------------------------------
-                // ----------------------------------------------
 
-                document.getElementById('loading-state').classList.add('hidden');
-                
-                // Initialize UI
+                // 3. FETCH LIVE RELATED ITEMS
+                const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
+                window.liveRelatedItems = relDbData || [];
+
+                // 4. SET LANGUAGE PREFERENCES
                 applySystemSetup();
-                renderSocialMedia();
-                renderCategoryFilters();
-                renderSubCategoryFilters();
-                executeFilter();
-                
+
+                // 5. FETCH MENU FOR CURRENT LANGUAGE
+                await fetchMenuDataForLang(currentLang);
+
             } catch (error) {
                 console.error("Initialization Error:", error);
                 document.getElementById('loading-state').classList.add('hidden');
             }
         }
 
-        // --- System Logic ---
-        function applySystemSetup() {
-            let langVal = "";
-            let langCol = "K";
+        // NEW: Dedicated Database Menu Fetcher (Swaps instantly on Language Toggle!)
+        async function fetchMenuDataForLang(lang) {
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('menu-container').classList.add('hidden');
             
-            for (let col of ["J", "K", "L", "M"]) {
-                let val = String(rawBranding[col] || "").trim().toLowerCase();
-                if (val === 'english' || val === 'arabic' || val === 'english&arabic' || val === 'both') {
-                    langVal = val;
-                    langCol = col;
-                    break;
-                }
+            const { data: menuData, error: menuError } = await supabaseClient
+                .from('menu_items')
+                .select('*')
+                .eq('language', lang)
+                .order('order_index', { ascending: true });
+
+            if (menuData) {
+                activeMenuData = menuData.map(item => ({
+                    id: item.id, itemCode: item.item_code, mainCat: item.main_cat, subCat: item.sub_cat,
+                    name: item.name, order: item.order_index || 999, price: item.price || 0,
+                    desc: item.description || "", calories: item.calories || "", recipe: item.recipe || "",
+                    isTodaySpecial: item.is_today_special || false,
+                    imgUrls: item.img_urls && item.img_urls.length > 0 ? item.img_urls : [rawBranding.smartLogo || 'https://via.placeholder.com/100'],
+                    img: item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : (rawBranding.smartLogo || 'https://via.placeholder.com/100'),
+                    video: item.video_url || "", reviewLinks: item.review_links || ""
+                }));
+                mainCategories = [...new Set(activeMenuData.map(i => i.mainCat))];
+                allSubCategories = [...new Set(activeMenuData.map(i => i.subCat))];
             }
 
-            if (langCol === "L") {
-                rawBranding.smartCurrency = rawBranding.K || "";
-                rawBranding.smartSocial = rawBranding.J || "";
-                rawBranding.smartDelivery = rawBranding.M || "";
-                rawBranding.smartLogo = rawBranding.N || "";
-                rawBranding.smartBanner = rawBranding.O || "";
-            } else {
-                rawBranding.smartCurrency = rawBranding.J || "";
-                rawBranding.smartSocial = rawBranding.L || ""; 
-                rawBranding.smartDelivery = rawBranding.L || "";
-                rawBranding.smartLogo = rawBranding.M || "";
-                rawBranding.smartBanner = rawBranding.N || "";
-            }
+            document.getElementById('loading-state').classList.add('hidden');
+            document.getElementById('menu-container').classList.remove('hidden');
+            
+            processDataForCurrentLang(); // Triggers UI Render
+        }
 
-            globalCurrency = rawBranding.smartCurrency;
+        function applySystemSetup() {
+            let langVal = (rawBranding.language || 'English&Arabic').toLowerCase().trim();
             const toggleBtn = document.getElementById('lang-toggle-btn');
             
-            if(langVal === 'english') {
+            if (langVal === 'english') {
                 langSetup = 'English'; currentLang = 'en';
                 toggleBtn.classList.add('hidden'); toggleBtn.classList.remove('flex');
-            } else if(langVal === 'arabic') {
+            } else if (langVal === 'arabic') {
                 langSetup = 'Arabic'; currentLang = 'ar';
                 toggleBtn.classList.add('hidden'); toggleBtn.classList.remove('flex');
             } else {
-                // FIX: When "Both" is selected in Excel, start the app in English!
                 langSetup = 'Both'; currentLang = 'en'; 
                 toggleBtn.classList.remove('hidden'); toggleBtn.classList.add('flex');
             }
-            // 🔴 FORCE OVERRIDE WITH LIVE DATABASE DATA 🔴
-            if (window.dbSettingsEn) {
-                globalCurrency = window.dbSettingsEn.currency || globalCurrency;
-                rawBranding.smartDelivery = window.dbSettingsEn.delivery_charge || rawBranding.smartDelivery;
-            }
-            // FIX: Game button 10-second reveal logic
+
             isGameTriggerEnabled = (String(rawBranding.P || "").trim().toLowerCase() === 'true');
             const gameBtn = document.getElementById('game-trigger-btn');
-            
             if (isGameTriggerEnabled && gameBtn) {
                 setTimeout(() => {
-                    // Only show it if the user isn't actively scrolling when the 10 seconds hits
                     if (!uiScrollTimeout) {
                         gameBtn.classList.remove('opacity-0', 'pointer-events-none');
                         gameBtn.classList.add('opacity-100');
                     }
-                }, 10000); // 10-second delay
+                }, 10000); 
             }
-
-            // FIX: Ensure the toggle button always shows the OPPOSITE language on load
             document.getElementById('lang-text').textContent = currentLang === 'en' ? 'AR' : 'EN';
-
-            processDataForCurrentLang();
         }
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'ar' : 'en';
             document.getElementById('lang-text').textContent = currentLang === 'en' ? 'AR' : 'EN';
             closeModal();
-            processDataForCurrentLang();
+            fetchMenuDataForLang(currentLang); // Now talks directly to the database!
         }
 
         function processDataForCurrentLang() {
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
             document.documentElement.lang = currentLang;
 
-            // FETCH LIVE BRAND NAME FROM DATABASE
             let smartBrandName = "Our Restaurant";
             if (window.dbSettingsEn && window.dbSettingsAr) {
                 smartBrandName = currentLang === 'en' ? (window.dbSettingsEn.brand_name || "Our Restaurant") : (window.dbSettingsAr.brand_name || "مطعمنا");
             }
 
-            // 1. Update the top navigation bar and bottom footer
             document.getElementById('nav-title').textContent = smartBrandName;
             document.getElementById('footer-title').textContent = smartBrandName;
-            
-            // 2. Properly split the Hero Header
-            const welcomeText = currentLang === 'en' ? "Welcome to" : "مرحباً بكم في";
-            document.getElementById('hero-title1').textContent = welcomeText;
+            document.getElementById('hero-title1').textContent = currentLang === 'en' ? "Welcome to" : "مرحباً بكم في";
             document.getElementById('hero-title2').textContent = smartBrandName;
             
             document.getElementById('f-phone').textContent = rawBranding.C || "--";
             document.getElementById('f-whatsapp').textContent = rawBranding.D || "--";
             
-            // SECONDARY PHONE LOGIC
             const phone2Li = document.getElementById('li-phone-2');
             if(rawBranding.other_number) {
                 document.getElementById('f-phone-2').textContent = rawBranding.other_number;
-                phone2Li.classList.remove('hidden');
-                phone2Li.classList.add('flex');
-            } else {
-                phone2Li.classList.add('hidden');
-                phone2Li.classList.remove('flex');
-            }
+                phone2Li.classList.remove('hidden'); phone2Li.classList.add('flex');
+            } else { phone2Li.classList.add('hidden'); phone2Li.classList.remove('flex'); }
             
-            // WEBSITE LOGIC
             const webLi = document.getElementById('li-website');
-            const webEl = document.getElementById('f-website');
             if(rawBranding.website) {
-                webEl.href = rawBranding.website.startsWith('http') ? rawBranding.website : 'https://' + rawBranding.website;
-                webLi.classList.remove('hidden');
-                webLi.classList.add('flex');
-            } else {
-                webLi.classList.add('hidden');
-                webLi.classList.remove('flex');
-            }
+                document.getElementById('f-website').href = rawBranding.website.startsWith('http') ? rawBranding.website : 'https://' + rawBranding.website;
+                webLi.classList.remove('hidden'); webLi.classList.add('flex');
+            } else { webLi.classList.add('hidden'); webLi.classList.remove('flex'); }
 
             const emailEl = document.getElementById('f-email');
             emailEl.textContent = rawBranding.F || "--";
             if(rawBranding.F) emailEl.href = "mailto:" + rawBranding.F;
 
-            const mapEl = document.getElementById('f-map-link');
             document.getElementById('f-address').textContent = rawBranding.H || "--";
-            if(rawBranding.I) mapEl.href = rawBranding.I;
+            if(rawBranding.I) document.getElementById('f-map-link').href = rawBranding.I;
 
             if(rawBranding.smartLogo) {
                 document.getElementById('default-logo-icon').classList.add('hidden');
@@ -1340,21 +1251,18 @@ let relatedItemsData = []; // (You did this perfectly!)
                 imgEl.src = rawBranding.smartLogo;
                 imgEl.classList.remove('hidden');
             }
-
             
             renderOffers();
-
+            renderSocialMedia();
+            renderCategoryFilters();
+            renderSubCategoryFilters();
+            executeFilter();
+            
             const t = staticText[currentLang];
-            // Clear the standard placeholder so it doesn't overlap our custom animated one!
             document.getElementById('searchInput').placeholder = ''; 
             document.getElementById('empty-text').textContent = t.empty;
             document.getElementById('label-contact').textContent = t.contact;
             document.getElementById('label-location').textContent = t.location;
-            
-            // Instead of resetting data from the old Excel arrays, just re-render the live Supabase data!
-            renderCategoryFilters();
-            renderSubCategoryFilters();
-            executeFilter();
             animateSearchPlaceholder();
         }
 
