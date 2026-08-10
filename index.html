@@ -329,6 +329,12 @@
                         <span class="dir-ltr font-medium truncate w-full" id="f-phone">--</span>
                     </li>
                     
+                    <!-- NEW: Secondary Phone -->
+                    <li id="li-phone-2" class="hidden flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 hover:text-white transition cursor-pointer text-center sm:text-start overflow-hidden" onclick="callPhone2()">
+                        <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center shrink-0"><i class="fas fa-phone-alt text-orange-400 sm:text-base text-sm"></i></div>
+                        <span class="dir-ltr font-medium truncate w-full" id="f-phone-2">--</span>
+                    </li>
+                    
                     <li class="flex flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 hover:text-white transition cursor-pointer text-center sm:text-start overflow-hidden" onclick="openWhatsApp()">
                         <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center shrink-0"><i class="fab fa-whatsapp text-green-400 sm:text-lg text-base"></i></div>
                         <span class="dir-ltr font-medium truncate w-full" id="f-whatsapp">--</span>
@@ -337,6 +343,12 @@
                     <li class="flex flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 hover:text-white transition text-center sm:text-start overflow-hidden">
                         <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center shrink-0"><i class="fas fa-envelope text-blue-400 sm:text-base text-sm"></i></div>
                         <a href="#" id="f-email" class="dir-ltr truncate w-full">--</a>
+                    </li>
+                    
+                    <!-- NEW: Website Link -->
+                    <li id="li-website" class="hidden flex-col sm:flex-row items-center sm:items-start gap-1.5 sm:gap-3 hover:text-white transition text-center sm:text-start overflow-hidden">
+                        <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center shrink-0"><i class="fas fa-globe text-blue-300 sm:text-base text-sm"></i></div>
+                        <a href="#" id="f-website" target="_blank" class="dir-ltr truncate w-full font-bold">Visit Website</a>
                     </li>
 
                 </ul>
@@ -1141,6 +1153,12 @@ let relatedItemsData = []; // (You did this perfectly!)
                     rawBranding.F = window.dbSettingsEn.email;
                     rawBranding.H = window.dbSettingsEn.address;
                     rawBranding.I = window.dbSettingsEn.location_url;
+                    
+                    // NEW ADDITIONS:
+                    rawBranding.other_number = window.dbSettingsEn.other_number;
+                    rawBranding.website = window.dbSettingsEn.website;
+                    rawBranding.social_links = window.dbSettingsEn.social_links;
+                    
                     if(window.dbSettingsEn.logo_link) rawBranding.smartLogo = window.dbSettingsEn.logo_link;
                 }
 // --- NEW: FETCH LIVE RELATED ITEMS FROM DATABASE ---
@@ -1274,6 +1292,29 @@ let relatedItemsData = []; // (You did this perfectly!)
             document.getElementById('f-phone').textContent = rawBranding.C || "--";
             document.getElementById('f-whatsapp').textContent = rawBranding.D || "--";
             
+            // SECONDARY PHONE LOGIC
+            const phone2Li = document.getElementById('li-phone-2');
+            if(rawBranding.other_number) {
+                document.getElementById('f-phone-2').textContent = rawBranding.other_number;
+                phone2Li.classList.remove('hidden');
+                phone2Li.classList.add('flex');
+            } else {
+                phone2Li.classList.add('hidden');
+                phone2Li.classList.remove('flex');
+            }
+            
+            // WEBSITE LOGIC
+            const webLi = document.getElementById('li-website');
+            const webEl = document.getElementById('f-website');
+            if(rawBranding.website) {
+                webEl.href = rawBranding.website.startsWith('http') ? rawBranding.website : 'https://' + rawBranding.website;
+                webLi.classList.remove('hidden');
+                webLi.classList.add('flex');
+            } else {
+                webLi.classList.add('hidden');
+                webLi.classList.remove('flex');
+            }
+
             const emailEl = document.getElementById('f-email');
             emailEl.textContent = rawBranding.F || "--";
             if(rawBranding.F) emailEl.href = "mailto:" + rawBranding.F;
@@ -2194,7 +2235,7 @@ function setupVerticalDraggable(elementId) {
             document.getElementById('label-wa').textContent = t.wa;
             document.getElementById('label-share').textContent = t.share;
 
-            const delCharge = rawBranding.smartDelivery ? `${rawBranding.smartDelivery} ${globalCurrency}` : 'Free';
+            const delCharge = rawBranding.smartDelivery ? rawBranding.smartDelivery : 'Free';
 document.getElementById('modalDeliveryText').textContent = `${t.deliveryPrefix} ${delCharge}`;
 
 // Restore the logic to display the correct currency symbol!
@@ -2421,6 +2462,9 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
         function callPhone() {
             if(rawBranding.C) window.location.href = `tel:${rawBranding.C}`;
         }
+function callPhone2() {
+            if(rawBranding.other_number) window.location.href = `tel:${rawBranding.other_number}`;
+        }
 
         function openWhatsApp() {
             if(rawBranding.D) window.open(`https://wa.me/${rawBranding.D}`, '_blank');
@@ -2464,31 +2508,20 @@ function smartWhatsAppOrder() {
             const container = document.getElementById('social-media-container');
             container.innerHTML = '';
 
-            const socialData = rawBranding.smartSocial || ""; 
-            const links = String(socialData).split(',').map(link => link.trim().toLowerCase());
+            if(!rawBranding.social_links) return;
             
-            const platforms = [
-                { name: 'instagram', icon: 'fa-instagram', hover: 'hover:bg-pink-600' },
-                { name: 'facebook', icon: 'fa-facebook-f', hover: 'hover:bg-blue-600' },
-                { name: 'snapchat', icon: 'fa-snapchat-ghost', hover: 'hover:bg-yellow-500 hover:text-black' },
-                { name: 'tiktok', icon: 'fa-tiktok', hover: 'hover:bg-gray-700' },
-                { name: 'youtube', icon: 'fa-youtube', hover: 'hover:bg-red-600' }
-            ];
+            // Parse JSONB from database
+            const socials = typeof rawBranding.social_links === 'string' ? JSON.parse(rawBranding.social_links) : rawBranding.social_links;
 
-            platforms.forEach(platform => {
-                const matchedLink = links.find(l => l.includes(platform.name));
-                const a = document.createElement('a');
-                
-                if (matchedLink) {
-                    a.href = matchedLink.startsWith('http') ? matchedLink : `https://${matchedLink}`;
+            socials.forEach(platform => {
+                if(platform.enabled && platform.url) {
+                    const a = document.createElement('a');
+                    a.href = platform.url.startsWith('http') ? platform.url : `https://${platform.url}`;
                     a.target = '_blank';
-                } else {
-                    a.href = '#'; 
+                    a.className = `w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 transition-all duration-300 hover:bg-gray-700 hover:text-white shadow-md hover:-translate-y-1`;
+                    a.innerHTML = `<i class="${platform.icon} ${platform.color}"></i>`;
+                    container.appendChild(a);
                 }
-                
-                a.className = `w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-gray-400 transition-all duration-300 ${platform.hover} hover:text-white shadow-md`;
-                a.innerHTML = `<i class="fab ${platform.icon}"></i>`;
-                container.appendChild(a);
             });
         }
       
