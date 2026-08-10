@@ -2308,8 +2308,8 @@ function setupVerticalDraggable(elementId) {
                 if (matchedItems.length > 0) {
                     matchedItems.forEach(relItem => {
                         relatedSlider.innerHTML += `
-                            <div class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                                <div onclick="openModal('${relItem.id}')">
+                            <div onclick="openModal('${relItem.id}')" class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+                                <div>
                                     <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
                                     <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1">${relItem.name}</h4>
                                 </div>
@@ -2597,6 +2597,8 @@ let diningType = 'Takeaway';
       function setupDraggable(element) {
             const slider = typeof element === 'string' ? document.getElementById(element) : element;
             if(!slider) return;
+if (slider.dataset.dragAttached === "true") return;
+            slider.dataset.dragAttached = "true";
             let isDown = false;
             let startX;
             let scrollLeft;
@@ -3684,32 +3686,25 @@ function toggleQuickCart(id) {
                 executeFilter();
             });
         }
-// NEW: Smart Math-based Carousel Scroller for Desktop Arrows
+// NEW: Bulletproof Scroll Logic for Desktop Arrows
         window.scrollModalSlider = function(direction) {
             const slider = document.getElementById('modal-image-slider');
             if(!slider) return;
             
             const isRTL = document.documentElement.dir === 'rtl';
             const slideWidth = slider.clientWidth;
-            const currentScroll = Math.abs(slider.scrollLeft);
             
-            // Figure out exactly which slide we are on
-            let currentIndex = Math.round(currentScroll / slideWidth);
-            let targetIndex = currentIndex + direction;
+            // Simply force the browser to scroll exactly one image-width left or right!
+            const scrollAmount = isRTL ? -(slideWidth * direction) : (slideWidth * direction);
             
-            // Loop around if we hit the ends
-            const totalSlides = slider.children.length;
-            if (targetIndex < 0) targetIndex = totalSlides - 1;
-            if (targetIndex >= totalSlides) targetIndex = 0;
-            
-            const targetScroll = targetIndex * slideWidth;
-            
-            slider.scrollTo({
-                left: isRTL ? -targetScroll : targetScroll,
+            slider.scrollBy({
+                left: scrollAmount,
                 behavior: 'smooth'
             });
             
-            lastSliderInteraction = Date.now(); // Pause auto-swipe while user is clicking
+            if (typeof lastSliderInteraction !== 'undefined') {
+                lastSliderInteraction = Date.now(); // Pause auto-swipe
+            }
         };
 
         window.onload = init;
