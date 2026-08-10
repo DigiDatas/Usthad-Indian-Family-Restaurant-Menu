@@ -209,22 +209,28 @@
                 <div class="flex justify-between items-end mb-4">
                     <div>
                         <h2 class="text-2xl font-black text-gray-800">1. Special Offers Manager</h2>
-                        <p class="text-sm text-gray-500">Manage promotional cards shown at the top of the app.</p>
+                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical text-gray-400"></i> to reorder promotional cards.</p>
                     </div>
-                    <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center gap-2">
-                        <i class="fas fa-plus"></i> Add Offer
-                    </button>
+                    <div class="flex gap-2">
+                        <button onclick="saveOfferOrder()" id="btn-save-offer-order" class="hidden bg-green-500 text-white px-4 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center gap-2 animate-pulse">
+                            <i class="fas fa-save"></i> Save Order
+                        </button>
+                        <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Add Offer
+                        </button>
+                    </div>
                 </div>
                 <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
                             <thead>
                                 <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    <th class="p-4 w-10"></th> <!-- NEW EMPTY TH FOR DRAG HANDLE -->
                                     <th class="p-4">Image</th><th class="p-4">Offer Name</th><th class="p-4">Old Price</th><th class="p-4">New Price</th><th class="p-4 text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="offers-table-body" class="divide-y divide-gray-100 text-sm">
-                                <tr><td colspan="5" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
+                                <tr><td colspan="6" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -244,9 +250,13 @@
                 </div>
                 
                 <div class="flex gap-4 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200 w-fit">
-                    <span class="text-xs font-bold text-gray-500 uppercase">Apply to:</span>
-                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer"><input type="checkbox" id="banner-lang-en" checked class="w-4 h-4 text-red-600 rounded"> English App</label>
-                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer"><input type="checkbox" id="banner-lang-ar" checked class="w-4 h-4 text-red-600 rounded"> Arabic App</label>
+                    <span class="text-xs font-bold text-gray-500 uppercase">Master Switch:</span>
+                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer">
+                        <input type="checkbox" id="banner-lang-en" onchange="toggleAllBanners('en')" class="w-4 h-4 text-red-600 rounded"> All English
+                    </label>
+                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer">
+                        <input type="checkbox" id="banner-lang-ar" onchange="toggleAllBanners('ar')" class="w-4 h-4 text-red-600 rounded"> All Arabic
+                    </label>
                 </div>
 
                 <!-- Dynamic Banner Sections Container -->
@@ -633,7 +643,22 @@ fetchOffers();
                 fetchSettings();
             }
         }
+async function saveOfferOrder() {
+            const btn = document.getElementById('btn-save-offer-order');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
+            const rows = document.querySelectorAll('.offer-row');
+            for (let i = 0; i < rows.length; i++) {
+                const id = rows[i].dataset.id;
+                await supabaseClient.from('special_offers').update({ order_index: i + 1 }).eq('id', id);
+            }
+
+            btn.innerHTML = `<i class="fas fa-save"></i> Save Order`;
+            btn.classList.add('hidden');
+            btn.classList.remove('flex');
+            alert("Special Offers order saved successfully!");
+            fetchOffers();
+        }
         function switchTab(tabName) {
             ['orders', 'menu', 'users', 'analytics', 'offers', 'settings'].forEach(t => {
                 document.getElementById(`section-${t}`).classList.add('hidden');
@@ -1043,14 +1068,19 @@ fetchOffers();
                 document.getElementById('form-recipe').value = '';
                 document.getElementById('form-video').value = '';
                 document.getElementById('form-reviews').value = '';
-                // Flash cards removed from here
-                document.getElementById('form-img').value = '';
+                
+                // FIXED TYPO: The correct ID is form-img-input
+                document.getElementById('form-img-input').value = '';
                 document.getElementById('form-image-file').value = '';
                 document.getElementById('form-special').checked = false;
                 
-                // NEW: Reset the Related Items Gallery when adding a new item
+                // Reset the Related Items Gallery
                 currentEditingRelated = [];
                 renderRelatedGallery();
+
+                // NEW: Reset the Product Images Gallery so it is blank for the new item!
+                currentEditingImages = [];
+                renderImageGallery();
                 
             } else {
                 document.getElementById('menu-modal-title').textContent = 'Edit Menu Item';
@@ -1533,10 +1563,10 @@ let currentMediaTarget = 'product';
                 `;
                 
                 imgCard.onclick = () => {
-                    // Route the image to the correct array and section
+                    // Route the image to the correct array and section (INCLUDES FIX A)
                     if (currentMediaTarget === 'product') { currentEditingImages.push(publicUrl); renderImageGallery(); }
                     else if (currentMediaTarget === 'related') { currentEditingRelated.push(publicUrl); renderRelatedGallery(); }
-                    else if (currentMediaTarget === 'banner') { currentAdminBanners[currentBannerIndex].push(publicUrl); renderGlobalGallery('banner', currentBannerIndex); }
+                    else if (currentMediaTarget === 'banner') { currentAdminBanners[currentBannerIndex].urls.push(publicUrl); renderGlobalGallery('banner', currentBannerIndex); }
                     else if (currentMediaTarget === 'flashcard') { currentAdminFlashcards.push(publicUrl); renderGlobalGallery('flashcard'); }
                     closeMediaLibrary();
                 };
@@ -1738,41 +1768,7 @@ let currentMediaTarget = 'product';
             document.getElementById('stat-dinein').textContent = dineInCount;
             document.getElementById('stat-takeaway').textContent = takeawayCount;
         }
-// ==========================================
-        // OFFERS MANAGER LOGIC
-        // ==========================================
-        let allOffers = [];
 
-        async function fetchOffers() {
-            const tbody = document.getElementById('offers-table-body');
-            const { data, error } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
-            
-            if (error) { tbody.innerHTML = `<tr><td colspan="5">Error loading offers.</td></tr>`; return; }
-            
-            allOffers = data || [];
-            tbody.innerHTML = '';
-
-            if (allOffers.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No active offers.</td></tr>`;
-                return;
-            }
-
-            allOffers.forEach(o => {
-                const img = o.image_url ? `<img src="${o.image_url}" class="w-12 h-8 object-cover rounded shadow-sm">` : `<div class="w-12 h-8 bg-gray-100 rounded text-center text-[10px] text-gray-400 pt-1">No Img</div>`;
-                tbody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition">
-                        <td class="p-3">${img}</td>
-                        <td class="p-3 font-bold text-gray-900">${o.offer_name} <br><span class="text-[10px] font-normal text-gray-400">${o.description || ''}</span></td>
-                        <td class="p-3 text-gray-400 line-through">${o.price_before || '-'}</td>
-                        <td class="p-3 font-black text-green-600">${o.price_after || '-'}</td>
-                        <td class="p-3 text-end">
-                            <button onclick="openOfferModal('edit', '${o.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition me-1"><i class="fas fa-pen text-xs"></i></button>
-                            <button onclick="deleteOffer('${o.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"><i class="fas fa-trash-alt text-xs"></i></button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
 
         function openOfferModal(mode, id = null) {
             const modal = document.getElementById('offerModal');
@@ -1946,19 +1942,27 @@ let currentMediaTarget = 'product';
             if(!container) return;
             container.innerHTML = '';
             
-            // Loops dynamically based on how many arrays exist!
-            for(let i = 0; i < currentAdminBanners.length; i++) {
+            currentAdminBanners.forEach((section, i) => {
+                const isEnChecked = section.en !== false ? 'checked' : '';
+                const isArChecked = section.ar !== false ? 'checked' : '';
+                
                 container.innerHTML += `
                     <div class="banner-section-block border border-gray-200 rounded-xl p-4 bg-gray-50 shadow-sm relative group">
-                        <div class="flex justify-between items-center mb-2 border-b border-gray-200 pb-2">
+                        <div class="flex flex-wrap justify-between items-center mb-3 border-b border-gray-200 pb-2 gap-2">
                             <h4 class="font-bold text-gray-800 text-sm flex items-center gap-2">
                                 <i class="fas fa-grip-vertical text-gray-400 hover:text-blue-500 cursor-grab section-drag-handle transition"></i>
                                 <i class="fas fa-layer-group text-blue-500"></i> Section ${i + 1} 
-                                <span class="text-xs text-gray-400 font-normal hidden sm:inline">(Displays below Category ${i + 1})</span>
                             </h4>
-                            <button type="button" onclick="deleteBannerSection(${i})" class="text-red-400 hover:text-red-600 transition" title="Delete Entire Section">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <div class="flex items-center gap-4">
+                                <div class="flex items-center gap-2 bg-white px-3 py-1 rounded-lg border border-gray-200 text-xs font-bold">
+                                    <span>Show in:</span>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="sec-en-${i}" ${isEnChecked} class="w-3.5 h-3.5 text-red-600 rounded"> EN</label>
+                                    <label class="flex items-center gap-1 cursor-pointer"><input type="checkbox" id="sec-ar-${i}" ${isArChecked} class="w-3.5 h-3.5 text-red-600 rounded"> AR</label>
+                                </div>
+                                <button type="button" onclick="deleteBannerSection(${i})" class="text-red-400 hover:text-red-600 transition" title="Delete Entire Section">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
                         <div id="banner-preview-gallery-${i}" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-white border border-gray-200 rounded-xl"></div>
                         <div class="flex gap-2">
@@ -1970,20 +1974,16 @@ let currentMediaTarget = 'product';
                         </div>
                     </div>
                 `;
-            }
+            });
 
-            // Make the entire sections draggable up and down!
             if (window.sectionsSortable) window.sectionsSortable.destroy();
             window.sectionsSortable = new Sortable(container, {
                 animation: 150,
                 handle: '.section-drag-handle',
                 ghostClass: 'opacity-50',
                 onEnd: function (evt) {
-                    // Swap the arrays natively in JavaScript
                     const movedItem = currentAdminBanners.splice(evt.oldIndex, 1)[0];
                     currentAdminBanners.splice(evt.newIndex, 0, movedItem);
-                    
-                    // Re-render everything so the UI numbering stays accurate
                     renderBannerSectionsUI();
                     for(let k = 0; k < currentAdminBanners.length; k++) {
                         renderGlobalGallery('banner', k);
@@ -1992,16 +1992,15 @@ let currentMediaTarget = 'product';
             });
         }
 
-        // Feature: Add a new Section Box
+        
         function addBannerSection() {
-            currentAdminBanners.push([]); 
+            currentAdminBanners.push({ urls: [], en: true, ar: true }); 
             renderBannerSectionsUI(); 
             for(let i = 0; i < currentAdminBanners.length; i++) {
                 renderGlobalGallery('banner', i);
             }
         }
         
-        // Feature: Delete a Section Box
         function deleteBannerSection(index) {
             if(!confirm("Are you sure you want to delete this entire banner section?")) return;
             currentAdminBanners.splice(index, 1);
@@ -2040,16 +2039,40 @@ let currentMediaTarget = 'product';
 
         async function fetchOffers() {
             const tbody = document.getElementById('offers-table-body');
-            const { data, error } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
+            const { data, error } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
             allOffers = data || [];
             
             tbody.innerHTML = '';
-            if (allOffers.length === 0) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No active offers.</td></tr>`;
+            if (allOffers.length === 0) tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-gray-400">No active offers.</td></tr>`;
             else {
-                allOffers.filter(o => o.offer_name !== 'Hidden System Row').forEach(o => {
-                    const img = o.image_url ? `<img src="${o.image_url}" class="w-12 h-8 object-cover rounded shadow-sm">` : `<div class="w-12 h-8 bg-gray-100 rounded text-center text-[10px] text-gray-400 pt-1">No Img</div>`;
-                    tbody.innerHTML += `<tr class="hover:bg-gray-50 transition"><td class="p-3">${img}</td><td class="p-3 font-bold text-gray-900">${o.offer_name}</td><td class="p-3 text-gray-400 line-through">${o.price_before || '-'}</td><td class="p-3 font-black text-green-600">${o.price_after || '-'}</td><td class="p-3 text-end"><button onclick="openOfferModal('edit', '${o.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 me-1"><i class="fas fa-pen text-xs"></i></button><button onclick="deleteOffer('${o.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600"><i class="fas fa-trash-alt text-xs"></i></button></td></tr>`;
-                });
+                allOffers.filter(o => o.offer_name !== 'Hidden System Row').forEach((o, index) => {
+                const img = o.image_url ? `<img src="${o.image_url}" class="w-12 h-8 object-cover rounded shadow-sm">` : `<div class="w-12 h-8 bg-gray-100 rounded text-center text-[10px] text-gray-400 pt-1">No Img</div>`;
+                tbody.innerHTML += `
+                    <tr class="offer-row hover:bg-gray-50 transition" data-id="${o.id}">
+                        <td class="p-3 text-center cursor-grab text-gray-300 hover:text-gray-500 offer-drag-handle"><i class="fas fa-grip-lines"></i></td>
+                        <td class="p-3">${img}</td>
+                        <td class="p-3 font-bold text-gray-900">${o.offer_name}</td>
+                        <td class="p-3 text-gray-400 line-through">${o.price_before || '-'}</td>
+                        <td class="p-3 font-black text-green-600">${o.price_after || '-'}</td>
+                        <td class="p-3 text-end">
+                            <button onclick="openOfferModal('edit', '${o.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 me-1"><i class="fas fa-pen text-xs"></i></button>
+                            <button onclick="deleteOffer('${o.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600"><i class="fas fa-trash-alt text-xs"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            // Initialize SortableJS on Offers Table Body
+            if (window.offerSortable) window.offerSortable.destroy();
+            window.offerSortable = new Sortable(tbody, {
+                animation: 150,
+                handle: '.offer-drag-handle',
+                ghostClass: 'bg-blue-50',
+                onEnd: () => {
+                    document.getElementById('btn-save-offer-order').classList.remove('hidden');
+                    document.getElementById('btn-save-offer-order').classList.add('flex');
+                }
+            });
             }
 
             const flashcardRow = allOffers.find(o => o.flashcard);
@@ -2058,35 +2081,44 @@ let currentMediaTarget = 'product';
             } else { currentAdminFlashcards = []; }
             renderGlobalGallery('flashcard');
 
-            // FETCH BANNERS: Unlimited Dynamic Sections Strategy
-            const { data: setDb } = await supabaseClient.from('restaurant_settings').select('banner_images').order('id', { ascending: true }).limit(1).maybeSingle();
+            // FETCH BANNERS: Multi-Section with per-section EN/AR parsing
+            const { data: setRows } = await supabaseClient.from('restaurant_settings').select('*').order('id', { ascending: true }).limit(2);
             
-            currentAdminBanners = []; // Reset clean
+            const rowEn = setRows && setRows.length > 0 ? setRows[0].banner_images : [];
+            const rowAr = setRows && setRows.length > 1 ? setRows[1].banner_images : (setRows && setRows.length > 0 ? setRows[0].banner_images : []);
             
-            if (setDb && setDb.banner_images && Array.isArray(setDb.banner_images)) {
-                for(let i = 0; i < setDb.banner_images.length; i++) {
-                    if (setDb.banner_images[i]) {
-                        currentAdminBanners.push(setDb.banner_images[i].split(',').map(u => u.trim()).filter(Boolean));
-                    } else {
-                        currentAdminBanners.push([]); // Keep empty slots intact
-                    }
-                }
-            }
-            
-            // Start with exactly 5 sections by default if the database has less than 5!
-            while (currentAdminBanners.length < 5) {
-                currentAdminBanners.push([]);
+            currentAdminBanners = [];
+            const maxLength = Math.max(rowEn ? rowEn.length : 0, rowAr ? rowAr.length : 0, 5);
+
+            for(let i = 0; i < maxLength; i++) {
+                const urlsEn = rowEn && rowEn[i] ? rowEn[i].split(',').map(u => u.trim()).filter(Boolean) : [];
+                const urlsAr = rowAr && rowAr[i] ? rowAr[i].split(',').map(u => u.trim()).filter(Boolean) : [];
+                
+                // If it exists in En or Ar, use those URLs; otherwise start empty
+                const activeUrls = urlsEn.length > 0 ? urlsEn : urlsAr;
+                
+                currentAdminBanners.push({
+                    urls: activeUrls,
+                    en: urlsEn.length > 0,
+                    ar: urlsAr.length > 0
+                });
             }
 
-            renderBannerSectionsUI(); // Draw UI
+            renderBannerSectionsUI(); 
             for(let i = 0; i < currentAdminBanners.length; i++) {
-                renderGlobalGallery('banner', i); // Load the images into the sections
+                renderGlobalGallery('banner', i);
             }
+            
+            // Update Master Switches based on fetched data (If any section is active, turn master ON)
+            const masterEn = document.getElementById('banner-lang-en');
+            const masterAr = document.getElementById('banner-lang-ar');
+            if (masterEn) masterEn.checked = currentAdminBanners.some(sec => sec.en);
+            if (masterAr) masterAr.checked = currentAdminBanners.some(sec => sec.ar); 
         }
 
-        // Updated Render Engine to handle multiple section indexes
+        // Updated Render Engine to handle multiple section indexes (INCLUDES FIX B)
         function renderGlobalGallery(type, sectionIndex = 0) {
-            const arr = type === 'banner' ? currentAdminBanners[sectionIndex] : currentAdminFlashcards;
+            const arr = type === 'banner' ? currentAdminBanners[sectionIndex].urls : currentAdminFlashcards;
             const galleryId = type === 'banner' ? `banner-preview-gallery-${sectionIndex}` : `flashcard-preview-gallery`;
             const gallery = document.getElementById(galleryId);
             if (!gallery) return;
@@ -2111,7 +2143,7 @@ let currentMediaTarget = 'product';
                 
                 window.bannerSortables[sectionIndex] = new Sortable(gallery, { 
                     animation: 150, filter: '.empty-gallery-text', 
-                    onEnd: () => { currentAdminBanners[sectionIndex] = Array.from(gallery.children).map(el => el.dataset.url); }
+                    onEnd: () => { currentAdminBanners[sectionIndex].urls = Array.from(gallery.children).map(el => el.dataset.url); }
                 });
             } else {
                 if (window.flashcardSortable) window.flashcardSortable.destroy();
@@ -2119,9 +2151,10 @@ let currentMediaTarget = 'product';
             }
         }
 
+        // INCLUDES FIX C
         function removeGlobalImage(type, index, sectionIndex = 0) {
             if (type === 'banner') {
-                currentAdminBanners[sectionIndex].splice(index, 1);
+                currentAdminBanners[sectionIndex].urls.splice(index, 1);
                 renderGlobalGallery(type, sectionIndex);
             } else {
                 currentAdminFlashcards.splice(index, 1);
@@ -2129,6 +2162,7 @@ let currentMediaTarget = 'product';
             }
         }
 
+        // INCLUDES FIX C
         function addExternalGalleryUrl(type, sectionIndex = 0) {
             const inputId = type === 'banner' ? `form-banner-input-${sectionIndex}` : `form-flashcard-input`;
             const input = document.getElementById(inputId);
@@ -2136,7 +2170,7 @@ let currentMediaTarget = 'product';
             const urls = input.value.split(',').map(u => u.trim()).filter(Boolean);
             
             if (type === 'banner') {
-                currentAdminBanners[sectionIndex].push(...urls);
+                currentAdminBanners[sectionIndex].urls.push(...urls);
                 renderGlobalGallery(type, sectionIndex);
             } else {
                 currentAdminFlashcards.push(...urls);
@@ -2145,6 +2179,16 @@ let currentMediaTarget = 'product';
             input.value = ''; 
         }
 
+        // MASTER SWITCH TOGGLE LOGIC
+        function toggleAllBanners(lang) {
+            const masterChecked = document.getElementById(`banner-lang-${lang}`).checked;
+            currentAdminBanners.forEach((_, i) => {
+                const box = document.getElementById(`sec-${lang}-${i}`);
+                if (box) box.checked = masterChecked;
+            });
+        }
+
+        // MASTER SWITCH SAVE LOGIC
         async function saveAdminBanners() {
             const btn = document.getElementById('btn-save-banners');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
@@ -2152,18 +2196,28 @@ let currentMediaTarget = 'product';
             const doEn = document.getElementById('banner-lang-en').checked;
             const doAr = document.getElementById('banner-lang-ar').checked;
 
+            // Capture live checkbox states from the DOM before saving
+            currentAdminBanners.forEach((sec, i) => {
+                const enBox = document.getElementById(`sec-en-${i}`);
+                const arBox = document.getElementById(`sec-ar-${i}`);
+                if (enBox) sec.en = enBox.checked;
+                if (arBox) sec.ar = arBox.checked;
+            });
+
             const idEn = document.getElementById('setting-id').value;
             const idAr = document.getElementById('setting-id-ar').value;
 
-            // CRITICAL FIX: Map the array of 5 arrays into an array of 5 comma-separated strings!
-            const bannerPayload = currentAdminBanners.map(section => section.join(','));
+            // Build payloads: If Master Switch is OFF, it forces all banners in that language to save as blank strings
+            const payloadEn = currentAdminBanners.map(sec => (doEn && sec.en) ? sec.urls.join(',') : '');
+            const payloadAr = currentAdminBanners.map(sec => (doAr && sec.ar) ? sec.urls.join(',') : '');
 
-            if (doEn && idEn) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerPayload }).eq('id', idEn);
-            if (doAr && idAr) await supabaseClient.from('restaurant_settings').update({ banner_images: bannerPayload }).eq('id', idAr);
+            if (idEn) await supabaseClient.from('restaurant_settings').update({ banner_images: payloadEn }).eq('id', idEn);
+            if (idAr) await supabaseClient.from('restaurant_settings').update({ banner_images: payloadAr }).eq('id', idAr);
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
-            alert("Banners successfully updated!");
+            alert("Banners successfully updated with master language settings!");
         }
+        
 
         async function saveAdminFlashcards() {
             const btn = document.getElementById('btn-save-flashcards');
