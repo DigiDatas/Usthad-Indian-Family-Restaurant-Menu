@@ -1356,26 +1356,25 @@ fetchOffers();
                     const brandRows = jsonData["Branding"]
                         .filter((r, idx) => idx > 0) // Skips the title header (Row 0)
                         .map(r => {
+                            // CRITICAL FIX: Wraps the banner string in an array so it fits Section 1 of the new UI
                             let banners = [];
-                            if (r.O) {
-                                String(r.O).split(',').forEach(b => {
-                                    if (b.trim()) banners.push(b.trim());
-                                });
+                            if (r.O && String(r.O).trim() !== "") {
+                                banners.push(String(r.O).trim());
                             }
                             return {
                                 brand_name: r.B || '',
                                 contact: r.C || '',
                                 whatsapp: r.D || '',
-                                other_number: r.E || '',  // Excel Column E
-                                email: r.F || '',         // Excel Column F
-                                website: r.G || '',       // Excel Column G
+                                other_number: r.E || '',  
+                                email: r.F || '',         
+                                website: r.G || '',       
                                 address: r.H || '',
                                 location_url: r.I || '',
                                 currency: r.K || '',
                                 language: r.L || '',
                                 delivery_charge: r.M || '',
                                 logo_link: r.N || '',
-                                banner_images: banners,
+                                banner_images: banners, // Fits the new format safely
                                 game_enabled: r.P === true || String(r.P).toLowerCase() === "true"
                             };
                         });
@@ -1386,25 +1385,53 @@ fetchOffers();
                     }
                 }
 
-                // --- 3. IMPORT SPECIAL OFFERS ---
+                // --- 3. SCAN MENU FOR LEGACY FLASHCARDS ---
+                // Since we moved Flashcards, we extract them from the old JSON columns first
+                let legacyFlashcards = [];
+                ['Menu-English', 'Menu-Arabic'].forEach(sheet => {
+                    if (jsonData[sheet]) {
+                        jsonData[sheet].forEach(r => {
+                            if (r.N && String(r.N).trim() !== "") {
+                                legacyFlashcards.push(...String(r.N).split(',').map(s => s.trim()));
+                            }
+                        });
+                    }
+                });
+                const globalFlashcardString = [...new Set(legacyFlashcards)].filter(Boolean).join(',');
+
+                // --- 4. IMPORT SPECIAL OFFERS & FLASHCARDS ---
                 if (jsonData["SpecialOffer"]) {
                     const offers = jsonData["SpecialOffer"]
-                        .filter((r, i) => i > 0 && r.B) // Skip headers
-                        .map(r => ({
-                            offer_name: String(r.B),
-                            description: r.C || '',
-                            price_before: parseFloat(r.D) || null,
-                            price_after: parseFloat(r.E) || null,
-                            image_url: r.F || '' // Column F
-                        }));
+                        .filter((r, i) => i > 0 && r.B) 
+                        .map((r, index) => {
+                            const payload = {
+                                offer_name: String(r.B),
+                                description: r.C || '',
+                                price_before: parseFloat(r.D) || null,
+                                price_after: parseFloat(r.E) || null,
+                                image_url: r.F || '' 
+                            };
+                            // Attach the legacy flashcards to the first offer row
+                            if (index === 0 && globalFlashcardString !== "") {
+                                payload.flashcard = globalFlashcardString;
+                            }
+                            return payload;
+                        });
 
                     if (offers.length > 0) {
                         await supabaseClient.from('special_offers').insert(offers);
                         totalImported += offers.length;
+                    } else if (globalFlashcardString !== "") {
+                        // If no offers exist, make the hidden row for flashcards
+                        await supabaseClient.from('special_offers').insert([{ offer_name: 'Hidden System Row', flashcard: globalFlashcardString }]);
+                        totalImported += 1;
                     }
+                } else if (globalFlashcardString !== "") {
+                    await supabaseClient.from('special_offers').insert([{ offer_name: 'Hidden System Row', flashcard: globalFlashcardString }]);
+                    totalImported += 1;
                 }
 
-                // --- 4. IMPORT MENU ITEMS (Reads EN and AR Separately) ---
+                // --- 5. IMPORT MENU ITEMS (Reads EN and AR Separately) ---
                 let menuRows = [];
                 ['Menu-English', 'Menu-Arabic'].forEach(sheetName => {
                     if (jsonData[sheetName]) {
@@ -1416,8 +1443,8 @@ fetchOffers();
                             if (isNaN(p)) return;
 
                             menuRows.push({
-                                item_code: String(r.A || ''), // Column A
-                                name: String(r.D), // Column D
+                                item_code: String(r.A || ''), 
+                                name: String(r.D), 
                                 main_cat: r.B || 'General',
                                 sub_cat: r.C || 'Other',
                                 price: p,
@@ -1429,7 +1456,7 @@ fetchOffers();
                                 img_urls: r.K ? String(r.K).split(',').map(s => s.trim()).filter(Boolean) : [],
                                 video_url: r.L || '',
                                 review_links: r.M || '',
-                                flash_cards: r.N || '',
+                                // CRITICAL FIX: flash_cards is totally removed from here!
                                 language: langTag
                             });
                         });
@@ -1437,11 +1464,12 @@ fetchOffers();
                 });
 
                 if (menuRows.length > 0) {
-                    await supabaseClient.from('menu_items').insert(menuRows);
+                    const { error: menuErr } = await supabaseClient.from('menu_items').insert(menuRows);
+                    if (menuErr) throw menuErr; // Throws error directly to the console so you can see it!
                     totalImported += menuRows.length;
                 }
 
-                // --- 5. IMPORT RELATED ITEMS ---
+                // --- 6. IMPORT RELATED ITEMS ---
                 if (jsonData["RelatedItems"]) {
                     const related = jsonData["RelatedItems"]
                         .filter((r, i) => i > 0 && r.C) // Skip headers
@@ -1454,7 +1482,8 @@ fetchOffers();
                         });
 
                     if (related.length > 0) {
-                        await supabaseClient.from('related_items_map').insert(related);
+                        const { error: relErr } = await supabaseClient.from('related_items_map').insert(related);
+                        if (relErr) throw relErr;
                         totalImported += related.length;
                     }
                 }
@@ -1465,6 +1494,7 @@ fetchOffers();
                 alert(`Successfully refreshed and imported ${totalImported} records! Old duplicates were permanently removed.`);
 
             } catch (err) {
+                console.error(err);
                 alert('Import Error: ' + err.message);
                 document.getElementById('btn-import-json').innerHTML = 'Import to Database';
             }
