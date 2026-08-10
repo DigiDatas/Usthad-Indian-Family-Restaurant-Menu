@@ -1147,7 +1147,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                 const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
                 window.liveRelatedItems = relDbData || [];
 // --- NEW: FETCH LIVE SPECIAL OFFERS & FLASHCARDS FROM DATABASE ---
-                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('id', { ascending: true });
+                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
                 if (dbOffers && dbOffers.length > 0) {
                     // Populate the Top Slider Offers (Ignoring our hidden system row)
                     rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
