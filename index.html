@@ -2080,59 +2080,108 @@ function setupVerticalDraggable(elementId) {
 
             const t = staticText[currentLang];
 
-            // --- NEW: Image Carousel Logic ---
+            // --- UPGRADED: Image & Video Carousel Logic ---
             const slider = document.getElementById('modal-image-slider');
             const dots = document.getElementById('modal-image-dots');
             slider.innerHTML = '';
             dots.innerHTML = '';
 
+            let hasVideo = false;
+            let videoHtml = '';
+            
+            // SMART VIDEO PARSER
+            if (item.video && item.video.trim() !== "") {
+                hasVideo = true;
+                let v = item.video.trim();
+                let embedUrl = v;
+                
+                if (v.includes('youtube.com/watch?v=')) {
+                    embedUrl = v.replace('watch?v=', 'embed/').split('&')[0];
+                } else if (v.includes('youtu.be/')) {
+                    embedUrl = v.replace('youtu.be/', 'youtube.com/embed/').split('?')[0];
+                } else if (v.includes('vimeo.com/')) {
+                    embedUrl = v.replace('vimeo.com/', 'player.vimeo.com/video/');
+                }
+                
+                if (v.endsWith('.mp4') || v.endsWith('.webm') || v.endsWith('.ogg')) {
+                    videoHtml = `<video src="${v}" controls playsinline class="w-full h-full object-cover shrink-0 snap-center bg-black"></video>`;
+                } else {
+                    videoHtml = `<iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen" class="w-full h-full object-cover shrink-0 snap-center bg-black"></iframe>`;
+                }
+                
+                // Inject the video as the FIRST slide
+                slider.insertAdjacentHTML('beforeend', videoHtml);
+            }
+
             const urls = item.imgUrls || [item.img];
             urls.forEach((url, i) => {
-                const imgHtml = `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="if(this.src.includes('.jpg')) { this.src=this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src=this.src.replace('.png', '.jpeg'); } else { if(this.parentElement && this.parentElement.children.length > 1) { this.remove(); let d = document.getElementById('dot-${i}'); if(d) d.remove(); } else { this.onerror=null; this.classList.replace('object-cover', 'object-contain'); this.classList.add('p-8'); this.src='${rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'}'; } }">`;
+                const imgHtml = `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="if(this.src.includes('.jpg')) { this.src=this.src.replace('.jpg', '.png'); } else if(this.src.includes('.png')) { this.src=this.src.replace('.png', '.jpeg'); } else { if(this.parentElement && this.parentElement.children.length > 1) { this.remove(); let d = document.getElementById('dot-img-${i}'); if(d) d.remove(); } else { this.onerror=null; this.classList.replace('object-cover', 'object-contain'); this.classList.add('p-8'); this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}'; } }">`;
                 slider.insertAdjacentHTML('beforeend', imgHtml);
-                // Always create dots. If the image 404s, the onerror logic above deletes the matching dot!
-                dots.insertAdjacentHTML('beforeend', `<div id="dot-${i}" class="modal-dot w-2 h-2 rounded-full transition-all duration-300 ${i===0 ? 'bg-red-500 scale-125' : 'bg-white/80 shadow-sm'}"></div>`);
             });
+
+            const totalSlides = hasVideo ? urls.length + 1 : urls.length;
+            
+            // Create the dots (First dot gets a tiny Play Icon if there's a video)
+            for(let i = 0; i < totalSlides; i++) {
+                let dotContent = (hasVideo && i === 0) ? '<i class="fas fa-play text-[6px] text-white ms-0.5"></i>' : '';
+                let dotClass = i === 0 ? 'bg-red-500 scale-125 w-3 h-3' : 'bg-white/80 shadow-sm w-2 h-2';
+                // We use 'dot-img-' ID for images so the auto-delete logic above works
+                let dotId = (hasVideo && i === 0) ? 'dot-video' : `dot-img-${hasVideo ? i - 1 : i}`;
+                dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass}">${dotContent}</div>`);
+            }
 
             clearInterval(window.modalCarouselTimer);
             
-            // INFINITE LOOP FIX: Append clone to the physical DOM
-            const realImgCount = urls.length;
-            if (realImgCount > 1) {
-                slider.insertAdjacentHTML('beforeend', `<img src="${urls[0]}" data-is-clone="true" class="w-full h-full object-cover shrink-0 snap-center">`);
-            }
-            
-            slider.onscroll = () => {
-                if (realImgCount <= 1) { dots.style.display = 'none'; return; }
-                dots.style.display = 'flex';
+            // DUAL-LOGIC: Handle auto-scrolling
+            if (hasVideo) {
+                // If there is a video, DISABLE the infinite looping auto-scroll so they can watch in peace!
+                slider.dataset.infiniteSetup = "true"; 
+                slider.dataset.realCount = totalSlides;
                 
-                let currentIdx = Math.round(Math.abs(slider.scrollLeft) / slider.clientWidth);
-                
-                // If they reached the clone, visually wrap the active dot back to 0!
-                if (currentIdx >= realImgCount) currentIdx = 0;
-                
-                const remainingDots = dots.querySelectorAll('.modal-dot');
-                remainingDots.forEach((dot, k) => {
-                    dot.className = `modal-dot w-2 h-2 rounded-full transition-all duration-300 ${k===currentIdx ? 'bg-red-500 scale-125' : 'bg-white/80 shadow-sm'}`;
-                });
-            };
-
-            window.modalCarouselTimer = setInterval(() => {
-                if (Date.now() - lastSliderInteraction < 5000) return;
-                if (realImgCount <= 1) return;
-                
-                const isRTL = document.documentElement.dir === 'rtl';
-                let currentPos = Math.abs(slider.scrollLeft);
-                const maxScroll = slider.scrollWidth - slider.clientWidth;
-                
-                // Silently teleport back to 0 if sitting on the clone
-                if (currentPos >= maxScroll - 5) {
-                    slider.scrollLeft = 0;
-                    currentPos = 0;
+                slider.onscroll = () => {
+                    if (totalSlides <= 1) { dots.style.display = 'none'; return; }
+                    dots.style.display = 'flex';
+                    let currentIdx = Math.round(Math.abs(slider.scrollLeft) / slider.clientWidth);
+                    
+                    const remainingDots = dots.querySelectorAll('.modal-dot');
+                    remainingDots.forEach((dot, k) => {
+                        let isVid = (hasVideo && k === 0);
+                        dot.className = `modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${k===currentIdx ? (isVid ? 'bg-red-500 scale-125 w-3 h-3' : 'bg-red-500 scale-125 w-2 h-2') : (isVid ? 'bg-white/80 shadow-sm w-3 h-3' : 'bg-white/80 shadow-sm w-2 h-2')}`;
+                    });
+                };
+            } else {
+                // NO VIDEO: Use standard infinite looping logic
+                slider.dataset.infiniteSetup = "false";
+                const realImgCount = urls.length;
+                if (realImgCount > 1) {
+                    slider.insertAdjacentHTML('beforeend', `<img src="${urls[0]}" data-is-clone="true" class="w-full h-full object-cover shrink-0 snap-center">`);
                 }
                 
-                slider.scrollTo({ left: isRTL ? -(currentPos + slider.clientWidth) : (currentPos + slider.clientWidth), behavior: 'smooth' });
-            }, 3000);
+                slider.onscroll = () => {
+                    if (realImgCount <= 1) { dots.style.display = 'none'; return; }
+                    dots.style.display = 'flex';
+                    let currentIdx = Math.round(Math.abs(slider.scrollLeft) / slider.clientWidth);
+                    if (currentIdx >= realImgCount) currentIdx = 0;
+                    
+                    const remainingDots = dots.querySelectorAll('.modal-dot');
+                    remainingDots.forEach((dot, k) => {
+                        dot.className = `modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${k===currentIdx ? 'bg-red-500 scale-125 w-2 h-2' : 'bg-white/80 shadow-sm w-2 h-2'}`;
+                    });
+                };
+
+                window.modalCarouselTimer = setInterval(() => {
+                    if (Date.now() - lastSliderInteraction < 5000) return;
+                    if (realImgCount <= 1) return;
+                    const isRTL = document.documentElement.dir === 'rtl';
+                    let currentPos = Math.abs(slider.scrollLeft);
+                    const maxScroll = slider.scrollWidth - slider.clientWidth;
+                    if (currentPos >= maxScroll - 5) {
+                        slider.scrollLeft = 0;
+                        currentPos = 0;
+                    }
+                    slider.scrollTo({ left: isRTL ? -(currentPos + slider.clientWidth) : (currentPos + slider.clientWidth), behavior: 'smooth' });
+                }, 3000);
+            }
             document.getElementById('modalCategoryBadge').textContent = item.subCat;
             document.getElementById('modalTitle').textContent = item.name;
             document.getElementById('modalDesc').textContent = item.desc;
@@ -2194,13 +2243,7 @@ document.getElementById('modalPrice').innerHTML = priceHtml;
                 recipeArea.classList.add('hidden');
             }
 
-            const vidBtn = document.getElementById('modalVideoBtn');
-            if(item.video) {
-                vidBtn.href = item.video;
-                vidBtn.classList.remove('hidden');
-            } else {
-                vidBtn.classList.add('hidden');
-            }
+            
 
             // Parse and Add Review/Social Icons
             const reviewArea = document.getElementById('modalReviewArea');
@@ -3658,7 +3701,6 @@ function toggleQuickCart(id) {
                 executeFilter();
             });
         }
-
         window.onload = init;
         setupSearch(); 
 
