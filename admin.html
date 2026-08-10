@@ -507,14 +507,19 @@
                     <textarea id="form-recipe" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500"></textarea>
                 </div>
 
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-play text-red-500 me-1"></i> Video URL</label>
+                    <input type="text" id="form-video" placeholder="https://youtube.com/..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 mb-4">
+                </div>
+
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-play text-red-500 me-1"></i> Video URL</label>
-                        <input type="text" id="form-video" placeholder="https://..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fab fa-google text-blue-500 me-1"></i> Google Map Review</label>
+                        <input type="text" id="form-review-google" placeholder="Paste Google Link..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-star text-yellow-500 me-1"></i> Review Links</label>
-                        <input type="text" id="form-reviews" placeholder="Comma separated URLs" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-thumbs-up text-pink-500 me-1"></i> Item Social Review</label>
+                        <input type="text" id="form-review-social" placeholder="Insta, TikTok, YT URLs..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
                     </div>
                 </div>
 
@@ -1121,7 +1126,8 @@ async function saveOfferOrder() {
                 document.getElementById('form-calories').value = '';
                 document.getElementById('form-recipe').value = '';
                 document.getElementById('form-video').value = '';
-                document.getElementById('form-reviews').value = '';
+                document.getElementById('form-review-google').value = '';
+                document.getElementById('form-review-social').value = '';
                 
                 // FIXED TYPO: The correct ID is form-img-input
                 document.getElementById('form-img-input').value = '';
@@ -1154,7 +1160,21 @@ async function saveOfferOrder() {
                     document.getElementById('form-calories').value = item.calories || '';
                     document.getElementById('form-recipe').value = item.recipe || '';
                     document.getElementById('form-video').value = item.video_url || '';
-                    document.getElementById('form-reviews').value = item.review_links || '';
+                    
+                    // Smart Splitter: Puts Google links in one box, and Social links in the other
+                    let googleLinks = [];
+                    let socialLinks = [];
+                    if (item.review_links) {
+                        item.review_links.split(',').forEach(l => {
+                            const link = l.trim();
+                            if (link) {
+                                if (link.toLowerCase().includes('google')) googleLinks.push(link);
+                                else socialLinks.push(link);
+                            }
+                        });
+                    }
+                    document.getElementById('form-review-google').value = googleLinks.join(', ');
+                    document.getElementById('form-review-social').value = socialLinks.join(', ');
                     // Flash cards removed from here
                     
                     document.getElementById('form-img-input').value = '';
@@ -1203,7 +1223,12 @@ async function saveOfferOrder() {
             const calories = parseInt(document.getElementById('form-calories').value) || null;
             const recipe = document.getElementById('form-recipe').value.trim();
             const video = document.getElementById('form-video').value.trim();
-            const reviews = document.getElementById('form-reviews').value.trim();
+            
+            // Combine both inputs back into a comma-separated string for the database
+            const revGoogle = document.getElementById('form-review-google').value.trim();
+            const revSocial = document.getElementById('form-review-social').value.trim();
+            const reviews = [revGoogle, revSocial].filter(Boolean).join(',');
+            
             const isSpecial = document.getElementById('form-special').checked;
 
             if (!name || !mainCat || !subCat || isNaN(price) || !itemCode) {
