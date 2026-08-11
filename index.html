@@ -814,24 +814,16 @@
             if (session) {
                 currentUser = session.user;
 
-                // NEW: Automatically redirect admins to the Admin Suite!
-                if (currentUser.app_metadata && currentUser.app_metadata.is_admin === true) {
-                    window.location.href = 'admin.html';
-                    return; // Stop running the rest of the customer logic
-                }
+                // REMOVED AUTO-REDIRECT: Admins can now preview the Customer App peacefully!
 
                 if(btnNavLogin) btnNavLogin.classList.replace('flex', 'hidden');
                 if(btnNavProfile) btnNavProfile.classList.replace('hidden', 'flex');
                 
-                // Hide auth modal if they successfully logged in
                 if(authModal) authModal.classList.replace('flex', 'hidden'); 
             } else {
                 currentUser = null;
                 if(btnNavLogin) btnNavLogin.classList.replace('hidden', 'flex');
                 if(btnNavProfile) btnNavProfile.classList.replace('flex', 'hidden');
-                
-                // Notice we NO LONGER force the authModal to open here!
-                // The user stays on the menu page peacefully.
             }
         }
 
@@ -860,6 +852,20 @@
             const gender = meta.gender || '';
             const details = [gender, age].filter(Boolean).join(' / ') || 'Not Provided';
             document.getElementById('profile-details-display').textContent = details;
+            
+            // NEW: Inject the Admin Dashboard Button dynamically if the user is an Admin!
+            const existingAdminBtn = document.getElementById('btn-goto-admin');
+            if (existingAdminBtn) existingAdminBtn.remove(); // Clear old button so it doesn't duplicate
+
+            if (currentUser.app_metadata && currentUser.app_metadata.is_admin === true) {
+                const logoutBtn = document.querySelector('#profileModal button[onclick="handleSignOut()"]');
+                const adminBtnHtml = `
+                    <button id="btn-goto-admin" onclick="window.location.href='admin.html'" class="w-full bg-red-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-red-700 transition flex items-center justify-center gap-2 mt-2">
+                        <i class="fas fa-cogs"></i> Go to Admin Dashboard
+                    </button>
+                `;
+                logoutBtn.insertAdjacentHTML('beforebegin', adminBtnHtml);
+            }
             
             document.getElementById('profileModal').classList.replace('hidden', 'flex');
         }
