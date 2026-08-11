@@ -2080,7 +2080,7 @@ function setupVerticalDraggable(elementId) {
         }
 
         function openModal(id) {
-            const item = activeMenuData.find(i => i.id === id);
+            const item = activeMenuData.find(i => String(i.id) === String(id));
             if (!item) return;
             currentOpenItemId = id;
 
@@ -2142,7 +2142,7 @@ function setupVerticalDraggable(elementId) {
             if (totalSlides > 1) {
                 const prevArrow = `<button onclick="scrollModalSlider(-1)" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-left"></i></button>`;
                 const nextArrow = `<button onclick="scrollModalSlider(1)" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-right"></i></button>`;
-                slider.insertAdjacentHTML('afterend', prevArrow + nextArrow);
+                slider.parentElement.insertAdjacentHTML('beforeend', prevArrow + nextArrow);
             }
 
             clearInterval(window.modalCarouselTimer);
@@ -3438,14 +3438,11 @@ function toggleQuickCart(id) {
         setInterval(() => triggerAutoSwipe('.mini-img-slider'), 4000);
         setInterval(() => triggerAutoSwipe('.excel-banner-slider'), 5000);
         
-        document.addEventListener('touchend', (e) => {
-            const slider = e.target.closest('.mini-img-slider, .excel-banner-slider, #modal-image-slider, #promo-slider');
-            if (slider && slider.children.length > 1) {
-                const maxScroll = slider.scrollWidth - slider.clientWidth;
-                if (maxScroll <= 0) return; 
-                
-                const touchEndX = e.changedTouches[0].clientX;
-                const diff = carouselSwipeStartX - touchEndX; 
+        let carouselSwipeStartX = 0;
+document.addEventListener('touchstart', (e) => {
+    const slider = e.target.closest('.mini-img-slider, .excel-banner-slider, #modal-image-slider, #promo-slider');
+    if (slider) carouselSwipeStartX = e.touches[0].clientX;
+}, { passive: true }); 
                 
                 // Only trigger if they swiped hard enough (40 pixels)
                 if (Math.abs(diff) > 40) {
@@ -3694,25 +3691,31 @@ function toggleQuickCart(id) {
             
             const isRTL = document.documentElement.dir === 'rtl';
             const slideWidth = slider.clientWidth;
-            const maxScroll = slider.scrollWidth - slideWidth;
-            let currentScroll = Math.abs(slider.scrollLeft);
-            
-            let targetScroll = currentScroll + (slideWidth * direction);
+            if (!slideWidth) return;
 
-            // Seamless Looping Logic
-            if (targetScroll > maxScroll + 10) {
-                targetScroll = 0; // Loop back to the start!
-            } else if (targetScroll < -10) {
-                targetScroll = maxScroll; // Loop to the end!
+            const maxScroll = slider.scrollWidth - slideWidth;
+            const currentPos = Math.abs(slider.scrollLeft);
+            const atEnd = currentPos >= maxScroll - 5;
+            const atStart = currentPos <= 5;
+
+            // If there's nowhere left to scroll in this direction, wrap around
+            // instead of doing nothing (this is the seamless loop).
+            let targetPos;
+            if (direction > 0 && atEnd) {
+                targetPos = 0;
+            } else if (direction < 0 && atStart) {
+                targetPos = maxScroll;
+            } else {
+                targetPos = currentPos + (slideWidth * direction);
             }
-            
+
             slider.scrollTo({
-                left: isRTL ? -targetScroll : targetScroll,
+                left: isRTL ? -targetPos : targetPos,
                 behavior: 'smooth'
             });
             
             if (typeof lastSliderInteraction !== 'undefined') {
-                lastSliderInteraction = Date.now(); // Pause auto-swipe so user can read
+                lastSliderInteraction = Date.now(); // Pause auto-swipe
             }
         };
 
