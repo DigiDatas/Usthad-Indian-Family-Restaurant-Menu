@@ -382,7 +382,7 @@
                 <!-- NEW: Image Slider -->
                 <div id="modal-image-slider" class="flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;"></div>
                 <!-- NEW: Pagination Dots -->
-                <div id="modal-image-dots" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-20 pointer-events-none"></div>
+                <div id="modal-image-dots" class="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-30 pointer-events-auto"></div>
 
                 <div id="modalCategoryBadge" class="absolute bottom-3 start-3 bg-white/95 backdrop-blur px-3 py-1.5 rounded-lg text-sm font-bold text-red-600 shadow-sm z-20"></div>
                 
@@ -2134,18 +2134,15 @@ function setupVerticalDraggable(elementId) {
                 let dotContent = (hasVideo && i === 0) ? '<i class="fas fa-play text-[6px] text-white ms-0.5"></i>' : '';
                 let dotClass = i === 0 ? 'bg-red-500 scale-125 w-3 h-3' : 'bg-white/80 shadow-sm w-2 h-2';
                 let dotId = (hasVideo && i === 0) ? 'dot-video' : `dot-img-${hasVideo ? i - 1 : i}`;
-                dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass}">${dotContent}</div>`);
+                // NEW: Added onclick, stopPropagation, and cursor-pointer for interactive dots!
+                dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" onclick="event.stopPropagation(); scrollModalToSlide(${i})" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass} cursor-pointer hover:bg-red-400 hover:scale-125">${dotContent}</div>`);
             }
 
-            // FIX 1: Robust Desktop Arrows using direct inline JS (Bypasses iframe video click traps)
+            // FIX: Robust Desktop Arrows using type="button", z-40, and stopPropagation!
             document.querySelectorAll('.modal-nav-arrow').forEach(el => el.remove()); 
             if (totalSlides > 1) {
-                const prevClick = `event.stopPropagation(); const s = document.getElementById('modal-image-slider'); s.scrollBy({ left: document.documentElement.dir === 'rtl' ? s.clientWidth : -s.clientWidth, behavior: 'smooth' });`;
-                const nextClick = `event.stopPropagation(); const s = document.getElementById('modal-image-slider'); s.scrollBy({ left: document.documentElement.dir === 'rtl' ? -s.clientWidth : s.clientWidth, behavior: 'smooth' });`;
-
-                const prevArrow = `<button type="button" onclick="${prevClick}" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-40 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-left pointer-events-none"></i></button>`;
-                const nextArrow = `<button type="button" onclick="${nextClick}" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-40 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-right pointer-events-none"></i></button>`;
-                
+                const prevArrow = `<button type="button" onclick="event.stopPropagation(); scrollModalSlider(-1)" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-40 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-left pointer-events-none"></i></button>`;
+                const nextArrow = `<button type="button" onclick="event.stopPropagation(); scrollModalSlider(1)" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-40 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-right pointer-events-none"></i></button>`;
                 slider.parentElement.insertAdjacentHTML('beforeend', prevArrow + nextArrow);
             }
 
@@ -3696,33 +3693,38 @@ function toggleQuickCart(id) {
             });
         }
 
-        // NEW: Smart Math-based Carousel Scroller for Desktop Arrows (With Looping!)
+        // NEW: Jump straight to a specific slide when clicking a dot
+        window.scrollModalToSlide = function(index) {
+            const slider = document.getElementById('modal-image-slider');
+            if(!slider) return;
+            
+            const isRTL = document.documentElement.dir === 'rtl';
+            const slideWidth = slider.clientWidth;
+            const targetPos = index * slideWidth;
+
+            slider.scrollTo({
+                left: isRTL ? -targetPos : targetPos,
+                behavior: 'smooth'
+            });
+            
+            if (typeof lastSliderInteraction !== 'undefined') {
+                lastSliderInteraction = Date.now(); // Pause auto-swipe so user can read
+            }
+        };
+
+        // NEW: Bulletproof Scroll Logic for Desktop Arrows
         window.scrollModalSlider = function(direction) {
             const slider = document.getElementById('modal-image-slider');
             if(!slider) return;
             
             const isRTL = document.documentElement.dir === 'rtl';
             const slideWidth = slider.clientWidth;
-            if (!slideWidth) return;
-
-            const maxScroll = slider.scrollWidth - slideWidth;
-            const currentPos = Math.abs(slider.scrollLeft);
-            const atEnd = currentPos >= maxScroll - 5;
-            const atStart = currentPos <= 5;
-
-            // If there's nowhere left to scroll in this direction, wrap around
-            // instead of doing nothing (this is the seamless loop).
-            let targetPos;
-            if (direction > 0 && atEnd) {
-                targetPos = 0;
-            } else if (direction < 0 && atStart) {
-                targetPos = maxScroll;
-            } else {
-                targetPos = currentPos + (slideWidth * direction);
-            }
-
-            slider.scrollTo({
-                left: isRTL ? -targetPos : targetPos,
+            
+            // Simply force the browser to scroll exactly one image-width left or right!
+            const scrollAmount = isRTL ? -(slideWidth * direction) : (slideWidth * direction);
+            
+            slider.scrollBy({
+                left: scrollAmount,
                 behavior: 'smooth'
             });
             
