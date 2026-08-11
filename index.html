@@ -3719,12 +3719,26 @@ function toggleQuickCart(id) {
             
             const isRTL = document.documentElement.dir === 'rtl';
             const slideWidth = slider.clientWidth;
-            
-            // Simply force the browser to scroll exactly one image-width left or right!
-            const scrollAmount = isRTL ? -(slideWidth * direction) : (slideWidth * direction);
-            
-            slider.scrollBy({
-                left: scrollAmount,
+            if (!slideWidth) return;
+
+            const maxScroll = slider.scrollWidth - slideWidth;
+            const currentPos = Math.abs(slider.scrollLeft);
+            const atEnd = currentPos >= maxScroll - 5;
+            const atStart = currentPos <= 5;
+
+            // If there's nowhere left to scroll in this direction, wrap around
+            // instead of doing nothing (this is the seamless loop).
+            let targetPos;
+            if (direction > 0 && atEnd) {
+                targetPos = 0;
+            } else if (direction < 0 && atStart) {
+                targetPos = maxScroll;
+            } else {
+                targetPos = currentPos + (slideWidth * direction);
+            }
+
+            slider.scrollTo({
+                left: isRTL ? -targetPos : targetPos,
                 behavior: 'smooth'
             });
             
