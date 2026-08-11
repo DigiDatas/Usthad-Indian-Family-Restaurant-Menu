@@ -490,10 +490,14 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Price *</label>
                         <input type="number" step="0.01" id="form-price" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Stock</label>
+                        <input type="number" id="form-stock" placeholder="Empty=Unlimit" class="w-full border border-yellow-300 bg-yellow-50 rounded-xl px-3 py-2 text-sm font-bold text-yellow-800 focus:outline-none focus:border-yellow-500">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Order</label>
@@ -1163,6 +1167,7 @@ async function saveOfferOrder() {
                     document.getElementById('form-order').value = item.order_index || 1;
                     document.getElementById('form-desc').value = item.description || '';
                     document.getElementById('form-calories').value = item.calories || '';
+			document.getElementById('form-stock').value = item.stock_quantity !== null ? item.stock_quantity : '';
                     document.getElementById('form-recipe').value = item.recipe || '';
                     document.getElementById('form-video').value = item.video_url || '';
                     
@@ -1226,6 +1231,8 @@ async function saveOfferOrder() {
             const orderIndex = parseInt(document.getElementById('form-order').value) || 1;
             const desc = document.getElementById('form-desc').value.trim();
             const calories = parseInt(document.getElementById('form-calories').value) || null;
+const stockRaw = document.getElementById('form-stock').value.trim();
+            const stockQty = stockRaw === '' ? null : parseInt(stockRaw);
             const recipe = document.getElementById('form-recipe').value.trim();
             const video = document.getElementById('form-video').value.trim();
             
@@ -1272,6 +1279,7 @@ async function saveOfferOrder() {
                 order_index: orderIndex,
                 description: desc,
                 calories: calories,
+		stock_quantity: stockQty,
                 recipe: recipe,
                 video_url: video,
                 review_links: reviews,
