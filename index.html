@@ -2137,11 +2137,15 @@ function setupVerticalDraggable(elementId) {
                 dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass}">${dotContent}</div>`);
             }
 
-            // FIX 2: Add Smart Navigation Arrows using the new math-based scroll function
+            // FIX 1: Robust Desktop Arrows using direct inline JS (Bypasses iframe video click traps)
             document.querySelectorAll('.modal-nav-arrow').forEach(el => el.remove()); 
             if (totalSlides > 1) {
-                const prevArrow = `<button onclick="scrollModalSlider(-1)" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-left"></i></button>`;
-                const nextArrow = `<button onclick="scrollModalSlider(1)" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 backdrop-blur text-gray-800 shadow flex items-center justify-center z-30 hover:bg-white transition"><i class="fas fa-chevron-right"></i></button>`;
+                const prevClick = `event.stopPropagation(); const s = document.getElementById('modal-image-slider'); s.scrollBy({ left: document.documentElement.dir === 'rtl' ? s.clientWidth : -s.clientWidth, behavior: 'smooth' });`;
+                const nextClick = `event.stopPropagation(); const s = document.getElementById('modal-image-slider'); s.scrollBy({ left: document.documentElement.dir === 'rtl' ? -s.clientWidth : s.clientWidth, behavior: 'smooth' });`;
+
+                const prevArrow = `<button type="button" onclick="${prevClick}" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-40 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-left pointer-events-none"></i></button>`;
+                const nextArrow = `<button type="button" onclick="${nextClick}" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-40 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-right pointer-events-none"></i></button>`;
+                
                 slider.parentElement.insertAdjacentHTML('beforeend', prevArrow + nextArrow);
             }
 
@@ -2308,15 +2312,13 @@ function setupVerticalDraggable(elementId) {
                 if (matchedItems.length > 0) {
                     matchedItems.forEach(relItem => {
                         relatedSlider.innerHTML += `
-                            <div onclick="setTimeout(() => openModal('${relItem.id}'), 10)" class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
-                                <div class="pointer-events-none">
-                                    <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
-                                    <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1">${relItem.name}</h4>
-                                </div>
-                                <div class="flex justify-between items-center mt-1">
-                                    <p class="text-[10px] text-orange-600 font-bold flex items-baseline gap-1 pointer-events-none">${relItem.price} ${getSmartCurrency(globalCurrency, '')}</p>
-                                    <button onclick="event.stopPropagation(); toggleQuickCart('${relItem.id}')" class="quick-add-btn-${relItem.id} bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-colors pointer-events-auto z-10 relative">
-                                        <i class="quick-add-icon-${relItem.id} fas fa-plus text-[8px] transition-transform duration-500"></i>
+                            <div onclick="openModal('${relItem.id}')" class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
+                                <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 pointer-events-none" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
+                                <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1 pointer-events-none">${relItem.name}</h4>
+                                <div class="flex justify-between items-center mt-1 pointer-events-none">
+                                    <p class="text-[10px] text-orange-600 font-bold flex items-baseline gap-1">${relItem.price} ${getSmartCurrency(globalCurrency, '')}</p>
+                                    <button type="button" onclick="event.stopPropagation(); toggleQuickCart('${relItem.id}')" class="quick-add-btn-${relItem.id} bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-colors pointer-events-auto z-10 relative">
+                                        <i class="quick-add-icon-${relItem.id} fas fa-plus text-[8px] transition-transform duration-500 pointer-events-none"></i>
                                     </button>
                                 </div>
                             </div>
