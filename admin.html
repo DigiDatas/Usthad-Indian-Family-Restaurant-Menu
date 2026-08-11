@@ -76,15 +76,7 @@
                 </div>
             </div>
         </div>
-        <!-- Mobile Tab Row -->
-        <div class="flex md:hidden border-t border-gray-100 bg-gray-50 px-2 py-1 gap-1 justify-around overflow-x-auto hide-scrollbar">
-            <button onclick="switchTab('dashboard')" id="m-tab-dashboard" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-red-50 text-red-600 shrink-0">Dashboard</button>
-            <button onclick="switchTab('menu')" id="m-tab-menu" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Menu</button>
-            <button onclick="switchTab('users')" id="m-tab-users" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Customers</button>
-            <button onclick="switchTab('offers')" id="m-tab-offers" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Offers</button>
-            <button onclick="switchTab('settings')" id="m-tab-settings" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Settings</button>
-        </div>
-    </nav>
+        
         <!-- Mobile Tab Row -->
         <div class="flex md:hidden border-t border-gray-100 bg-gray-50 px-2 py-1 gap-1 justify-around">
             <button onclick="switchTab('orders')" id="m-tab-orders" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-red-50 text-red-600">Orders</button>
@@ -176,44 +168,91 @@
             </div>
         </section>
 
-        <!-- ================= TAB 4: ANALYTICS ================= -->
-        <section id="section-analytics" class="tab-section hidden">
-            <div class="mb-6">
-                <h2 class="text-2xl font-black text-gray-800">Sales & Inventory Analytics</h2>
-                <p class="text-sm text-gray-500">Track high-level performance metrics, item demand, and stock warnings.</p>
+        <!-- ================= TAB 2: MENU MANAGER ================= -->
+        <section id="section-menu" class="tab-section hidden">
+            <div class="flex flex-col mb-6 gap-4">
+                <div class="flex justify-between items-end">
+                    <div>
+                        <h2 class="text-2xl font-black text-gray-800">Menu Manager</h2>
+                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical mx-1 text-gray-400"></i> to reorder. Drag between groups to change categories.</p>
+                    </div>
+                    
+                    <div class="flex bg-gray-200 p-1 rounded-lg">
+                        <button onclick="switchAdminLanguage('en')" id="filter-lang-en" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition">English (EN)</button>
+                        <button onclick="switchAdminLanguage('ar')" id="filter-lang-ar" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition">Arabic (AR)</button>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 w-full justify-end border-t border-gray-200 pt-4">
+                    <button onclick="saveMenuOrder()" id="btn-save-order" class="hidden bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center justify-center gap-2 animate-pulse">
+                        <i class="fas fa-save"></i> Save Order Changes
+                    </button>
+                    <button onclick="openMenuModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center justify-center gap-2">
+                        <i class="fas fa-plus"></i> Add New Item
+                    </button>
+                    <button onclick="openJsonModal()" class="bg-gray-900 text-white px-4 py-2 rounded-xl shadow-md hover:bg-gray-800 font-bold text-sm transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-code"></i> Bulk JSON
+                    </button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Total Revenue</p>
-                    <p id="stat-revenue" class="text-3xl font-black text-green-600 mt-1">0.00</p>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Total Orders</p>
-                    <p id="stat-orders" class="text-3xl font-black text-gray-900 mt-1">0</p>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Dine-In Orders</p>
-                    <p id="stat-dinein" class="text-3xl font-black text-blue-600 mt-1">0</p>
-                </div>
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
-                    <p class="text-xs font-bold text-gray-400 uppercase">Takeaway Orders</p>
-                    <p id="stat-takeaway" class="text-3xl font-black text-amber-600 mt-1">0</p>
+            <!-- Menu Table Grid -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto pb-20">
+                    <table class="w-full text-left border-collapse" id="menu-table">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4 w-10"></th> 
+                                <th class="p-4 w-12 text-center">SL#</th>
+                                <th class="p-4 w-12 text-center">Index</th>
+                                <th class="p-4">Item</th>
+                                <th class="p-4">Price / Stock</th>
+                                <th class="p-4">Special</th>
+                                <th class="p-4 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="menu-table-body" class="divide-y divide-gray-100 text-sm">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Menu Items...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
+        </section>
 
-            <!-- NEW: Demand & Stock Dashboards -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Low Stock Alerts -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-2 border-red-100 flex flex-col h-80">
-                    <h3 class="text-lg font-black text-gray-800 border-b border-gray-100 pb-3 mb-3 shrink-0"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
-                    <div id="analytics-low-stock" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar"></div>
+        <!-- ================= TAB 3: CUSTOMERS & USER ORDERS ================= -->
+        <section id="section-users" class="tab-section hidden">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">Customer Directory</h2>
+                    <p class="text-sm text-gray-500">View customer contact details, lifetime spend, and order history.</p>
                 </div>
-                
-                <!-- Best Sellers -->
-                <div class="bg-white p-6 rounded-2xl shadow-sm border-2 border-blue-100 flex flex-col h-80">
-                    <h3 class="text-lg font-black text-gray-800 border-b border-gray-100 pb-3 mb-3 shrink-0"><i class="fas fa-fire text-orange-500 me-2"></i> Trending Demand (Top 10)</h3>
-                    <div id="analytics-best-sellers" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar"></div>
+                <button onclick="fetchUsersAndOrders(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
+                    <i class="fas fa-sync-alt text-red-500 transition-all duration-300"></i> Refresh
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                <th class="p-4">Customer Name</th>
+                                <th class="p-4">Phone / WhatsApp</th>
+                                <th class="p-4">Email Address</th>
+                                <th class="p-4">Latest Address</th>
+                                <th class="p-4 text-center">Total Orders</th>
+                                <th class="p-4">Lifetime Spent</th>
+                                <th class="p-4 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table-body" class="divide-y divide-gray-100 text-sm">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Customer Data...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
