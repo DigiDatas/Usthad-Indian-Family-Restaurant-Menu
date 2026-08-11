@@ -16,6 +16,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
         
@@ -927,8 +928,16 @@ async function logoutAdmin() {
             
             const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             
-            if (error) alert("Error: " + error.message);
-            else checkSession();
+            if (error) {
+                alert("Error: " + error.message);
+            } else {
+                await checkSession();
+                
+                // 🎉 SMART UX: Auto-reopen the cart if they were trying to checkout!
+                if (cart.length > 0) {
+                    setTimeout(() => { openCartModal(); }, 400); // 400ms delay lets the login window close smoothly first
+                }
+            }
             
             btn.innerHTML = originalHtml;
         }
@@ -972,9 +981,12 @@ async function logoutAdmin() {
                 btn.innerHTML = originalHtml;
             } else {
                 alert("Success! Your account has been created.");
-                // NEW: Since email confirmation is off, the user is instantly logged in!
-                // Calling checkSession() will automatically recognize them and close the login popup.
-                checkSession(); 
+                await checkSession(); 
+                
+                // 🎉 SMART UX: Auto-reopen the cart if they were trying to checkout!
+                if (cart.length > 0) {
+                    setTimeout(() => { openCartModal(); }, 400); 
+                }
             }
         }
 
