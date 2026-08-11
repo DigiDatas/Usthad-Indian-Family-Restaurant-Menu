@@ -2091,19 +2091,22 @@ function setupVerticalDraggable(elementId) {
             const t = staticText[currentLang];
 
             // --- UPGRADED: Image & Video Carousel Logic ---
-            // --- UPGRADED: Image & Video Carousel Logic ---
             const slider = document.getElementById('modal-image-slider');
             const dots = document.getElementById('modal-image-dots');
+            
+            // FIX 1: Force scroll reset so videos never disappear!
+            slider.style.scrollBehavior = 'auto'; 
+            slider.scrollLeft = 0; 
+            
             slider.innerHTML = '';
             dots.innerHTML = '';
             
-            // FIX: Force the dots container to be interactive and layered ON TOP of the video!
             dots.className = "absolute bottom-3 left-0 right-0 flex justify-center gap-1.5 z-50 pointer-events-auto";
 
             let hasVideo = false;
             let videoHtml = '';
             
-            // SMART VIDEO PARSER (Restored!)
+            // SMART VIDEO PARSER
             if (item.video && item.video.trim() !== "") {
                 hasVideo = true;
                 let v = item.video.trim();
@@ -2117,10 +2120,11 @@ function setupVerticalDraggable(elementId) {
                     embedUrl = v.replace('vimeo.com/', 'player.vimeo.com/video/');
                 }
                 
+                // FIX 2: Wrapped the iframe in a rigid <div> so it doesn't break flexbox swiping!
                 if (v.endsWith('.mp4') || v.endsWith('.webm') || v.endsWith('.ogg')) {
-                    videoHtml = `<video src="${v}" controls playsinline class="w-full h-full object-cover shrink-0 snap-center bg-black"></video>`;
+                    videoHtml = `<div class="w-full h-full shrink-0 snap-center bg-black relative"><video src="${v}" controls playsinline class="absolute inset-0 w-full h-full object-contain"></video></div>`;
                 } else {
-                    videoHtml = `<iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen" class="w-full h-full object-cover shrink-0 snap-center bg-black pointer-events-auto"></iframe>`;
+                    videoHtml = `<div class="w-full h-full shrink-0 snap-center bg-black relative"><iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen" class="absolute inset-0 w-full h-full pointer-events-auto"></iframe></div>`;
                 }
                 
                 slider.insertAdjacentHTML('beforeend', videoHtml);
@@ -2139,20 +2143,22 @@ function setupVerticalDraggable(elementId) {
                 let dotClass = i === 0 ? 'bg-red-500 scale-125 w-3 h-3' : 'bg-white/80 shadow-sm w-2 h-2';
                 let dotId = (hasVideo && i === 0) ? 'dot-video' : `dot-img-${hasVideo ? i - 1 : i}`;
                 
-                // FIX: Added onclick, preventDefault, and cursor-pointer for fully interactive dots!
                 dots.insertAdjacentHTML('beforeend', `<div id="${dotId}" onclick="event.preventDefault(); event.stopPropagation(); window.scrollModalToSlide(${i});" class="modal-dot flex items-center justify-center rounded-full transition-all duration-300 ${dotClass} cursor-pointer hover:bg-red-400 pointer-events-auto z-50"> ${dotContent} </div>`);
             }
 
-            // FIX: Robust Desktop Arrows using preventDefault to stop the iframe from swallowing clicks
+            // FIX 3: Elevated z-index to z-[100] to overpower YouTube iframes
             document.querySelectorAll('.modal-nav-arrow').forEach(el => el.remove()); 
             if (totalSlides > 1) {
-                const prevArrow = `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.scrollModalSlider(-1);" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-50 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-left pointer-events-none"></i></button>`;
-                const nextArrow = `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.scrollModalSlider(1);" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-50 hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-right pointer-events-none"></i></button>`;
+                const prevArrow = `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.scrollModalSlider(-1);" class="modal-nav-arrow absolute start-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-[100] hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-left pointer-events-none"></i></button>`;
+                const nextArrow = `<button type="button" onclick="event.preventDefault(); event.stopPropagation(); window.scrollModalSlider(1);" class="modal-nav-arrow absolute end-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/90 backdrop-blur text-gray-800 shadow-md flex items-center justify-center z-[100] hover:bg-white hover:scale-110 transition cursor-pointer"><i class="fas fa-chevron-right pointer-events-none"></i></button>`;
                 slider.parentElement.insertAdjacentHTML('beforeend', prevArrow + nextArrow);
             }
 
             clearInterval(window.modalCarouselTimer);
             
+            // Restore smooth scrolling for interactions after initial load
+            setTimeout(() => { slider.style.scrollBehavior = 'smooth'; }, 50);
+
             if (hasVideo) {
                 slider.dataset.infiniteSetup = "true"; 
                 slider.dataset.realCount = totalSlides;
