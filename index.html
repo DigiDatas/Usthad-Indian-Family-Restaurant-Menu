@@ -2989,12 +2989,21 @@ function toggleQuickCart(id) {
                 } else {
                     // 🎉 SMART INVENTORY SYSTEM: Deduct stock from the master database!
                     for (const cartItem of cart) {
-                        if (cartItem.stockQty !== null) {
+                        // Check if the item actually has a stock limit being tracked
+                        if (cartItem.stockQty !== null && cartItem.stockQty !== undefined) {
+                            
+                            // Calculate the new stock number (ensuring it never drops below 0)
                             const newStock = Math.max(0, cartItem.stockQty - cartItem.qty);
-                            // We use itemCode so it updates BOTH the English and Arabic versions at the same time!
-                            await supabaseClient.from('menu_items')
+                            
+                            // Send the update to Supabase! (Using itemCode ensures both EN and AR versions update simultaneously)
+                            const { error: stockErr } = await supabaseClient
+                                .from('menu_items')
                                 .update({ stock_quantity: newStock })
                                 .eq('item_code', cartItem.itemCode);
+                                
+                            if (stockErr) {
+                                console.error("Stock Deduction Failed:", stockErr.message);
+                            }
                         }
                     }
                 }
