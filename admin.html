@@ -8,6 +8,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
@@ -93,14 +94,24 @@
 
         <!-- ================= TAB 1: UNIFIED DASHBOARD ================= -->
         <section id="section-dashboard" class="tab-section">
-            <div class="flex justify-between items-end mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 gap-4">
                 <div>
                     <h2 class="text-2xl font-black text-gray-800">Command Center</h2>
                     <p class="text-sm text-gray-500">Live analytics, stock alerts, and incoming order management.</p>
                 </div>
-                <button onclick="fetchDashboardData(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
-                    <i class="fas fa-sync-alt text-blue-500 transition-all duration-300"></i> Refresh
-                </button>
+                
+                <div class="flex items-center gap-2 bg-white p-1.5 rounded-xl shadow-sm border border-gray-200">
+                    <select id="dashboard-time-filter" onchange="fetchDashboardData(null, false)" class="bg-gray-50 border border-gray-200 text-xs font-bold text-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:border-red-500 cursor-pointer">
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="year">This Year</option>
+                        <option value="all">All Time</option>
+                    </select>
+                    <button onclick="fetchDashboardData(this, false)" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition flex items-center gap-2 font-bold text-xs">
+                        <i class="fas fa-sync-alt transition-all duration-300"></i> Refresh
+                    </button>
+                </div>
             </div>
 
             <!-- Detailed Analytics Row -->
@@ -121,43 +132,68 @@
                     <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="fas fa-fire text-orange-500 me-1"></i> Pending Orders</p>
                     <p id="stat-pending-count" class="text-2xl font-black text-orange-600 mt-1">0</p>
                 </div>
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between col-span-2 lg:col-span-1">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between col-span-2 lg:col-span-1 border-b-4 border-b-red-500">
                     <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="far fa-clock text-red-500 me-1"></i> Max Wait Time</p>
-                    <p id="stat-wait-time" class="text-2xl font-black text-red-600 mt-1">0m</p>
+                    <p id="stat-wait-time" class="text-2xl font-black text-red-600 mt-1 live-ticker" data-time="">0m</p>
                 </div>
             </div>
 
-            <!-- Secondary Analytics (Stock & Demand) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
-                <!-- Low Stock Alerts (CLICKABLE!) -->
-                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-red-100 flex flex-col h-64 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-50 rounded-bl-full -z-10"></div>
-                    <h3 class="text-sm font-black text-gray-800 mb-3 shrink-0 uppercase tracking-wider"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
-                    <div id="analytics-low-stock" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar"></div>
+            <!-- NEW: Top 5 Urgent Orders Cards -->
+            <div id="urgent-orders-wrapper" class="mb-6 hidden">
+                <h3 class="text-sm font-black text-gray-800 mb-3 uppercase tracking-wider"><i class="fas fa-exclamation-circle text-red-500 me-2"></i> Most Urgent Orders</h3>
+                <div id="urgent-orders-container" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <!-- Cards injected via JS -->
+                </div>
+            </div>
+
+            <!-- Graphs & Secondary Analytics -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+                
+                <!-- NEW: Dynamic Bar Chart -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-200 lg:col-span-2 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Order Status Trends</h3>
+                        <select id="chart-data-filter" onchange="renderDashChart()" class="bg-gray-50 border border-gray-200 text-[10px] font-bold rounded px-2 py-1 focus:outline-none">
+                            <option value="revenue">By Revenue</option>
+                            <option value="count">By Order Count</option>
+                        </select>
+                    </div>
+                    <div class="relative flex-grow min-h-[200px]">
+                        <canvas id="dashboardChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-4 sm:gap-6">
+                    <!-- Low Stock Alerts -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex flex-col flex-1 relative overflow-hidden max-h-48">
+                        <h3 class="text-sm font-black text-gray-800 mb-2 shrink-0 uppercase tracking-wider"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
+                        <div id="analytics-low-stock" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar pb-2"></div>
+                    </div>
+                    <!-- Trending Demand -->
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-blue-100 flex flex-col flex-1 relative overflow-hidden max-h-48">
+                        <h3 class="text-sm font-black text-gray-800 mb-2 shrink-0 uppercase tracking-wider"><i class="fas fa-chart-line text-blue-500 me-2"></i> Trending Demand</h3>
+                        <div id="analytics-best-sellers" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar pb-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Expandable Orders Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
+                <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex justify-between items-center shrink-0">
+                    <h3 class="font-black text-gray-800"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders (Latest 20)</h3>
+                    <span class="text-[10px] font-bold text-gray-400 uppercase">Click row to expand</span>
                 </div>
                 
-                <!-- Best Sellers -->
-                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-blue-100 flex flex-col h-64 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-10"></div>
-                    <h3 class="text-sm font-black text-gray-800 mb-3 shrink-0 uppercase tracking-wider"><i class="fas fa-chart-line text-blue-500 me-2"></i> Trending Demand</h3>
-                    <div id="analytics-best-sellers" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar"></div>
-                </div>
-            </div>
-
-            <!-- Compact Orders Table -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="font-black text-gray-800"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders</h3>
-                </div>
-                <div class="overflow-x-auto">
+                <!-- Fixed Height Scrollable Container -->
+                <div class="overflow-y-auto overflow-x-auto max-h-[500px] relative">
                     <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-white border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                        <thead class="sticky top-0 bg-white shadow-sm z-10">
+                            <tr class="border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                                 <th class="p-4 whitespace-nowrap">Order ID / Date</th>
                                 <th class="p-4">Customer</th>
                                 <th class="p-4">Items Summary</th>
-                                <th class="p-4">Total</th>
-                                <th class="p-4 text-center">Status Action</th>
+                                <th class="p-4">Wait Time</th>
+                                <th class="p-4 text-center">Status</th>
                             </tr>
                         </thead>
                         <tbody id="orders-table-body" class="divide-y divide-gray-50 text-sm">
@@ -826,6 +862,10 @@
         
 
         // --- MASTER DASHBOARD LOGIC ---
+        let dashboardFilteredOrders = [];
+        let dashChartInstance = null;
+        let activeLiveTimers = [];
+
         async function fetchDashboardData(btnElement = null, isBackground = false) {
             let icon = null;
             if (btnElement) {
@@ -833,92 +873,211 @@
                 if (icon) icon.classList.add('fa-spin');
             }
 
-            const tbody = document.getElementById('orders-table-body');
-
-            const { data: orders, error } = await supabaseClient
-                .from('orders')
-                .select('*')
-                .order('created_at', { ascending: false });
+            // CRITICAL FIX: Fetch BOTH Orders and Menu Items simultaneously so Stock Alerts are perfectly Live!
+            const [ordersRes, menuRes] = await Promise.all([
+                supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
+                supabaseClient.from('menu_items').select('*')
+            ]);
 
             if (icon) icon.classList.remove('fa-spin');
 
-            if (error) {
-                if (!isBackground) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold">Error loading dashboard.</td></tr>`;
+            if (ordersRes.error || menuRes.error) {
+                console.error("Dashboard Fetch Error", ordersRes.error, menuRes.error);
+                if (!isBackground) alert("Failed to refresh dashboard data.");
                 return;
             }
 
-            allOrders = orders || [];
-            
-            // Notification Trigger
-            if (isBackground && allOrders.length > lastKnownOrderCount && lastKnownOrderCount > 0) {
+            allOrders = ordersRes.data || [];
+            allMenuItems = menuRes.data || []; // Updates stock globally!
+
+            // NOTIFICATIONS FIX: Check for NEW PENDING orders
+            const currentPendingCount = allOrders.filter(o => o.status === 'Pending').length;
+            if (isBackground && currentPendingCount > lastKnownOrderCount) {
                 const badge = document.getElementById('notif-badge');
-                badge.textContent = allOrders.length - lastKnownOrderCount;
+                badge.textContent = currentPendingCount;
                 badge.classList.remove('hidden');
             }
-            lastKnownOrderCount = allOrders.length;
+            lastKnownOrderCount = currentPendingCount;
+
+            processDashboardFilters();
+        }
+
+        function processDashboardFilters() {
+            const filterVal = document.getElementById('dashboard-time-filter').value;
+            const now = new Date();
+            
+            dashboardFilteredOrders = allOrders.filter(order => {
+                const orderDate = new Date(order.created_at);
+                if (filterVal === 'today') {
+                    return orderDate.toDateString() === now.toDateString();
+                } else if (filterVal === 'week') {
+                    const diffTime = Math.abs(now - orderDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                    return diffDays <= 7;
+                } else if (filterVal === 'month') {
+                    return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+                } else if (filterVal === 'year') {
+                    return orderDate.getFullYear() === now.getFullYear();
+                }
+                return true; // 'all'
+            });
 
             updateDetailedAnalytics();
             renderOrdersTable();
+            renderDashChart();
+            startLiveTimers();
+        }
+
+        // TIME FORMATTER HELPER
+        function getWaitTimeStr(dateString) {
+            const orderTime = new Date(dateString).getTime();
+            const diffMins = Math.floor((Date.now() - orderTime) / 60000);
+            return diffMins > 60 ? `${Math.floor(diffMins/60)}h ${diffMins%60}m` : `${diffMins}m`;
         }
 
         function renderOrdersTable() {
             const tbody = document.getElementById('orders-table-body');
+            const urgentContainer = document.getElementById('urgent-orders-container');
+            const urgentWrapper = document.getElementById('urgent-orders-wrapper');
             tbody.innerHTML = '';
+            urgentContainer.innerHTML = '';
 
-            if (allOrders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No Orders Yet</td></tr>`;
+            if (dashboardFilteredOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold">No orders found for this time period.</td></tr>`;
+                urgentWrapper.classList.add('hidden');
                 return;
             }
 
-            allOrders.forEach(order => {
+            // --- 1. RENDER TOP 5 URGENT ORDERS ---
+            const pendingOrders = dashboardFilteredOrders
+                .filter(o => o.status === 'Pending' || o.status === 'Cooking')
+                .sort((a,b) => new Date(a.created_at) - new Date(b.created_at)); // Oldest first
+
+            if (pendingOrders.length > 0) {
+                urgentWrapper.classList.remove('hidden');
+                pendingOrders.slice(0, 5).forEach((order, idx) => {
+                    const waitStr = getWaitTimeStr(order.created_at);
+                    const statColor = order.status === 'Cooking' ? 'bg-blue-500' : 'bg-yellow-500';
+                    
+                    urgentContainer.innerHTML += `
+                        <div onclick="toggleOrderDetails('${order.id}')" class="bg-white p-3 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full ${statColor}"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-black text-gray-800 uppercase">${order.order_number}</span>
+                                <span class="text-[10px] font-black text-red-600 bg-red-50 px-1.5 rounded live-ticker" data-time="${order.created_at}">${waitStr}</span>
+                            </div>
+                            <p class="text-xs font-bold text-gray-600 truncate mb-1">${order.customer_name || 'Guest'}</p>
+                            <p class="text-[9px] text-gray-400 font-bold">${order.order_type}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                urgentWrapper.classList.add('hidden');
+            }
+
+            // --- 2. RENDER MAIN TABLE (Limit to latest 20) ---
+            dashboardFilteredOrders.slice(0, 20).forEach(order => {
                 const date = new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                 const displayNo = order.order_number || 'ORD-XXXX';
+                const waitStr = getWaitTimeStr(order.created_at);
                 
-                // Color code the current status
-                let statColor = "bg-yellow-100 text-yellow-700";
-                if(order.status === 'Cooking') statColor = "bg-blue-100 text-blue-700";
-                if(order.status === 'Completed') statColor = "bg-green-100 text-green-700";
-                if(order.status === 'Cancelled') statColor = "bg-gray-100 text-gray-500";
+                // Beautiful Status Badges
+                let badge = `<span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Pending</span>`;
+                if(order.status === 'Cooking') badge = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Cooking</span>`;
+                if(order.status === 'Completed') badge = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Completed</span>`;
+                if(order.status === 'Cancelled') badge = `<span class="bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase">Cancelled</span>`;
 
-                // Summarize items into a string (e.g., "2x Burger, 1x Coke")
+                // Quick Summary
                 let itemsSummary = [];
+                let fullItemsHtml = '';
                 if (order.items && Array.isArray(order.items)) {
                     itemsSummary = order.items.map(i => `<span class="text-red-500 font-bold">${i.qty}x</span> ${i.name}`);
+                    order.items.forEach(i => {
+                        fullItemsHtml += `<div class="flex justify-between text-sm py-1 border-b border-gray-50"><span class="font-medium text-gray-700">${i.qty}x ${i.name}</span><span class="text-gray-500 font-bold">${(i.price * i.qty).toFixed(2)}</span></div>`;
+                    });
                 }
-                const itemsHtml = itemsSummary.length > 0 ? itemsSummary.join('<br>') : '<span class="text-gray-400 italic">No details</span>';
+                const shortSummary = itemsSummary.length > 0 ? itemsSummary.join(', ') : 'No details';
 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50/50 transition group";
-                tr.innerHTML = `
-                    <td class="p-4 align-top">
-                        <div class="font-black text-gray-900 text-xs">${displayNo}</div>
-                        <div class="text-[10px] text-gray-400 font-bold mt-1">${date}</div>
-                        <div class="text-[10px] font-bold text-blue-600 mt-1">${order.order_type}</div>
-                    </td>
-                    <td class="p-4 align-top">
-                        <div class="font-bold text-gray-800 text-xs truncate max-w-[120px]">${order.customer_name || 'Guest'}</div>
-                        <div class="text-[10px] text-gray-500 mt-1">${order.customer_phone || 'No Phone'}</div>
-                        ${order.table_number ? `<div class="text-[10px] text-red-500 font-bold mt-1">Table: ${order.table_number}</div>` : ''}
-                    </td>
-                    <td class="p-4 align-top text-xs text-gray-600 leading-relaxed">${itemsHtml}</td>
-                    <td class="p-4 align-top font-black text-green-600 text-sm">${parseFloat(order.total_amount).toFixed(2)}</td>
-                    <td class="p-4 align-top text-center w-36">
-                        <select onchange="updateStatus('${order.id}', this.value)" class="w-full bg-white border border-gray-200 text-[10px] font-black uppercase tracking-wider rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 shadow-sm ${statColor} cursor-pointer mb-2">
-                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
-                            <option value="Cooking" ${order.status === 'Cooking' ? 'selected' : ''}>Cooking</option>
-                            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
-                            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                        </select>
-                    </td>
+                // THE SUMMARY ROW (Clickable)
+                tbody.innerHTML += `
+                    <tr onclick="toggleOrderDetails('${order.id}')" class="hover:bg-gray-50 transition cursor-pointer group" id="row-sum-${order.id}">
+                        <td class="p-4 align-middle">
+                            <div class="font-black text-gray-900 text-xs">${displayNo}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mt-1">${date}</div>
+                        </td>
+                        <td class="p-4 align-middle">
+                            <div class="font-bold text-gray-800 text-xs truncate max-w-[120px]">${order.customer_name || 'Guest'}</div>
+                            <div class="text-[10px] font-bold text-blue-600 mt-1">${order.order_type}</div>
+                        </td>
+                        <td class="p-4 align-middle text-[10px] text-gray-500 max-w-[150px] truncate">${shortSummary}</td>
+                        <td class="p-4 align-middle font-black text-red-500 text-xs live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</td>
+                        <td class="p-4 align-middle text-center">${badge}</td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
+
+                // THE EXPANDED DETAILED CARD (Hidden by default)
+                tbody.innerHTML += `
+                    <tr id="row-det-${order.id}" class="hidden bg-gray-50 border-b-2 border-gray-200 shadow-inner">
+                        <td colspan="5" class="p-4">
+                            <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 flex flex-col md:flex-row gap-4">
+                                <div class="flex-1">
+                                    <h4 class="font-black text-gray-900 text-sm mb-2"><i class="fas fa-receipt text-gray-400 me-2"></i> Order Details</h4>
+                                    <div class="grid grid-cols-2 gap-2 text-xs mb-3">
+                                        <div><span class="text-gray-400 font-bold">Phone:</span> <a href="tel:${order.customer_phone}" class="text-blue-600 font-bold">${order.customer_phone || 'N/A'}</a></div>
+                                        ${order.table_number ? `<div><span class="text-gray-400 font-bold">Table:</span> <span class="text-red-500 font-black">${order.table_number}</span></div>` : ''}
+                                        ${order.delivery_address ? `<div class="col-span-2"><span class="text-gray-400 font-bold">Address:</span> ${order.delivery_address}</div>` : ''}
+                                    </div>
+                                    <div class="bg-gray-50 rounded p-2 mb-3 max-h-32 overflow-y-auto">${fullItemsHtml}</div>
+                                    <div class="flex justify-between items-center text-sm font-black text-gray-800 border-t border-gray-100 pt-2">
+                                        <span>Total:</span> <span class="text-green-600 text-lg">${parseFloat(order.total_amount).toFixed(2)}</span>
+                                    </div>
+                                </div>
+                                <div class="w-full md:w-48 flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-3 md:pt-0 md:pl-4">
+                                    <p class="text-[10px] font-bold text-gray-400 uppercase text-center mb-1">Action Panel</p>
+                                    <button onclick="updateStatus('${order.id}', 'Pending')" class="w-full py-2 text-[10px] font-black uppercase rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm">Pending</button>
+                                    <button onclick="updateStatus('${order.id}', 'Cooking')" class="w-full py-2 text-[10px] font-black uppercase rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm">Cooking</button>
+                                    <button onclick="updateStatus('${order.id}', 'Completed')" class="w-full py-2 text-[10px] font-black uppercase rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
+                                    <button onclick="updateStatus('${order.id}', 'Cancelled')" class="w-full py-2 text-[10px] font-black uppercase rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition shadow-sm">Cancel</button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
+        function toggleOrderDetails(orderId) {
+            const detRow = document.getElementById(`row-det-${orderId}`);
+            if(detRow) detRow.classList.toggle('hidden');
+        }
+
         async function updateStatus(orderId, newStatus) {
+            // Update Supabase
             const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
-            if (error) alert("Could not update status: " + error.message);
-            else fetchDashboardData(null, true); // Silent refresh
+            if (error) {
+                alert("Could not update status: " + error.message);
+            } else {
+                // Update Local UI instantly for speed, then fetch silently
+                const order = allOrders.find(o => o.id === orderId);
+                if (order) order.status = newStatus;
+                processDashboardFilters(); // Re-render everything instantly!
+                
+                // Silent network refresh in background
+                supabaseClient.from('orders').select('*').order('created_at', { ascending: false }).then(({data}) => {
+                    if (data) allOrders = data;
+                });
+            }
+        }
+
+        // --- GLOBAL TICKER ENGINE ---
+        function startLiveTimers() {
+            if (window.liveTickerInterval) clearInterval(window.liveTickerInterval);
+            window.liveTickerInterval = setInterval(() => {
+                document.querySelectorAll('.live-ticker').forEach(el => {
+                    const t = el.dataset.time;
+                    if (t) el.textContent = getWaitTimeStr(t);
+                });
+            }, 60000); // Updates every 1 minute perfectly
         }
 
         function updateDetailedAnalytics() {
@@ -928,7 +1087,7 @@
             let oldestPendingTime = null;
             let itemCounts = {};
 
-            allOrders.forEach(o => {
+            dashboardFilteredOrders.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
                 totalRev += amt;
                 
@@ -953,19 +1112,19 @@
                 }
             });
 
-            // Calculate Max Wait Time
-            let waitText = "0m";
-            if (oldestPendingTime) {
-                const diffMins = Math.floor((Date.now() - oldestPendingTime) / 60000);
-                if (diffMins > 60) waitText = `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
-                else waitText = `${diffMins}m`;
-            }
-
             document.getElementById('stat-revenue').textContent = totalRev.toFixed(2);
             document.getElementById('stat-pending-rev').textContent = pendingRev.toFixed(2);
-            document.getElementById('stat-orders').textContent = allOrders.length;
+            document.getElementById('stat-orders').textContent = dashboardFilteredOrders.length;
             document.getElementById('stat-pending-count').textContent = pendingCount;
-            document.getElementById('stat-wait-time').textContent = waitText;
+            
+            const waitEl = document.getElementById('stat-wait-time');
+            if (oldestPendingTime) {
+                waitEl.dataset.time = new Date(oldestPendingTime).toISOString();
+                waitEl.textContent = getWaitTimeStr(oldestPendingTime);
+            } else {
+                waitEl.dataset.time = "";
+                waitEl.textContent = "0m";
+            }
 
             // Render Best Sellers
             const bestSellersContainer = document.getElementById('analytics-best-sellers');
@@ -980,10 +1139,10 @@
                             </span>
                             <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg font-black text-[10px] shrink-0">${qty} Sold</span>
                         </div>`).join('')
-                    : '<div class="text-center text-gray-400 py-6"><p class="text-xs font-medium">No sales data yet.</p></div>';
+                    : '<div class="text-center text-gray-400 py-6"><p class="text-xs font-medium">No sales data found.</p></div>';
             }
 
-            // Render CLICKABLE Low Stock Alerts
+            // Render CLICKABLE Low Stock Alerts (Now perfectly live!)
             const lowStockContainer = document.getElementById('analytics-low-stock');
             if (lowStockContainer && typeof allMenuItems !== 'undefined') {
                 const lowStockItems = allMenuItems
@@ -994,15 +1153,63 @@
                     ? lowStockItems.map(item => `
                         <div class="flex justify-between items-center text-xs p-2.5 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group">
                             <span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span>
-                            <!-- NEW: Clicking this badge opens the editor to refill stock instantly! -->
                             <button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" title="Click to Refill Stock" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white shadow-sm hover:bg-red-700' : 'bg-yellow-400 text-yellow-900 shadow-sm hover:bg-yellow-500'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition cursor-pointer flex items-center gap-1 shrink-0">
                                 ${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i>
                             </button>
                         </div>`).join('')
-                    : '<div class="text-center py-6 flex flex-col items-center"><i class="fas fa-check-circle text-2xl mb-2 text-green-400 opacity-50"></i><p class="text-xs font-bold text-green-600">All tracked items are well stocked!</p></div>';
+                    : '<div class="text-center py-6 flex flex-col items-center"><i class="fas fa-check-circle text-2xl mb-2 text-green-400 opacity-50"></i><p class="text-[10px] font-bold text-green-600 uppercase">All stock optimal</p></div>';
             }
         }
-             
+
+        // --- CHART.JS RENDERER ---
+        function renderDashChart() {
+            const ctx = document.getElementById('dashboardChart');
+            if (!ctx) return;
+            const filterType = document.getElementById('chart-data-filter').value; // 'revenue' or 'count'
+
+            // Aggregate Data
+            let pendingAgg = 0;
+            let completedAgg = 0;
+            let cancelledAgg = 0;
+
+            dashboardFilteredOrders.forEach(o => {
+                const val = filterType === 'revenue' ? parseFloat(o.total_amount || 0) : 1;
+                if (o.status === 'Pending' || o.status === 'Cooking') pendingAgg += val;
+                else if (o.status === 'Completed') completedAgg += val;
+                else if (o.status === 'Cancelled') cancelledAgg += val;
+            });
+
+            if (dashChartInstance) dashChartInstance.destroy();
+
+            dashChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Pending / Cooking', 'Completed', 'Cancelled'],
+                    datasets: [{
+                        label: filterType === 'revenue' ? 'Revenue Amount' : 'Number of Orders',
+                        data: [pendingAgg, completedAgg, cancelledAgg],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.7)', // Yellow/Orange
+                            'rgba(16, 185, 129, 0.7)', // Green
+                            'rgba(156, 163, 175, 0.7)' // Gray
+                        ],
+                        borderColor: [
+                            'rgba(245, 158, 11, 1)',
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(156, 163, 175, 1)'
+                        ],
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
 
         
 
@@ -2628,6 +2835,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             alert("Banners successfully updated with master language settings!");
         }
         
+
         async function saveAdminFlashcards() {
             const btn = document.getElementById('btn-save-flashcards');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
