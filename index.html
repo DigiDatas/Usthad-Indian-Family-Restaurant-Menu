@@ -1165,6 +1165,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                     id: item.id, itemCode: item.item_code, mainCat: item.main_cat, subCat: item.sub_cat,
                     name: item.name, order: item.order_index || 999, price: item.price || 0,
                     desc: item.description || "", calories: item.calories || "", recipe: item.recipe || "",
+                    stockQty: item.stock_quantity !== null ? item.stock_quantity : null,
                     isTodaySpecial: item.is_today_special || false,
                     imgUrls: item.img_urls && item.img_urls.length > 0 ? item.img_urls : [rawBranding.smartLogo || 'https://via.placeholder.com/100'],
                     img: item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : (rawBranding.smartLogo || 'https://via.placeholder.com/100'),
@@ -2010,7 +2011,8 @@ function setupVerticalDraggable(elementId) {
                 const card = document.createElement('div');
                 
                 const bgClass = item.isTodaySpecial ? 'bg-amber-50/60 border-amber-200' : 'bg-white border-gray-100';
-                let cardClasses = `menu-card ${bgClass} rounded-2xl overflow-hidden border shadow-sm flex flex-col h-full opacity-0 translate-y-4 relative group`;
+                const isSoldOut = item.stockQty !== null && item.stockQty <= 0;
+                let cardClasses = `menu-card ${bgClass} rounded-2xl overflow-hidden border shadow-sm flex flex-col h-full opacity-0 translate-y-4 relative group ${isSoldOut ? 'grayscale opacity-60 pointer-events-none' : ''}`;
                 
                 if (isHighlight) {
                     cardClasses += ' w-[40vw] sm:w-[220px] snap-start shrink-0';
@@ -2032,7 +2034,10 @@ function setupVerticalDraggable(elementId) {
                     : `<span class="flex items-baseline"><span>${item.price}</span>${cardCurrencyDisplay}</span>`;
 
                 let badgeHtml = '';
-                if(item.isTodaySpecial) badgeHtml = `<div class="absolute top-2 end-2 bg-gradient-to-r from-orange-400 to-red-500 px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold text-white shadow-sm z-10"><i class="fas fa-star text-[10px]"></i> Special</div>`;
+                if(isSoldOut) {
+                    badgeHtml = `<div class="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-30 flex items-center justify-center"><span class="bg-red-600 text-white text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-xl transform -rotate-12 border-2 border-white">Sold Out</span></div>`;
+                }
+                else if(item.isTodaySpecial) badgeHtml = `<div class="absolute top-2 end-2 bg-gradient-to-r from-orange-400 to-red-500 px-2 py-1 rounded-lg text-[8px] sm:text-[10px] font-bold text-white shadow-sm z-10"><i class="fas fa-star text-[8px]"></i> Special</div>`;
                 else if(item.video) badgeHtml = `<div class="absolute top-2 end-2 bg-black/70 backdrop-blur px-2 py-1 rounded-lg text-[10px] sm:text-xs font-bold text-white shadow-sm flex items-center gap-1 z-10"><i class="fas fa-play"></i> Video</div>`;
 
                 const urls = item.imgUrls || [item.img];
@@ -2672,7 +2677,13 @@ function toggleQuickCart(id) {
             } else {
                 // If not in cart, add 1 quantity
                 const item = activeMenuData.find(i => String(i.id) === String(id));
-                if (item) cart.push({ ...item, qty: 1 });
+                if (item) {
+                    if (item.stockQty !== null && item.stockQty <= 0) {
+                        alert("Sorry, this item is currently sold out!");
+                        return;
+                    }
+                    cart.push({ ...item, qty: 1 });
+                }
             }
             updateCartUI(); 
         }
@@ -2779,7 +2790,12 @@ function toggleQuickCart(id) {
             // Convert both IDs to Strings to guarantee a perfect match
             const item = cart.find(c => String(c.id) === String(id));
             if (item) {
-                item.qty += change;
+                const newQty = item.qty + change;
+                if (change > 0 && item.stockQty !== null && newQty > item.stockQty) {
+                    alert(`Sorry, only ${item.stockQty} portions left in stock!`);
+                    return;
+                }
+                item.qty = newQty;
                 // If quantity drops to 0, remove it from the cart
                 if (item.qty <= 0) {
                     cart = cart.filter(c => String(c.id) !== String(id));
@@ -2970,6 +2986,17 @@ function toggleQuickCart(id) {
                 if (error) {
                     console.error("Supabase Error:", error);
                     alert("Warning: Could not save order to database, but we will still send it to WhatsApp.");
+                } else {
+                    // 🎉 SMART INVENTORY SYSTEM: Deduct stock from the master database!
+                    for (const cartItem of cart) {
+                        if (cartItem.stockQty !== null) {
+                            const newStock = Math.max(0, cartItem.stockQty - cartItem.qty);
+                            // We use itemCode so it updates BOTH the English and Arabic versions at the same time!
+                            await supabaseClient.from('menu_items')
+                                .update({ stock_quantity: newStock })
+                                .eq('item_code', cartItem.itemCode);
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("System Error:", err);
