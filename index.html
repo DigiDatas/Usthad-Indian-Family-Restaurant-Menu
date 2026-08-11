@@ -2874,17 +2874,17 @@ function toggleQuickCart(id) {
             }
         }
 
-        // UPDATED: Sends order to Supabase AND WhatsApp
+        // UPDATED: Sends order to Supabase AND WhatsApp with Live Stock Verification
         async function sendOrderViaWhatsApp() {
             if(cart.length === 0 || !rawBranding.D) return;
             
-            // BLOCK GUESTS FROM ORDERING: Only real accounts have an email attached
+            // BLOCK GUESTS FROM ORDERING
             if (!currentUser || !currentUser.email) {
                 alert("Please log in or register a free account to complete your order.");
                 closeCartModal();
                 setAuthMode('signup');
                 document.getElementById('authModal').classList.replace('hidden', 'flex');
-                return; // Stop the order process
+                return; 
             }
             
             const restaurantName = rawBranding.B || 'Our Store';
@@ -2921,7 +2921,7 @@ function toggleQuickCart(id) {
                 subtotal += (parseFloat(item.price) || 0) * item.qty;
             });
 
-            // Read Name and Phone from inputs
+            // Read Name and Phone
             const customerName = document.getElementById('order-customer-name').value.trim();
             const customerPhone = document.getElementById('order-customer-phone').value.trim();
 
@@ -2930,16 +2930,43 @@ function toggleQuickCart(id) {
                 return;
             }
 
-            // Lock the button early so the user doesn't double-click
+            // Lock the button early
             const btn = document.querySelector('button[onclick="sendOrderViaWhatsApp()"]');
             const originalBtnHtml = btn.innerHTML;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Processing...`;
 
+            // ==========================================
+            // 🚨 NEW: LIVE INVENTORY VERIFICATION 🚨
+            // ==========================================
+            for (const cartItem of cart) {
+                if (cartItem.stockQty !== null && cartItem.stockQty !== undefined) {
+                    // Instantly check the database for the exact stock at this very millisecond
+                    const { data: liveData } = await supabaseClient
+                        .from('menu_items')
+                        .select('stock_quantity')
+                        .eq('item_code', cartItem.itemCode)
+                        .limit(1)
+                        .maybeSingle();
+
+                    if (liveData && liveData.stock_quantity !== null) {
+                        if (liveData.stock_quantity < cartItem.qty) {
+                            alert(`🚨 Oops! Another customer just bought ${cartItem.name}. Only ${liveData.stock_quantity} left in stock! Please adjust your cart.`);
+                            btn.innerHTML = originalBtnHtml; // Unlock button
+                            
+                            // Instantly refresh their menu in the background to show the true stock
+                            fetchMenuDataForLang(currentLang);
+                            return; // STOP THE ORDER COMPLETELY!
+                        }
+                        // Temporarily store the true live stock so our deduction math is perfectly accurate
+                        cartItem.liveStock = liveData.stock_quantity;
+                    }
+                }
+            }
+
             // 1. SMART SEQUENTIAL ORDER NUMBER GENERATOR
-            let uniqueOrderNo = 'ORD-0125'; // Default starting number 
+            let uniqueOrderNo = 'ORD-0125'; 
             
             try {
-                // Fetch the absolute newest order from the database
                 const { data: lastOrder } = await supabaseClient
                     .from('orders')
                     .select('order_number')
@@ -2948,11 +2975,9 @@ function toggleQuickCart(id) {
                     .limit(1)
                     .maybeSingle();
 
-                // If an order exists, extract the number and add 1
                 if (lastOrder && lastOrder.order_number) {
                     const lastNum = parseInt(lastOrder.order_number.replace('ORD-', ''));
                     if (!isNaN(lastNum)) {
-                        // Add 1 and force 4 digits (turns 124 into 0125)
                         uniqueOrderNo = 'ORD-' + String(lastNum + 1).padStart(4, '0');
                     }
                 }
@@ -2968,7 +2993,7 @@ function toggleQuickCart(id) {
                 const { error } = await supabaseClient
                     .from('orders')
                     .insert([{
-                        order_number: uniqueOrderNo, // <--- SAVES SEQUENTIAL NUMBER
+                        order_number: uniqueOrderNo, 
                         customer_id: currentUser ? currentUser.id : 'guest',
                         customer_name: customerName,
                         customer_phone: customerPhone,
@@ -2980,30 +3005,24 @@ function toggleQuickCart(id) {
                         total_amount: subtotal,
                         status: 'Pending'
                     }]);
-                    
+
                 btn.innerHTML = originalBtnHtml;
 
                 if (error) {
                     console.error("Supabase Error:", error);
                     alert("Warning: Could not save order to database, but we will still send it to WhatsApp.");
                 } else {
-                    // 🎉 SMART INVENTORY SYSTEM: Deduct stock from the master database!
+                    // 🎉 SMART INVENTORY SYSTEM: Deduct using the VERIFIED live math
                     for (const cartItem of cart) {
-                        // Check if the item actually has a stock limit being tracked
-                        if (cartItem.stockQty !== null && cartItem.stockQty !== undefined) {
+                        if (cartItem.liveStock !== undefined) {
+                            const newStock = Math.max(0, cartItem.liveStock - cartItem.qty);
                             
-                            // Calculate the new stock number (ensuring it never drops below 0)
-                            const newStock = Math.max(0, cartItem.stockQty - cartItem.qty);
-                            
-                            // Send the update to Supabase! (Using itemCode ensures both EN and AR versions update simultaneously)
                             const { error: stockErr } = await supabaseClient
                                 .from('menu_items')
                                 .update({ stock_quantity: newStock })
                                 .eq('item_code', cartItem.itemCode);
                                 
-                            if (stockErr) {
-                                console.error("Stock Deduction Failed:", stockErr.message);
-                            }
+                            if (stockErr) console.error("Stock Deduction Failed:", stockErr.message);
                         }
                     }
                 }
