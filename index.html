@@ -2308,14 +2308,14 @@ function setupVerticalDraggable(elementId) {
                 if (matchedItems.length > 0) {
                     matchedItems.forEach(relItem => {
                         relatedSlider.innerHTML += `
-                            <div onclick="openModal('${relItem.id}')" class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
-                                <div>
+                            <div onclick="setTimeout(() => openModal('${relItem.id}'), 10)" class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
+                                <div class="pointer-events-none">
                                     <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
                                     <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1">${relItem.name}</h4>
                                 </div>
                                 <div class="flex justify-between items-center mt-1">
-                                    <p class="text-[10px] text-orange-600 font-bold flex items-baseline gap-1">${relItem.price} ${getSmartCurrency(globalCurrency, '')}</p>
-                                    <button onclick="event.stopPropagation(); toggleQuickCart('${relItem.id}')" class="quick-add-btn-${relItem.id} bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-colors">
+                                    <p class="text-[10px] text-orange-600 font-bold flex items-baseline gap-1 pointer-events-none">${relItem.price} ${getSmartCurrency(globalCurrency, '')}</p>
+                                    <button onclick="event.stopPropagation(); toggleQuickCart('${relItem.id}')" class="quick-add-btn-${relItem.id} bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-colors pointer-events-auto z-10 relative">
                                         <i class="quick-add-icon-${relItem.id} fas fa-plus text-[8px] transition-transform duration-500"></i>
                                     </button>
                                 </div>
@@ -3686,24 +3686,33 @@ function toggleQuickCart(id) {
                 executeFilter();
             });
         }
-// NEW: Bulletproof Scroll Logic for Desktop Arrows
+
+        // NEW: Smart Math-based Carousel Scroller for Desktop Arrows (With Looping!)
         window.scrollModalSlider = function(direction) {
             const slider = document.getElementById('modal-image-slider');
             if(!slider) return;
             
             const isRTL = document.documentElement.dir === 'rtl';
             const slideWidth = slider.clientWidth;
+            const maxScroll = slider.scrollWidth - slideWidth;
+            let currentScroll = Math.abs(slider.scrollLeft);
             
-            // Simply force the browser to scroll exactly one image-width left or right!
-            const scrollAmount = isRTL ? -(slideWidth * direction) : (slideWidth * direction);
+            let targetScroll = currentScroll + (slideWidth * direction);
+
+            // Seamless Looping Logic
+            if (targetScroll > maxScroll + 10) {
+                targetScroll = 0; // Loop back to the start!
+            } else if (targetScroll < -10) {
+                targetScroll = maxScroll; // Loop to the end!
+            }
             
-            slider.scrollBy({
-                left: scrollAmount,
+            slider.scrollTo({
+                left: isRTL ? -targetScroll : targetScroll,
                 behavior: 'smooth'
             });
             
             if (typeof lastSliderInteraction !== 'undefined') {
-                lastSliderInteraction = Date.now(); // Pause auto-swipe
+                lastSliderInteraction = Date.now(); // Pause auto-swipe so user can read
             }
         };
 
