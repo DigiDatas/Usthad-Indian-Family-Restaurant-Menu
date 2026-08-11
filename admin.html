@@ -28,34 +28,63 @@
     <nav class="bg-white shadow-sm sticky top-0 z-40 border-b border-gray-200">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center text-xl shadow-sm">
-                    <i class="fas fa-store"></i>
+                <!-- NEW: Dynamic Business Logo -->
+                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center overflow-hidden shadow-sm shrink-0 border border-gray-100">
+                    <img id="admin-brand-logo" src="" class="w-full h-full object-cover hidden">
+                    <i id="admin-default-icon" class="fas fa-store text-red-500 text-xl"></i>
                 </div>
-                <h1 class="text-xl font-extrabold text-gray-900 tracking-tight">Admin Suite</h1>
+                <h1 class="text-xl font-extrabold text-gray-900 tracking-tight hidden sm:block">Admin Suite</h1>
             </div>
             
-            <!-- Tab Navigation Links -->
+            <!-- Tab Navigation Links (Updated) -->
             <div class="hidden md:flex gap-2">
-                <button onclick="switchTab('orders')" id="tab-btn-orders" class="px-4 py-2 rounded-xl font-bold text-sm bg-red-50 text-red-600 transition"><i class="fas fa-receipt me-2"></i>Live Orders</button>
-                <button onclick="switchTab('menu')" id="tab-btn-menu" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-utensils me-2"></i>Menu Manager</button>
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="px-4 py-2 rounded-xl font-bold text-sm bg-red-50 text-red-600 transition"><i class="fas fa-chart-pie me-2"></i>Dashboard</button>
+                <button onclick="switchTab('menu')" id="tab-btn-menu" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-utensils me-2"></i>Menu</button>
                 <button onclick="switchTab('users')" id="tab-btn-users" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-users me-2"></i>Customers</button>
-                <button onclick="switchTab('analytics')" id="tab-btn-analytics" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-chart-pie me-2"></i>Analytics</button>
-<button onclick="switchTab('offers')" id="tab-btn-offers" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-tags me-2"></i>Offers</button>
+                <button onclick="switchTab('offers')" id="tab-btn-offers" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-tags me-2"></i>Offers</button>
                 <button onclick="switchTab('settings')" id="tab-btn-settings" class="px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition"><i class="fas fa-cog me-2"></i>Settings</button>
             </div>
 
-            <div class="flex items-center gap-4 sm:gap-6 border-s border-gray-200 ps-4 sm:ps-6">
-                <!-- NEW: Preview App Button (Opens in New Tab) -->
-                <a href="index.html" target="_blank" class="flex items-center gap-2 text-blue-500 hover:text-blue-700 font-bold text-sm transition bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg shadow-sm">
-                    <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Preview App</span>
+            <div class="flex items-center gap-3 sm:gap-5 border-s border-gray-200 ps-3 sm:ps-5">
+                <a href="index.html" target="_blank" class="flex items-center gap-2 text-blue-500 hover:text-blue-700 font-bold text-sm transition bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg shadow-sm" title="Preview App">
+                    <i class="fas fa-external-link-alt"></i> <span class="hidden lg:inline">Preview</span>
                 </a>
                 
-                <!-- UPGRADED: Sign Out Button -->
-                <button id="btn-admin-logout" onclick="logoutAdmin()" class="flex items-center gap-2 text-gray-500 hover:text-red-600 font-bold text-sm transition">
-                    <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Sign Out</span>
-                </button>
+                <!-- NEW: Notifications Bell -->
+                <div class="relative">
+                    <button onclick="toggleNotifications()" class="relative p-2 text-gray-500 hover:text-blue-600 transition">
+                        <i class="fas fa-bell text-xl"></i>
+                        <span id="notif-badge" class="absolute top-0 right-0 bg-red-500 text-white text-[9px] font-bold w-4 h-4 flex items-center justify-center rounded-full hidden animate-bounce">0</span>
+                    </button>
+                </div>
+
+                <!-- NEW: Profile Dropdown -->
+                <div class="relative">
+                    <button onclick="toggleProfileMenu()" class="w-9 h-9 rounded-full bg-gray-100 border border-gray-200 shadow-sm flex items-center justify-center text-gray-600 hover:bg-gray-200 transition focus:ring-2 focus:ring-red-200">
+                        <i class="fas fa-user"></i>
+                    </button>
+                    <!-- Dropdown Content -->
+                    <div id="profile-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 hidden flex-col z-50 overflow-hidden transform origin-top-right transition-all">
+                        <div class="px-4 py-3 border-b border-gray-50 bg-gray-50">
+                            <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-0.5">Signed in as</p>
+                            <p id="admin-profile-name" class="text-sm font-bold text-gray-900 truncate">Admin User</p>
+                        </div>
+                        <button id="btn-admin-logout" onclick="logoutAdmin()" class="w-full text-left px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition flex items-center gap-2">
+                            <i class="fas fa-sign-out-alt"></i> Sign Out
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
+        <!-- Mobile Tab Row -->
+        <div class="flex md:hidden border-t border-gray-100 bg-gray-50 px-2 py-1 gap-1 justify-around overflow-x-auto hide-scrollbar">
+            <button onclick="switchTab('dashboard')" id="m-tab-dashboard" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-red-50 text-red-600 shrink-0">Dashboard</button>
+            <button onclick="switchTab('menu')" id="m-tab-menu" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Menu</button>
+            <button onclick="switchTab('users')" id="m-tab-users" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Customers</button>
+            <button onclick="switchTab('offers')" id="m-tab-offers" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Offers</button>
+            <button onclick="switchTab('settings')" id="m-tab-settings" class="px-3 py-1.5 rounded-lg font-bold text-xs text-gray-600 shrink-0">Settings</button>
+        </div>
+    </nav>
         <!-- Mobile Tab Row -->
         <div class="flex md:hidden border-t border-gray-100 bg-gray-50 px-2 py-1 gap-1 justify-around">
             <button onclick="switchTab('orders')" id="m-tab-orders" class="px-3 py-1.5 rounded-lg font-bold text-xs bg-red-50 text-red-600">Orders</button>
@@ -70,113 +99,77 @@
     <!-- Main Content Area -->
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- ================= TAB 1: ORDERS ================= -->
-        <section id="section-orders" class="tab-section">
+        <!-- ================= TAB 1: UNIFIED DASHBOARD ================= -->
+        <section id="section-dashboard" class="tab-section">
             <div class="flex justify-between items-end mb-6">
                 <div>
-                    <h2 class="text-2xl font-black text-gray-800">Live Orders Dashboard</h2>
-                    <p class="text-sm text-gray-500">Manage incoming restaurant orders in real time.</p>
+                    <h2 class="text-2xl font-black text-gray-800">Command Center</h2>
+                    <p class="text-sm text-gray-500">Live analytics, stock alerts, and incoming order management.</p>
                 </div>
-                <button onclick="fetchOrders()" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
-                    <i class="fas fa-sync-alt"></i> Refresh
+                <button onclick="fetchDashboardData(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
+                    <i class="fas fa-sync-alt text-blue-500 transition-all duration-300"></i> Refresh
                 </button>
             </div>
 
-            <div id="orders-container" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400">
-                    <i class="fas fa-circle-notch fa-spin text-4xl mb-4 text-red-500"></i>
-                    <p class="font-medium animate-pulse">Loading Live Orders...</p>
+            <!-- Detailed Analytics Row -->
+            <div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4 mb-6">
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="fas fa-wallet text-green-500 me-1"></i> Total Revenue</p>
+                    <p id="stat-revenue" class="text-2xl font-black text-gray-900 mt-1">0.00</p>
                 </div>
-            </div>
-        </section>
-
-        <!-- ================= TAB 2: MENU MANAGER ================= -->
-        <section id="section-menu" class="tab-section hidden">
-            <div class="flex flex-col mb-6 gap-4">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800">Menu Manager</h2>
-                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical mx-1 text-gray-400"></i> to reorder. Drag between groups to change categories.</p>
-                    </div>
-                    
-                    <!-- NEW: Language Filter -->
-                    <div class="flex bg-gray-200 p-1 rounded-lg">
-                        <button onclick="switchAdminLanguage('en')" id="filter-lang-en" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition">English (EN)</button>
-                        <button onclick="switchAdminLanguage('ar')" id="filter-lang-ar" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition">Arabic (AR)</button>
-                    </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="fas fa-hourglass-half text-yellow-500 me-1"></i> Pending Revenue</p>
+                    <p id="stat-pending-rev" class="text-2xl font-black text-yellow-600 mt-1">0.00</p>
                 </div>
-
-                <div class="flex gap-2 w-full justify-end border-t border-gray-200 pt-4">
-                    <!-- NEW: Save Changes Button (Hidden by default) -->
-                    <button onclick="saveMenuOrder()" id="btn-save-order" class="hidden bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center justify-center gap-2 animate-pulse">
-                        <i class="fas fa-save"></i> Save Order Changes
-                    </button>
-                    <button onclick="openMenuModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-plus"></i> Add New Item
-                    </button>
-                    <button onclick="openJsonModal()" class="bg-gray-900 text-white px-4 py-2 rounded-xl shadow-md hover:bg-gray-800 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-file-code"></i> Bulk JSON
-                    </button>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="fas fa-receipt text-blue-500 me-1"></i> Total Orders</p>
+                    <p id="stat-orders" class="text-2xl font-black text-blue-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="fas fa-fire text-orange-500 me-1"></i> Pending Orders</p>
+                    <p id="stat-pending-count" class="text-2xl font-black text-orange-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-between col-span-2 lg:col-span-1">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase"><i class="far fa-clock text-red-500 me-1"></i> Max Wait Time</p>
+                    <p id="stat-wait-time" class="text-2xl font-black text-red-600 mt-1">0m</p>
                 </div>
             </div>
 
-            <!-- Menu Table Grid -->
+            <!-- Secondary Analytics (Stock & Demand) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+                <!-- Low Stock Alerts (CLICKABLE!) -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-red-100 flex flex-col h-64 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-red-50 rounded-bl-full -z-10"></div>
+                    <h3 class="text-sm font-black text-gray-800 mb-3 shrink-0 uppercase tracking-wider"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
+                    <div id="analytics-low-stock" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar"></div>
+                </div>
+                
+                <!-- Best Sellers -->
+                <div class="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-blue-100 flex flex-col h-64 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -z-10"></div>
+                    <h3 class="text-sm font-black text-gray-800 mb-3 shrink-0 uppercase tracking-wider"><i class="fas fa-chart-line text-blue-500 me-2"></i> Trending Demand</h3>
+                    <div id="analytics-best-sellers" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar"></div>
+                </div>
+            </div>
+
+            <!-- Compact Orders Table -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto pb-20">
-                    <table class="w-full text-left border-collapse" id="menu-table">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="p-4 w-10"></th> <!-- Drag Handle Column -->
-                                <th class="p-4 w-12 text-center">SL#</th>
-                                <th class="p-4 w-12 text-center">Index</th>
-                                <th class="p-4">Item</th>
-                                <th class="p-4">Price</th>
-                                <th class="p-4">Special</th>
-                                <th class="p-4 text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <!-- JS will inject dynamic TBODY elements here based on Category -->
-                        <tbody id="menu-table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Menu Items...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex justify-between items-center">
+                    <h3 class="font-black text-gray-800"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders</h3>
                 </div>
-            </div>
-        </section>
-
-        <!-- ================= TAB 3: CUSTOMERS & USER ORDERS ================= -->
-        <section id="section-users" class="tab-section hidden">
-            <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Customer Directory</h2>
-                    <p class="text-sm text-gray-500">View customer contact details, lifetime spend, and order history.</p>
-                </div>
-                <!-- UPDATED: Added "this" to pass the button for the spin animation -->
-                <button onclick="fetchUsersAndOrders(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
-                    <i class="fas fa-sync-alt text-red-500 transition-all duration-300"></i> Refresh
-                </button>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="p-4">Customer Name</th>
-                                <th class="p-4">Phone / WhatsApp</th>
-                                <th class="p-4">Email Address</th>
-                                <th class="p-4">Latest Address</th>
-                                <th class="p-4 text-center">Total Orders</th>
-                                <th class="p-4">Lifetime Spent</th>
-                                <th class="p-4 text-end">Actions</th>
+                            <tr class="bg-white border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                <th class="p-4 whitespace-nowrap">Order ID / Date</th>
+                                <th class="p-4">Customer</th>
+                                <th class="p-4">Items Summary</th>
+                                <th class="p-4">Total</th>
+                                <th class="p-4 text-center">Status Action</th>
                             </tr>
                         </thead>
-                        <tbody id="users-table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr>
-                                <td colspan="6" class="p-8 text-center text-gray-400">Loading Customer Data...</td>
-                            </tr>
+                        <tbody id="orders-table-body" class="divide-y divide-gray-50 text-sm">
+                            <tr><td colspan="5" class="p-8 text-center text-gray-400"><i class="fas fa-spinner fa-spin me-2"></i> Loading Dashboard...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -690,10 +683,12 @@
         let allOrders = [];
 	let currentUser = null;
 
-        // --- AUTH & TAB SWITCHING ---
+        let livePollingTimer = null;
+        let lastKnownOrderCount = 0;
+
         async function verifyAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
-            currentUser = session?.user || null; // <--- ADD THIS
+            currentUser = session?.user || null;
             const overlay = document.getElementById('admin-login-overlay');
             const userMeta = session?.user?.app_metadata;
             const isAdmin = userMeta && userMeta.is_admin === true;
@@ -707,13 +702,60 @@
                 `;
             } else {
                 overlay.classList.add('hidden');
-                fetchOrders();
+                
+                // Set Profile Name
+                const adminName = currentUser.user_metadata?.name || currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+                document.getElementById('admin-profile-name').textContent = adminName;
+
+                // Load all data
+                fetchDashboardData();
                 fetchMenu();
                 fetchUsersAndOrders();
-fetchOffers();
+                fetchOffers();
                 fetchSettings();
+                
+                // Start Live Auto-Refresh every 30 seconds
+                livePollingTimer = setInterval(() => fetchDashboardData(null, true), 30000);
             }
         }
+
+        // Profile Menu Toggle
+        function toggleProfileMenu() {
+            const menu = document.getElementById('profile-dropdown');
+            menu.classList.toggle('hidden');
+            menu.classList.toggle('flex');
+        }
+
+        // Close dropdown if clicked outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.relative')) {
+                const profileMenu = document.getElementById('profile-dropdown');
+                if (profileMenu && !profileMenu.classList.contains('hidden')) {
+                    profileMenu.classList.add('hidden');
+                    profileMenu.classList.remove('flex');
+                }
+            }
+        });
+
+        // Notifications Toggle (Clears badge on click)
+        function toggleNotifications() {
+            const badge = document.getElementById('notif-badge');
+            badge.classList.add('hidden');
+            alert("No new system notifications at this time.");
+        }
+
+        function switchTab(tabName) {
+            ['dashboard', 'menu', 'users', 'offers', 'settings'].forEach(t => {
+                const section = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if(section) section.classList.add('hidden');
+                if(btn) btn.className = "px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition";
+            });
+            document.getElementById(`section-${tabName}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-xl font-bold text-sm bg-red-50 text-red-600 transition";
+        }
+            
 // NEW: The missing secure logout function!
         async function logoutAdmin() {
             const btn = document.getElementById('btn-admin-logout');
@@ -726,7 +768,7 @@ fetchOffers();
             window.location.href = 'index.html';
         }
 
-async function saveOfferOrder() {
+		async function saveOfferOrder() {
             const btn = document.getElementById('btn-save-offer-order');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
@@ -742,108 +784,188 @@ async function saveOfferOrder() {
             alert("Special Offers order saved successfully!");
             fetchOffers();
         }
-        function switchTab(tabName) {
-            ['orders', 'menu', 'users', 'analytics', 'offers', 'settings'].forEach(t => {
-                document.getElementById(`section-${t}`).classList.add('hidden');
-                const btn = document.getElementById(`tab-btn-${t}`);
-                if(btn) {
-                    btn.className = "px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition";
-                }
-            });
-            document.getElementById(`section-${tabName}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-            if(activeBtn) {
-                activeBtn.className = "px-4 py-2 rounded-xl font-bold text-sm bg-red-50 text-red-600 transition";
-            }
-        }
+        
 
-        // --- FETCH & RENDER ORDERS ---
-        async function fetchOrders() {
-            const container = document.getElementById('orders-container');
-            
-            // SORT CRITICAL FIX: .order('created_at', { ascending: false }) puts newest on top!
+        // --- MASTER DASHBOARD LOGIC ---
+        async function fetchDashboardData(btnElement = null, isBackground = false) {
+            let icon = null;
+            if (btnElement) {
+                icon = btnElement.querySelector('.fa-sync-alt');
+                if (icon) icon.classList.add('fa-spin');
+            }
+
+            const tbody = document.getElementById('orders-table-body');
+
             const { data: orders, error } = await supabaseClient
                 .from('orders')
                 .select('*')
                 .order('created_at', { ascending: false });
 
+            if (icon) icon.classList.remove('fa-spin');
+
             if (error) {
-                container.innerHTML = `<div class="col-span-full text-center text-red-500 font-bold py-10">Error loading orders.</div>`;
+                if (!isBackground) tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-red-500 font-bold">Error loading dashboard.</td></tr>`;
                 return;
             }
 
             allOrders = orders || [];
-            updateAnalytics();
-            container.innerHTML = '';
+            
+            // Notification Trigger
+            if (isBackground && allOrders.length > lastKnownOrderCount && lastKnownOrderCount > 0) {
+                const badge = document.getElementById('notif-badge');
+                badge.textContent = allOrders.length - lastKnownOrderCount;
+                badge.classList.remove('hidden');
+            }
+            lastKnownOrderCount = allOrders.length;
+
+            updateDetailedAnalytics();
+            renderOrdersTable();
+        }
+
+        function renderOrdersTable() {
+            const tbody = document.getElementById('orders-table-body');
+            tbody.innerHTML = '';
 
             if (allOrders.length === 0) {
-                container.innerHTML = `
-                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-gray-400 bg-white rounded-2xl border border-gray-200 border-dashed">
-                        <i class="fas fa-inbox text-5xl mb-4 text-gray-300"></i>
-                        <h3 class="text-xl font-bold text-gray-500">No Orders Yet</h3>
-                    </div>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-8 text-center text-gray-400">No Orders Yet</td></tr>`;
                 return;
             }
 
             allOrders.forEach(order => {
-                const date = new Date(order.created_at).toLocaleString();
-                let statusColor = "bg-yellow-100 text-yellow-700";
-                if(order.status === 'Cooking') statusColor = "bg-blue-100 text-blue-700";
-                if(order.status === 'Completed') statusColor = "bg-green-100 text-green-700";
-                if(order.status === 'Cancelled') statusColor = "bg-red-100 text-red-700";
+                const date = new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                const displayNo = order.order_number || 'ORD-XXXX';
+                
+                // Color code the current status
+                let statColor = "bg-yellow-100 text-yellow-700";
+                if(order.status === 'Cooking') statColor = "bg-blue-100 text-blue-700";
+                if(order.status === 'Completed') statColor = "bg-green-100 text-green-700";
+                if(order.status === 'Cancelled') statColor = "bg-gray-100 text-gray-500";
 
-                let itemsHtml = '';
+                // Summarize items into a string (e.g., "2x Burger, 1x Coke")
+                let itemsSummary = [];
                 if (order.items && Array.isArray(order.items)) {
-                    order.items.forEach(item => {
-                        itemsHtml += `<div class="flex justify-between text-sm py-1 border-b border-gray-50 last:border-0">
-                            <span class="font-medium text-gray-700">${item.qty}x ${item.name}</span>
-                            <span class="text-gray-500">${(item.price * item.qty).toFixed(2)}</span>
-                        </div>`;
-                    });
+                    itemsSummary = order.items.map(i => `<span class="text-red-500 font-bold">${i.qty}x</span> ${i.name}`);
                 }
+                const itemsHtml = itemsSummary.length > 0 ? itemsSummary.join('<br>') : '<span class="text-gray-400 italic">No details</span>';
 
-                const displayOrderNo = order.order_number || 'ORD-XXXX';
-
-                const card = document.createElement('div');
-                card.className = "bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col";
-                card.innerHTML = `
-                    <div class="flex justify-between items-start mb-4">
-                        <div>
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="bg-red-50 text-red-600 px-2 py-0.5 rounded font-black text-xs">${displayOrderNo}</span>
-                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-wider ${statusColor}">${order.status}</span>
-                            </div>
-                            <h3 class="font-bold text-gray-900 mt-2 text-lg">${order.order_type}</h3>
-                            <p class="text-xs text-gray-400 font-medium">${date}</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-sm font-bold text-gray-400 uppercase tracking-wider">Total</p>
-                            <p class="text-2xl font-black text-green-600">${order.total_amount}</p>
-                        </div>
-                    </div>
-                    <div class="bg-red-50 border border-red-100 p-2.5 rounded-xl text-xs font-bold text-gray-800 mb-3 flex flex-col gap-1">
-                        <div><i class="fas fa-user text-red-500 w-5"></i> Name: <span class="text-gray-900 font-extrabold">${order.customer_name || 'Guest'}</span></div>
-                        <div><i class="fas fa-phone text-green-600 w-5"></i> Phone: <a href="tel:${order.customer_phone}" class="text-blue-600 underline">${order.customer_phone || 'Not Provided'}</a></div>
-                    </div>
-                    ${order.table_number ? `<div class="bg-gray-50 p-2 rounded-lg text-sm font-bold text-gray-700 mb-3"><i class="fas fa-chair text-gray-400 w-5"></i> Table: <span class="text-red-500">${order.table_number}</span></div>` : ''}
-                    ${order.delivery_address ? `<div class="bg-gray-50 p-2 rounded-lg text-xs font-medium text-gray-600 mb-3"><i class="fas fa-map-marker-alt text-gray-400 w-4"></i> ${order.delivery_address}</div>` : ''}
-                    <div class="bg-gray-50 rounded-xl p-3 mb-4 flex-grow">${itemsHtml}</div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-auto pt-4 border-t border-gray-100">
-                        <button onclick="updateStatus('${order.id}', 'Pending')" class="py-2 text-xs font-bold rounded-lg bg-yellow-50 text-yellow-700 hover:bg-yellow-100 transition">Pending</button>
-                        <button onclick="updateStatus('${order.id}', 'Cooking')" class="py-2 text-xs font-bold rounded-lg bg-blue-50 text-blue-700 hover:bg-blue-100 transition">Cooking</button>
-                        <button onclick="updateStatus('${order.id}', 'Completed')" class="py-2 text-xs font-bold rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition">Completed</button>
-                        <button onclick="updateStatus('${order.id}', 'Cancelled')" class="py-2 text-xs font-bold rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition">Cancel</button>
-                    </div>
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/50 transition group";
+                tr.innerHTML = `
+                    <td class="p-4 align-top">
+                        <div class="font-black text-gray-900 text-xs">${displayNo}</div>
+                        <div class="text-[10px] text-gray-400 font-bold mt-1">${date}</div>
+                        <div class="text-[10px] font-bold text-blue-600 mt-1">${order.order_type}</div>
+                    </td>
+                    <td class="p-4 align-top">
+                        <div class="font-bold text-gray-800 text-xs truncate max-w-[120px]">${order.customer_name || 'Guest'}</div>
+                        <div class="text-[10px] text-gray-500 mt-1">${order.customer_phone || 'No Phone'}</div>
+                        ${order.table_number ? `<div class="text-[10px] text-red-500 font-bold mt-1">Table: ${order.table_number}</div>` : ''}
+                    </td>
+                    <td class="p-4 align-top text-xs text-gray-600 leading-relaxed">${itemsHtml}</td>
+                    <td class="p-4 align-top font-black text-green-600 text-sm">${parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td class="p-4 align-top text-center w-36">
+                        <select onchange="updateStatus('${order.id}', this.value)" class="w-full bg-white border border-gray-200 text-[10px] font-black uppercase tracking-wider rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 shadow-sm ${statColor} cursor-pointer mb-2">
+                            <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>Pending</option>
+                            <option value="Cooking" ${order.status === 'Cooking' ? 'selected' : ''}>Cooking</option>
+                            <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>Completed</option>
+                            <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+                        </select>
+                    </td>
                 `;
-                container.appendChild(card);
+                tbody.appendChild(tr);
             });
         }
 
         async function updateStatus(orderId, newStatus) {
             const { error } = await supabaseClient.from('orders').update({ status: newStatus }).eq('id', orderId);
             if (error) alert("Could not update status: " + error.message);
-            else fetchOrders();
+            else fetchDashboardData(null, true); // Silent refresh
         }
+
+        function updateDetailedAnalytics() {
+            let totalRev = 0, pendingRev = 0;
+            let dineInCount = 0, takeawayCount = 0;
+            let pendingCount = 0;
+            let oldestPendingTime = null;
+            let itemCounts = {};
+
+            allOrders.forEach(o => {
+                const amt = parseFloat(o.total_amount || 0);
+                totalRev += amt;
+                
+                if (o.order_type === 'Dine In') dineInCount++;
+                if (o.order_type === 'Takeaway') takeawayCount++;
+                
+                if (o.status === 'Pending' || o.status === 'Cooking') {
+                    pendingRev += amt;
+                    pendingCount++;
+                    
+                    const orderTime = new Date(o.created_at).getTime();
+                    if (!oldestPendingTime || orderTime < oldestPendingTime) {
+                        oldestPendingTime = orderTime;
+                    }
+                }
+
+                if (o.items && Array.isArray(o.items)) {
+                    o.items.forEach(item => {
+                        if (!itemCounts[item.name]) itemCounts[item.name] = 0;
+                        itemCounts[item.name] += item.qty;
+                    });
+                }
+            });
+
+            // Calculate Max Wait Time
+            let waitText = "0m";
+            if (oldestPendingTime) {
+                const diffMins = Math.floor((Date.now() - oldestPendingTime) / 60000);
+                if (diffMins > 60) waitText = `${Math.floor(diffMins/60)}h ${diffMins%60}m`;
+                else waitText = `${diffMins}m`;
+            }
+
+            document.getElementById('stat-revenue').textContent = totalRev.toFixed(2);
+            document.getElementById('stat-pending-rev').textContent = pendingRev.toFixed(2);
+            document.getElementById('stat-orders').textContent = allOrders.length;
+            document.getElementById('stat-pending-count').textContent = pendingCount;
+            document.getElementById('stat-wait-time').textContent = waitText;
+
+            // Render Best Sellers
+            const bestSellersContainer = document.getElementById('analytics-best-sellers');
+            if (bestSellersContainer) {
+                const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+                bestSellersContainer.innerHTML = sortedItems.length > 0 
+                    ? sortedItems.map(([name, qty], index) => `
+                        <div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-100 shrink-0">
+                            <span class="font-bold text-gray-700 flex items-center gap-2 truncate">
+                                <span class="${index < 3 ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-200 text-gray-500'} w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0">${index+1}</span> 
+                                <span class="truncate">${name}</span>
+                            </span>
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg font-black text-[10px] shrink-0">${qty} Sold</span>
+                        </div>`).join('')
+                    : '<div class="text-center text-gray-400 py-6"><p class="text-xs font-medium">No sales data yet.</p></div>';
+            }
+
+            // Render CLICKABLE Low Stock Alerts
+            const lowStockContainer = document.getElementById('analytics-low-stock');
+            if (lowStockContainer && typeof allMenuItems !== 'undefined') {
+                const lowStockItems = allMenuItems
+                    .filter(i => i.stock_quantity !== null && i.stock_quantity <= 10 && i.language === 'en')
+                    .sort((a, b) => a.stock_quantity - b.stock_quantity);
+                
+                lowStockContainer.innerHTML = lowStockItems.length > 0
+                    ? lowStockItems.map(item => `
+                        <div class="flex justify-between items-center text-xs p-2.5 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group">
+                            <span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span>
+                            <!-- NEW: Clicking this badge opens the editor to refill stock instantly! -->
+                            <button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" title="Click to Refill Stock" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white shadow-sm hover:bg-red-700' : 'bg-yellow-400 text-yellow-900 shadow-sm hover:bg-yellow-500'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition cursor-pointer flex items-center gap-1 shrink-0">
+                                ${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i>
+                            </button>
+                        </div>`).join('')
+                    : '<div class="text-center py-6 flex flex-col items-center"><i class="fas fa-check-circle text-2xl mb-2 text-green-400 opacity-50"></i><p class="text-xs font-bold text-green-600">All tracked items are well stocked!</p></div>';
+            }
+        }
+             
+
+        
 
         // --- NEW: MENU MANAGER STATE ---
         let currentAdminLang = 'en'; 
@@ -875,7 +997,7 @@ async function saveOfferOrder() {
 
             allMenuItems = data || [];
             renderMenuTable();
-		updateAnalytics();
+		updateDetailedAnalytics();
         }
 
         function renderMenuTable() {
@@ -1914,68 +2036,7 @@ let currentMediaTarget = 'product';
             modal.classList.remove('flex');
         }
 
-        function updateAnalytics() {
-            let totalRev = 0;
-            let dineInCount = 0;
-            let takeawayCount = 0;
-            
-            // Demand Tracker
-            let itemCounts = {};
-
-            allOrders.forEach(o => {
-                totalRev += parseFloat(o.total_amount || 0);
-                if (o.order_type === 'Dine In') dineInCount++;
-                if (o.order_type === 'Takeaway') takeawayCount++;
-                
-                // Tally up every single item sold across all orders
-                if (o.items && Array.isArray(o.items)) {
-                    o.items.forEach(item => {
-                        if (!itemCounts[item.name]) itemCounts[item.name] = 0;
-                        itemCounts[item.name] += item.qty;
-                    });
-                }
-            });
-
-            document.getElementById('stat-revenue').textContent = totalRev.toFixed(2);
-            document.getElementById('stat-orders').textContent = allOrders.length;
-            document.getElementById('stat-dinein').textContent = dineInCount;
-            document.getElementById('stat-takeaway').textContent = takeawayCount;
-
-            // 1. Render Top Demand (Best Sellers)
-            const bestSellersContainer = document.getElementById('analytics-best-sellers');
-            if (bestSellersContainer) {
-                // Sort items from highest sold to lowest sold, and grab the top 10
-                const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-                
-                bestSellersContainer.innerHTML = sortedItems.length > 0 
-                    ? sortedItems.map(([name, qty], index) => `
-                        <div class="flex justify-between items-center text-sm p-3 bg-gray-50 rounded-xl border border-gray-100 shrink-0">
-                            <span class="font-bold text-gray-700 flex items-center gap-2">
-                                <span class="${index < 3 ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-600'} w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black">${index+1}</span> 
-                                ${name}
-                            </span>
-                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-lg font-black text-xs">${qty} Sold</span>
-                        </div>`).join('')
-                    : '<div class="text-center text-gray-400 py-10"><i class="fas fa-chart-line text-3xl mb-2 opacity-50"></i><p class="text-sm font-medium">No sales data yet.</p></div>';
-            }
-
-            // 2. Render Low Stock Warnings
-            const lowStockContainer = document.getElementById('analytics-low-stock');
-            if (lowStockContainer && typeof allMenuItems !== 'undefined') {
-                // Filter strictly for tracked items with 10 or less stock (ignore unlimited nulls), English names only for the dashboard
-                const lowStockItems = allMenuItems
-                    .filter(i => i.stock_quantity !== null && i.stock_quantity <= 10 && i.language === 'en')
-                    .sort((a, b) => a.stock_quantity - b.stock_quantity);
-                
-                lowStockContainer.innerHTML = lowStockItems.length > 0
-                    ? lowStockItems.map(item => `
-                        <div class="flex justify-between items-center text-sm p-3 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0">
-                            <span class="font-bold ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span>
-                            <span class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white shadow-sm' : 'bg-yellow-400 text-yellow-900'} px-3 py-1 rounded-lg font-black text-xs uppercase">${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'}</span>
-                        </div>`).join('')
-                    : '<div class="text-center text-gray-400 py-10"><i class="fas fa-check-circle text-3xl mb-2 text-green-400 opacity-50"></i><p class="text-sm font-medium text-green-600">All tracked items are well stocked!</p></div>';
-            }
-        }
+        
 
 
         function openOfferModal(mode, id = null) {
@@ -2108,6 +2169,13 @@ let currentMediaTarget = 'product';
                 if (arRow) {
                     document.getElementById('setting-id-ar').value = arRow.id;
                     document.getElementById('set-brand-ar').value = arRow.brand_name || '';
+                } // <--- Notice the closing brace here!
+
+                // NEW: Business Logo Loader (Safely outside the arRow check)
+                if (mainRow.logo_link) {
+                    document.getElementById('admin-brand-logo').src = mainRow.logo_link;
+                    document.getElementById('admin-brand-logo').classList.remove('hidden');
+                    document.getElementById('admin-default-icon').classList.add('hidden');
                 }
 
                 // Smart Currency Loader
