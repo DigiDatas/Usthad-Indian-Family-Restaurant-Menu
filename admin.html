@@ -1287,7 +1287,6 @@ const stockRaw = document.getElementById('form-stock').value.trim();
                 // THIS LINE GRABS YOUR EXACT DRAGGABLE GALLERY ORDER!
                 img_urls: [...currentEditingImages] 
             };
-
             let saveError;
             if (id) {
                 const { error } = await supabaseClient.from('menu_items').update(payload).eq('id', id);
