@@ -2887,6 +2887,11 @@ function toggleQuickCart(id) {
                 return; 
             }
             
+            // 1. HARD LOCK THE BUTTON (Prevents Double-Tap Glitches)
+            const btn = document.querySelector('button[onclick="sendOrderViaWhatsApp()"]');
+            if (btn.dataset.locked === "true") return; 
+            btn.dataset.locked = "true"; // Engage lock!
+            
             const restaurantName = rawBranding.B || 'Our Store';
             const orderDate = new Date().toLocaleString('en-US', { 
                 day: '2-digit', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit' 
@@ -2899,6 +2904,7 @@ function toggleQuickCart(id) {
             if (diningType === 'Dine In') {
                 if (!selectedTable) {
                     alert('Please select a table number from the list!');
+                    btn.dataset.locked = "false"; // Unlock if failed
                     return;
                 }
                 orderTypeStr = `Dine In (${selectedTable})`;
@@ -2909,8 +2915,10 @@ function toggleQuickCart(id) {
                     locationText = `\n📍 *Delivery Address:*\n${addressInput}\n`;
                 } else {
                     const proceedWithoutAddress = confirm("You haven't entered a delivery address. Do you want to send the order anyway and share your location directly in WhatsApp?");
-                    if (!proceedWithoutAddress) return; 
-                    
+                    if (!proceedWithoutAddress) {
+                        btn.dataset.locked = "false"; // Unlock if cancelled
+                        return; 
+                    }
                     locationText = `\n📍 *Delivery Address:*\n(Will share via WhatsApp)\n`;
                 }
             }
@@ -2927,16 +2935,16 @@ function toggleQuickCart(id) {
 
             if (!customerName || !customerPhone) {
                 alert('Please enter your Name and Phone Number so we can process your order!');
+                btn.dataset.locked = "false"; // Unlock if failed
                 return;
             }
 
-            // Lock the button early
-            const btn = document.querySelector('button[onclick="sendOrderViaWhatsApp()"]');
+            // Visual Loading State
             const originalBtnHtml = btn.innerHTML;
             btn.innerHTML = `<i class="fas fa-spinner fa-spin text-2xl"></i> Processing...`;
 
             // ==========================================
-            // 🚨 NEW: LIVE INVENTORY VERIFICATION 🚨
+            // 🚨 LIVE INVENTORY VERIFICATION 🚨
             // ==========================================
             for (const cartItem of cart) {
                 if (cartItem.stockQty !== null && cartItem.stockQty !== undefined) {
@@ -2949,16 +2957,21 @@ function toggleQuickCart(id) {
                         .maybeSingle();
 
                     if (liveData && liveData.stock_quantity !== null) {
-                        if (liveData.stock_quantity < cartItem.qty) {
-                            alert(`🚨 Oops! Another customer just bought ${cartItem.name}. Only ${liveData.stock_quantity} left in stock! Please adjust your cart.`);
-                            btn.innerHTML = originalBtnHtml; // Unlock button
+                        // Force strict Number formatting to prevent math glitches
+                        const liveStock = Number(liveData.stock_quantity);
+                        const orderQty = Number(cartItem.qty);
+
+                        if (liveStock < orderQty) {
+                            alert(`🚨 Oops! Another customer just bought ${cartItem.name}. Only ${liveStock} left in stock! Please adjust your cart.`);
+                            btn.dataset.locked = "false"; // Unlock
+                            btn.innerHTML = originalBtnHtml; // Reset Button
                             
                             // Instantly refresh their menu in the background to show the true stock
                             fetchMenuDataForLang(currentLang);
                             return; // STOP THE ORDER COMPLETELY!
                         }
                         // Temporarily store the true live stock so our deduction math is perfectly accurate
-                        cartItem.liveStock = liveData.stock_quantity;
+                        cartItem.liveStock = liveStock;
                     }
                 }
             }
@@ -3029,6 +3042,9 @@ function toggleQuickCart(id) {
             } catch (err) {
                 console.error("System Error:", err);
             }
+
+            // Unlock button logic before redirecting, just in case they cancel the WhatsApp prompt
+            btn.dataset.locked = "false"; 
 
             // ==========================================
             // BUILD WHATSAPP MESSAGE
