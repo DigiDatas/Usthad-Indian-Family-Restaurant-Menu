@@ -233,6 +233,25 @@
                             </div>
                         </div>
 
+			<!-- 🌟 NEW: DINE-IN VS TAKEAWAY COMPARISON CARD -->
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
+                            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-3"><i class="fas fa-utensils text-emerald-500 me-2"></i> Dine-In vs Takeaway</h3>
+                            <div class="grid grid-cols-2 gap-3">
+                                <!-- Dine-In Box -->
+                                <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl">
+                                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1">Dine-In</p>
+                                    <p class="text-base font-black text-emerald-900 truncate" id="stat-dinein-rev">0.00</p>
+                                    <p class="text-[11px] font-bold text-emerald-700 mt-0.5" id="stat-dinein-ord">0 Orders</p>
+                                </div>
+                                <!-- Takeaway Box -->
+                                <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl">
+                                    <p class="text-[10px] font-black text-indigo-600 uppercase tracking-wider mb-1">Takeaway</p>
+                                    <p class="text-base font-black text-indigo-900 truncate" id="stat-takeaway-rev">0.00</p>
+                                    <p class="text-[11px] font-bold text-indigo-700 mt-0.5" id="stat-takeaway-ord">0 Orders</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Low Stock Alerts -->
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex flex-col relative overflow-hidden flex-1 min-h-[200px] max-h-[300px]">
                             <h3 class="text-sm font-black text-gray-800 mb-2 shrink-0 uppercase tracking-wider"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
@@ -1386,11 +1405,25 @@
         function updateDetailedAnalytics() {
             let totRev = 0, totOrd = 0, penRev = 0, penOrd = 0, cookRev = 0, cookOrd = 0;
             let oldestPendingTime = null, itemCounts = {};
+            
+            // 🌟 NEW: Counters for Dine-In vs Takeaway
+            let dineInOrd = 0, dineInRev = 0;
+            let takeawayOrd = 0, takeawayRev = 0;
 
             dashboardFilteredOrders.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
                 totRev += amt; totOrd++;
                 
+                // Track Dine-In vs Takeaway metrics
+                const type = (o.order_type || '').toLowerCase();
+                if (type.includes('dine')) {
+                    dineInOrd++;
+                    dineInRev += amt;
+                } else {
+                    takeawayOrd++;
+                    takeawayRev += amt;
+                }
+
                 if (o.status === 'Pending') {
                     penRev += amt; penOrd++;
                     const t = new Date(o.created_at).getTime();
@@ -1402,6 +1435,7 @@
                 if (o.items && Array.isArray(o.items)) o.items.forEach(item => { itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty; });
             });
 
+            // Update top cards
             document.getElementById('stat-tot-rev').innerHTML = `<span class="flex items-center gap-1">${getCurrencyHtml()} ${totRev.toFixed(2)}</span>`;
             document.getElementById('stat-tot-ord').textContent = `${totOrd} Orders`;
             document.getElementById('stat-pen-rev').innerHTML = `<span class="flex items-center gap-1">${getCurrencyHtml()} ${penRev.toFixed(2)}</span>`;
@@ -1409,6 +1443,12 @@
             document.getElementById('stat-cook-rev').innerHTML = `<span class="flex items-center gap-1">${getCurrencyHtml()} ${cookRev.toFixed(2)}</span>`;
             document.getElementById('stat-cook-ord').textContent = `${cookOrd} Orders Cooking`;
             
+            // 🌟 NEW: Render Dine-In vs Takeaway Card Values
+            document.getElementById('stat-dinein-rev').innerHTML = `<span class="flex items-center gap-0.5">${getCurrencyHtml()} ${dineInRev.toFixed(2)}</span>`;
+            document.getElementById('stat-dinein-ord').textContent = `${dineInOrd} Orders`;
+            document.getElementById('stat-takeaway-rev').innerHTML = `<span class="flex items-center gap-0.5">${getCurrencyHtml()} ${takeawayRev.toFixed(2)}</span>`;
+            document.getElementById('stat-takeaway-ord').textContent = `${takeawayOrd} Orders`;
+
             const waitEl = document.getElementById('stat-wait-time');
             if (oldestPendingTime) { waitEl.dataset.time = new Date(oldestPendingTime).toISOString(); waitEl.textContent = getWaitTimeStr(oldestPendingTime); } 
             else { waitEl.dataset.time = ""; waitEl.textContent = "0m"; }
