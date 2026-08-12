@@ -3036,11 +3036,20 @@ function toggleQuickCart(id) {
                         if (cartItem.liveStock !== undefined) {
                             const newStock = Math.max(0, cartItem.liveStock - cartItem.qty);
                             
-                            // FIX: If the item has a code, update both EN and AR rows. If not, just update this exact ID!
+                            let updateQuery;
+                            // If the item has a code, update both EN and AR rows. If not, update this exact ID!
                             if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
-                                await supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('item_code', cartItem.itemCode);
+                                updateQuery = supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('item_code', cartItem.itemCode);
                             } else {
-                                await supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('id', cartItem.id);
+                                updateQuery = supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('id', cartItem.id);
+                            }
+
+                            const { error: stockErr } = await updateQuery;
+                                
+                            // 🚨 IF IT FAILS NOW, IT WILL TELL YOU EXACTLY WHY!
+                            if (stockErr) {
+                                alert(`Failed to deduct stock for ${cartItem.name}. Supabase Error: ${stockErr.message}`);
+                                console.error("Stock Deduction Failed:", stockErr.message);
                             }
                         }
                     }
