@@ -1149,7 +1149,7 @@
             if(detRow) detRow.classList.toggle('hidden');
         }
 
-        // --- FIXED STATUS UPDATER (With Error Logs) ---
+        // --- THE FIXED UPDATE STATUS ENGINE ---
         async function updateStatus(orderId, newStatus, event, minsStr = null) {
             if(event) event.stopPropagation(); // Stops UI Glitching!
             
@@ -1162,20 +1162,38 @@
                 }
             }
 
-            // 1. Instant Optimistic UI Update
-            const localOrder = allOrders.find(o => o.id === orderId);
+            // 1. FIX: Enforce strict String matching for IDs!
+            const localOrder = allOrders.find(o => String(o.id) === String(orderId));
             if(localOrder) {
                 localOrder.status = newStatus;
                 if(payload.target_completion_time) localOrder.target_completion_time = payload.target_completion_time;
             }
-            processDashboardFilters(); // Re-renders UI instantly
 
-            // 2. Database Sync
+            // 2. FIX: Remember if the card was open before re-rendering!
+            const detRow = document.getElementById(`row-det-${orderId}`);
+            const wasExpanded = detRow && !detRow.classList.contains('hidden');
+
+            processDashboardFilters(); // Visually changes everything before DB answers
+
+            // Re-open the card instantly so it doesn't snap closed
+            if (wasExpanded) {
+                const newDetRow = document.getElementById(`row-det-${orderId}`);
+                if (newDetRow) newDetRow.classList.remove('hidden');
+            }
+
+            // 3. BACKGROUND DATABASE SYNC
             const { error } = await supabaseClient.from('orders').update(payload).eq('id', orderId);
             if (error) {
                 console.error("DB Update Failed:", error);
-                alert("Status sync failed. Refreshing...");
-                fetchDashboardData(); 
+                
+                // Smart Error Catching
+                if (error.message.includes('target_completion_time')) {
+                    alert("DATABASE ERROR: You need to run the SQL command in Supabase to add the 'target_completion_time' column!");
+                } else {
+                    alert("Server Sync Failed: " + error.message);
+                }
+                
+                fetchDashboardData(); // Hard reset if DB fails
             }
         }
 
@@ -1293,7 +1311,8 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
             });
         }
-		       
+        
+        
 
         // --- NEW: MENU MANAGER STATE ---
         let currentAdminLang = 'en'; 
