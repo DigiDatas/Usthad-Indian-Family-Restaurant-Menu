@@ -834,7 +834,10 @@
                 fetchOffers();
                 fetchSettings();
                 
-                // Start Live Auto-Refresh every 30 seconds
+                // 🚨 ADD THESE 2 LINES HERE ➔
+                graphActiveFilter = 'week';
+                if(typeof setGraphFilter === 'function') setGraphFilter('week');
+
                 livePollingTimer = setInterval(() => fetchDashboardData(null, true), 30000);
             }
         }
@@ -1428,6 +1431,7 @@
         }
 
         function renderGroupedChart() {
+if (!graphActiveFilter) graphActiveFilter = 'week';
             const ctx = document.getElementById('dashboardChart');
             if (!ctx) return;
 
