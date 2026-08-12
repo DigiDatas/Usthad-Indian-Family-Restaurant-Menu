@@ -38,27 +38,27 @@
                 <h1 class="absolute left-16 opacity-0 group-hover:opacity-100 text-xl font-black whitespace-nowrap transition-opacity duration-300 tracking-tight">Admin Suite</h1>
             </div>
 
-            <!-- Navigation Links (Flawless Absolute Centering) -->
-            <nav class="flex flex-col gap-2 p-3 mt-4">
-                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="sidebar-btn relative h-12 w-full rounded-xl bg-red-600 text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-chart-pie text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Dashboard</span>
+            <!-- Navigation Links (Increased Gap, Height, and Rounded Corners) -->
+            <nav class="flex flex-col gap-4 p-3 mt-6">
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="sidebar-btn relative h-14 w-full rounded-2xl bg-red-600 text-white transition-colors flex items-center shadow-sm">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-chart-pie text-lg"></i></div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Dashboard</span>
                 </button>
-                <button onclick="switchTab('menu')" id="tab-btn-menu" class="sidebar-btn relative h-12 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-utensils text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Menu Manager</span>
+                <button onclick="switchTab('menu')" id="tab-btn-menu" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-utensils text-lg"></i></div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Menu Manager</span>
                 </button>
-                <button onclick="switchTab('users')" id="tab-btn-users" class="sidebar-btn relative h-12 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-users text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Customers</span>
+                <button onclick="switchTab('users')" id="tab-btn-users" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-users text-lg"></i></div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Customers</span>
                 </button>
-                <button onclick="switchTab('offers')" id="tab-btn-offers" class="sidebar-btn relative h-12 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-tags text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Offers</span>
+                <button onclick="switchTab('offers')" id="tab-btn-offers" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-tags text-lg"></i></div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Offers</span>
                 </button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="sidebar-btn relative h-12 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cog text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Settings</span>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cog text-lg"></i></div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Settings</span>
                 </button>
             </nav>
         </div>
@@ -836,20 +836,20 @@
             menu.classList.toggle('flex');
         }
 
-        // FIXED TABS ENGINE (Preserves Sidebar Classes)
+        // FIXED TABS ENGINE (Preserves new h-14 height and gaps)
         function switchTab(tabName) {
             ['dashboard', 'menu', 'users', 'offers', 'settings'].forEach(t => {
                 const section = document.getElementById(`section-${t}`);
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if(section) section.classList.add('hidden');
-                // Reset Inactive Buttons
-                if(btn) btn.className = "sidebar-btn flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full relative";
+                // Reset Inactive Buttons (Now using h-14 and rounded-2xl)
+                if(btn) btn.className = "sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center";
             });
             const activeSection = document.getElementById(`section-${tabName}`);
             if(activeSection) activeSection.classList.remove('hidden');
             const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-            // Set Active Button
-            if(activeBtn) activeBtn.className = "sidebar-btn flex items-center p-3 rounded-xl bg-red-600 text-white transition-colors w-full relative";
+            // Set Active Button (Now using h-14 and rounded-2xl)
+            if(activeBtn) activeBtn.className = "sidebar-btn relative h-14 w-full rounded-2xl bg-red-600 text-white transition-colors flex items-center shadow-sm";
         }
 
         // GLOBAL CLICK LISTENER (Fixes Dropdown Glitches)
