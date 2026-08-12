@@ -922,9 +922,22 @@
             processDashboardFilters();
         }
 
-        // Proxy to catch the HTML buttons from the graph and route them globally
+        // --- FIXED GRAPH FILTER BUTTONS & RENDER ENGINE ---
         function setGraphFilter(f) {
-            setDashFilter(f);
+            graphActiveFilter = f; // Updates the active state ('week', 'month', 'year', 'all')
+            
+            // Highlight the active button visually
+            ['week', 'month', 'year', 'all'].forEach(btnId => {
+                const btn = document.getElementById(`gflt-${btnId}`);
+                if(btn) {
+                    btn.className = btnId === f 
+                        ? "px-2 py-1 rounded text-[9px] font-black bg-white shadow-sm text-blue-600 transition" 
+                        : "px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition";
+                }
+            });
+            
+            // Re-render the graph with the new time filter
+            renderGroupedChart();
         }
 
         async function fetchDashboardData(btnElement = null, isBackground = false) {
@@ -1221,9 +1234,22 @@
             });
         }
 
+        // --- ACCORDION ROW TOGGLE ENGINE ---
         function toggleOrderDetails(orderId) {
-            const detRow = document.getElementById(`row-det-${orderId}`);
-            if(detRow) detRow.classList.toggle('hidden');
+            const targetDetRow = document.getElementById(`row-det-${orderId}`);
+            if (!targetDetRow) return;
+
+            const isCurrentlyHidden = targetDetRow.classList.contains('hidden');
+
+            // 1. Instantly collapse ALL other open order detail rows
+            document.querySelectorAll('[id^="row-det-"]').forEach(row => {
+                row.classList.add('hidden');
+            });
+
+            // 2. If the clicked row was hidden, open it. If it was open, leave it closed.
+            if (isCurrentlyHidden) {
+                targetDetRow.classList.remove('hidden');
+            }
         }
 
         async function updateStatus(orderId, newStatus, event, minsStr = null) {
@@ -1401,15 +1427,33 @@
             }
         }
 
-        // --- GROUPED BAR CHART ENGINE ---
         function renderGroupedChart() {
             const ctx = document.getElementById('dashboardChart');
             if (!ctx) return;
 
+            const now = new Date();
+            
+            // Filter allOrders dynamically based on the graph's selected filter button
+            const graphData = allOrders.filter(order => {
+                const orderDate = new Date(order.created_at);
+                if (graphActiveFilter === 'week') {
+                    const diffTime = Math.abs(now - orderDate);
+                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                    return diffDays <= 7;
+                }
+                if (graphActiveFilter === 'month') {
+                    return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+                }
+                if (graphActiveFilter === 'year') {
+                    return orderDate.getFullYear() === now.getFullYear();
+                }
+                return true; // 'all'
+            });
+
             let cTot=0, cPen=0, cCok=0, cCmp=0, cCan=0;
             let rTot=0, rPen=0, rCok=0, rCmp=0, rCan=0;
 
-            dashboardFilteredOrders.forEach(o => {
+            graphData.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
                 cTot++; rTot += amt;
                 if(o.status==='Pending') { cPen++; rPen+=amt; }
