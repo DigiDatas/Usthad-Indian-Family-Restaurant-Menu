@@ -2959,29 +2959,24 @@ function toggleQuickCart(id) {
             // ==========================================
             for (const cartItem of cart) {
                 if (cartItem.stockQty !== null && cartItem.stockQty !== undefined) {
-                    // Instantly check the database for the exact stock at this very millisecond
+                    // FIX: Search by exact row ID so old items without Item Codes never crash the system!
                     const { data: liveData } = await supabaseClient
                         .from('menu_items')
                         .select('stock_quantity')
-                        .eq('item_code', cartItem.itemCode)
-                        .limit(1)
+                        .eq('id', cartItem.id)
                         .maybeSingle();
 
                     if (liveData && liveData.stock_quantity !== null) {
-                        // Force strict Number formatting to prevent math glitches
                         const liveStock = Number(liveData.stock_quantity);
                         const orderQty = Number(cartItem.qty);
 
                         if (liveStock < orderQty) {
                             alert(`🚨 Oops! Another customer just bought ${cartItem.name}. Only ${liveStock} left in stock! Please adjust your cart.`);
-                            btn.dataset.locked = "false"; // Unlock
-                            btn.innerHTML = originalBtnHtml; // Reset Button
-                            
-                            // Instantly refresh their menu in the background to show the true stock
+                            btn.dataset.locked = "false"; 
+                            btn.innerHTML = originalBtnHtml; 
                             fetchMenuDataForLang(currentLang);
-                            return; // STOP THE ORDER COMPLETELY!
+                            return; 
                         }
-                        // Temporarily store the true live stock so our deduction math is perfectly accurate
                         cartItem.liveStock = liveStock;
                     }
                 }
@@ -3036,18 +3031,17 @@ function toggleQuickCart(id) {
                     console.error("Supabase Error:", error);
                     alert("Warning: Could not save order to database, but we will still send it to WhatsApp.");
                 } else {
-                    // 🎉 AUTOMATIC STOCK DEDUCTION ENGINE: 
-                    // This subtracts the purchased quantity from your database stock_quantity!
+                    // 🎉 AUTOMATIC STOCK DEDUCTION ENGINE
                     for (const cartItem of cart) {
                         if (cartItem.liveStock !== undefined) {
                             const newStock = Math.max(0, cartItem.liveStock - cartItem.qty);
                             
-                            const { error: stockErr } = await supabaseClient
-                                .from('menu_items')
-                                .update({ stock_quantity: newStock })
-                                .eq('item_code', cartItem.itemCode);
-                                
-                            if (stockErr) console.error("Stock Deduction Failed:", stockErr.message);
+                            // FIX: If the item has a code, update both EN and AR rows. If not, just update this exact ID!
+                            if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
+                                await supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('item_code', cartItem.itemCode);
+                            } else {
+                                await supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('id', cartItem.id);
+                            }
                         }
                     }
                 }
