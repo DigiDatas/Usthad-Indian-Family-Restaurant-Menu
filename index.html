@@ -3036,7 +3036,8 @@ function toggleQuickCart(id) {
                     console.error("Supabase Error:", error);
                     alert("Warning: Could not save order to database, but we will still send it to WhatsApp.");
                 } else {
-                    // 🎉 SMART INVENTORY SYSTEM: Deduct using the VERIFIED live math
+                    // 🎉 AUTOMATIC STOCK DEDUCTION ENGINE: 
+                    // This subtracts the purchased quantity from your database stock_quantity!
                     for (const cartItem of cart) {
                         if (cartItem.liveStock !== undefined) {
                             const newStock = Math.max(0, cartItem.liveStock - cartItem.qty);
