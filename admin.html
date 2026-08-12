@@ -128,51 +128,53 @@
                     <!-- LEFT COLUMN (Span 2) -->
                     <div class="lg:col-span-2 flex flex-col gap-6">
                         
-                        <!-- NEW PASTEL ANALYTICS CARDS (NOW 5 COLUMNS) -->
+                        <!-- NEW PASTEL ANALYTICS CARDS (LOCKED FIXED HEIGHT) -->
                         <div class="grid grid-cols-2 xl:grid-cols-5 gap-4 shrink-0">
+                            
                             <!-- Pastel Blue -->
-                            <div class="bg-[#eff6ff] p-4 rounded-2xl shadow-sm border border-[#bfdbfe] flex justify-between items-end relative overflow-hidden">
-                                <div>
-                                    <p class="text-[10px] font-black text-blue-500 uppercase tracking-wider mb-1"><i class="fas fa-chart-pie me-1"></i> Total Overall</p>
-                                    <p class="text-2xl font-black text-blue-900" id="stat-tot-rev">0.00</p>
-                                    <p class="text-[11px] font-bold text-blue-600 mt-1" id="stat-tot-ord">0 Orders</p>
+                            <div class="bg-[#eff6ff] p-4 rounded-2xl shadow-sm border border-[#bfdbfe] flex justify-between items-end relative overflow-hidden h-[104px]">
+                                <div class="w-full">
+                                    <p class="text-[10px] font-black text-blue-500 uppercase tracking-wider mb-2"><i class="fas fa-chart-pie me-1"></i> Total Overall</p>
+                                    <p class="text-2xl font-black text-blue-900 leading-none" id="stat-tot-rev">0.00</p>
+                                    <p class="text-[11px] font-bold text-blue-600 mt-1.5 leading-none" id="stat-tot-ord">0 Orders</p>
                                 </div>
                             </div>
                             
                             <!-- Pastel Orange -->
-                            <div class="bg-[#fff7ed] p-4 rounded-2xl shadow-sm border border-[#fed7aa] flex justify-between items-end relative overflow-hidden">
-                                <div>
-                                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-wider mb-1"><i class="fas fa-hourglass-half me-1"></i> Pending</p>
-                                    <p class="text-2xl font-black text-orange-900" id="stat-pen-rev">0.00</p>
-                                    <p class="text-[11px] font-bold text-orange-600 mt-1" id="stat-pen-ord">0 Waiting</p>
+                            <div class="bg-[#fff7ed] p-4 rounded-2xl shadow-sm border border-[#fed7aa] flex justify-between items-end relative overflow-hidden h-[104px]">
+                                <div class="w-full">
+                                    <p class="text-[10px] font-black text-orange-500 uppercase tracking-wider mb-2"><i class="fas fa-hourglass-half me-1"></i> Pending</p>
+                                    <p class="text-2xl font-black text-orange-900 leading-none" id="stat-pen-rev">0.00</p>
+                                    <p class="text-[11px] font-bold text-orange-600 mt-1.5 leading-none" id="stat-pen-ord">0 Waiting</p>
                                 </div>
                             </div>
 
                             <!-- Pastel Yellow -->
-                            <div class="bg-[#fefce8] p-4 rounded-2xl shadow-sm border border-[#fef08a] flex justify-between items-end relative overflow-hidden">
-                                <div>
-                                    <p class="text-[10px] font-black text-yellow-600 uppercase tracking-wider mb-1"><i class="fas fa-fire me-1"></i> Cooking</p>
-                                    <p class="text-2xl font-black text-yellow-800" id="stat-cook-rev">0.00</p>
-                                    <p class="text-[11px] font-bold text-yellow-700 mt-1" id="stat-cook-ord">0 Cooking</p>
+                            <div class="bg-[#fefce8] p-4 rounded-2xl shadow-sm border border-[#fef08a] flex justify-between items-end relative overflow-hidden h-[104px]">
+                                <div class="w-full">
+                                    <p class="text-[10px] font-black text-yellow-600 uppercase tracking-wider mb-2"><i class="fas fa-fire me-1"></i> Cooking</p>
+                                    <p class="text-2xl font-black text-yellow-800 leading-none" id="stat-cook-rev">0.00</p>
+                                    <p class="text-[11px] font-bold text-yellow-700 mt-1.5 leading-none" id="stat-cook-ord">0 Cooking</p>
                                 </div>
                             </div>
 
                             <!-- Pastel Red (Longest Wait) -->
-                            <div class="bg-[#fef2f2] p-4 rounded-2xl shadow-sm border border-[#fecaca] flex justify-between items-end">
-                                <div>
-                                    <p class="text-[10px] font-black text-red-500 uppercase tracking-wider mb-1"><i class="far fa-clock me-1"></i> Longest Wait</p>
-                                    <p class="text-2xl font-black text-red-900 live-ticker" id="stat-wait-time" data-time="">0m</p>
-                                    <p class="text-[11px] font-bold text-red-500 mt-1">Pending Only</p>
+                            <div class="bg-[#fef2f2] p-4 rounded-2xl shadow-sm border border-[#fecaca] flex justify-between items-end relative overflow-hidden h-[104px]">
+                                <div class="w-full">
+                                    <p class="text-[10px] font-black text-red-500 uppercase tracking-wider mb-2"><i class="far fa-clock me-1"></i> Longest Wait</p>
+                                    <p class="text-2xl font-black text-red-900 live-ticker leading-none" id="stat-wait-time" data-time="">0m</p>
+                                    <p class="text-[11px] font-bold text-red-500 mt-1.5 leading-none">Pending Only</p>
                                 </div>
                             </div>
 
-                            <!-- NEW 5th CARD: SOLID RED SLA CAROUSEL -->
-                            <div class="bg-red-600 p-4 rounded-2xl shadow-md border border-red-700 flex flex-col relative overflow-hidden text-white h-full justify-between">
-                                <p class="text-[10px] font-black text-red-200 uppercase tracking-wider flex items-center gap-1"><i class="fas fa-exclamation-triangle animate-pulse text-yellow-300"></i> Critical Delays</p>
-                                <div id="sla-carousel-content" class="flex-1 flex flex-col justify-end relative w-full mt-1">
+                            <!-- 5th CARD: SOLID RED SLA CAROUSEL -->
+                            <div class="bg-red-600 p-4 rounded-2xl shadow-md border border-red-700 flex flex-col relative overflow-hidden text-white h-[104px] justify-between">
+                                <p class="text-[10px] font-black text-red-200 uppercase tracking-wider flex items-center gap-1 shrink-0"><i class="fas fa-exclamation-triangle animate-pulse text-yellow-300"></i> Critical Delays</p>
+                                <div id="sla-carousel-content" class="flex-1 flex flex-col justify-end relative w-full overflow-hidden">
                                     <div class="text-xs font-bold text-red-200 flex items-center gap-1"><i class="fas fa-check-circle"></i> All on time</div>
                                 </div>
                             </div>
+
                         </div>
 
                         <!-- Top 5 Urgent Orders Cards -->
@@ -1154,7 +1156,7 @@
                     
                     if (isLate) {
                         timeColor = 'text-red-600 animate-pulse';
-                        warningMarquee = `<marquee scrollamount="3" class="text-[9px] text-red-600 font-black bg-red-50 px-2 py-0.5 rounded shadow-sm w-28 ml-2 border border-red-100 tracking-wider">⚠️ DELAYED ORDER</marquee>`;
+                        warningMarquee = `<marquee scrollamount="3" class="text-[9px] text-red-600 font-black bg-red-50 px-2 py-0.5 rounded shadow-sm w-35 ml-2 border border-red-0 tracking-wider">⚠️ DELAYED ORDER</marquee>`;
                     }
                 }
 
