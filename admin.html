@@ -128,8 +128,8 @@
                     <!-- LEFT COLUMN (Span 2) -->
                     <div class="lg:col-span-2 flex flex-col gap-6">
                         
-                        <!-- NEW PASTEL ANALYTICS CARDS -->
-                        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 shrink-0">
+                        <!-- NEW PASTEL ANALYTICS CARDS (NOW 5 COLUMNS) -->
+                        <div class="grid grid-cols-2 xl:grid-cols-5 gap-4 shrink-0">
                             <!-- Pastel Blue -->
                             <div class="bg-[#eff6ff] p-4 rounded-2xl shadow-sm border border-[#bfdbfe] flex justify-between items-end relative overflow-hidden">
                                 <div>
@@ -157,12 +157,20 @@
                                 </div>
                             </div>
 
-                            <!-- Pastel Red -->
+                            <!-- Pastel Red (Longest Wait) -->
                             <div class="bg-[#fef2f2] p-4 rounded-2xl shadow-sm border border-[#fecaca] flex justify-between items-end">
                                 <div>
-                                    <p class="text-[10px] font-black text-red-500 uppercase tracking-wider mb-1"><i class="far fa-clock me-1 animate-pulse"></i> Longest Wait</p>
+                                    <p class="text-[10px] font-black text-red-500 uppercase tracking-wider mb-1"><i class="far fa-clock me-1"></i> Longest Wait</p>
                                     <p class="text-2xl font-black text-red-900 live-ticker" id="stat-wait-time" data-time="">0m</p>
                                     <p class="text-[11px] font-bold text-red-500 mt-1">Pending Only</p>
+                                </div>
+                            </div>
+
+                            <!-- NEW 5th CARD: SOLID RED SLA CAROUSEL -->
+                            <div class="bg-red-600 p-4 rounded-2xl shadow-md border border-red-700 flex flex-col relative overflow-hidden text-white h-full justify-between">
+                                <p class="text-[10px] font-black text-red-200 uppercase tracking-wider flex items-center gap-1"><i class="fas fa-exclamation-triangle animate-pulse text-yellow-300"></i> Critical Delays</p>
+                                <div id="sla-carousel-content" class="flex-1 flex flex-col justify-end relative w-full mt-1">
+                                    <div class="text-xs font-bold text-red-200 flex items-center gap-1"><i class="fas fa-check-circle"></i> All on time</div>
                                 </div>
                             </div>
                         </div>
@@ -871,12 +879,10 @@
         let tableStatusFilter = 'All';
         let tableSortCol = 'urgent'; 
         let tableSortDir = 'desc'; 
-        let graphActiveFilter = 'all'; 
 
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        Chart.register(ChartDataLabels);
         
-        // 🚨 YOUR CUSTOM SVG FOR SAUDI RIYAL GOES HERE 🚨
-        // Replace this string with your exact <svg> code!
         const CUSTOM_SVG_CURRENCY = `<span class="font-serif italic mr-1">SR</span>`; 
 
         function getCurrencyHtml() {
@@ -900,8 +906,23 @@
 
         function setDashFilter(filterName) {
             activeFilter = filterName;
-            renderTimeFilters();
+            renderTimeFilters(); // Updates Top Bar
+
+            // Synchronize the inline Graph Buttons visually
+            ['week', 'month', 'year', 'all'].forEach(btnId => {
+                const btn = document.getElementById(`gflt-${btnId}`);
+                if(btn) {
+                    const isActive = (filterName === btnId) || (filterName.startsWith('month-') && btnId === 'month');
+                    btn.className = isActive ? "px-2 py-1 rounded text-[9px] font-black bg-white shadow-sm text-blue-600 transition" : "px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition";
+                }
+            });
+
             processDashboardFilters();
+        }
+
+        // Proxy to catch the HTML buttons from the graph and route them globally
+        function setGraphFilter(f) {
+            setDashFilter(f);
         }
 
         async function fetchDashboardData(btnElement = null, isBackground = false) {
@@ -942,6 +963,8 @@
                 const orderDate = new Date(order.created_at);
                 if (activeFilter === 'today') return orderDate.toDateString() === now.toDateString();
                 if (activeFilter === 'week') return Math.ceil(Math.abs(now - orderDate) / (1000 * 60 * 60 * 24)) <= 7;
+                if (activeFilter === 'month') return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+                if (activeFilter === 'year') return orderDate.getFullYear() === now.getFullYear();
                 if (activeFilter.startsWith('month-')) {
                     const m = parseInt(activeFilter.split('-')[1]);
                     return orderDate.getMonth() === m && orderDate.getFullYear() === now.getFullYear();
@@ -1000,6 +1023,13 @@
             `).join('');
         }
         function clearNotifications() { systemNotifications = []; renderNotifications(); document.getElementById('notif-badge').classList.add('hidden'); toggleNotifications();}
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.notif-container')) {
+                const drop = document.getElementById('notif-dropdown');
+                if (drop && !drop.classList.contains('hidden')) { drop.classList.add('hidden'); drop.classList.remove('flex'); }
+            }
+        });
 
         // --- TABLE SORTING & EXACT FILTER COLORS ---
         function renderTableFilters() {
@@ -1110,7 +1140,24 @@
                     });
                 }
 
-                // SMART COOKING HTML: Hides the input entirely if already cooking!
+                // SMART SLA MARQUEE RENDERER
+                let warningMarquee = '';
+                let timeColor = 'text-gray-600';
+                
+                if (order.status === 'Pending' || order.status === 'Cooking') {
+                    timeColor = 'text-blue-600';
+                    const now = Date.now();
+                    let isLate = false;
+                    
+                    if (order.status === 'Pending' && Math.floor((now - new Date(order.created_at).getTime()) / 60000) >= 2) isLate = true;
+                    if (order.status === 'Cooking' && order.target_completion_time && now > new Date(order.target_completion_time).getTime()) isLate = true;
+                    
+                    if (isLate) {
+                        timeColor = 'text-red-600 animate-pulse';
+                        warningMarquee = `<marquee scrollamount="3" class="text-[9px] text-red-600 font-black bg-red-50 px-2 py-0.5 rounded shadow-sm w-28 ml-2 border border-red-100 tracking-wider">⚠️ DELAYED ORDER</marquee>`;
+                    }
+                }
+
                 let cookActionHtml = '';
                 if (order.status === 'Pending') {
                     cookActionHtml = `
@@ -1132,7 +1179,12 @@
                             <div class="font-bold text-gray-800 text-xs truncate max-w-[130px]">${order.customer_name || 'Guest'}</div>
                             <div class="text-[10px] font-bold text-blue-600 mt-1">${order.order_type}</div>
                         </td>
-                        <td class="p-4 align-middle font-black text-red-500 text-xs live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</td>
+                        <td class="p-4 align-middle">
+                            <div class="flex items-center">
+                                <span class="font-black ${timeColor} text-xs live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</span>
+                                ${warningMarquee}
+                            </div>
+                        </td>
                         <td class="p-4 align-middle text-center">${badge}</td>
                     </tr>
                     
@@ -1155,7 +1207,6 @@
                                     
                                     <button onclick="updateStatus('${order.id}', 'Pending', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition shadow-sm">Pending</button>
                                     
-                                    <!-- Dynamic Cooking Action -->
                                     ${cookActionHtml}
 
                                     <button onclick="updateStatus('${order.id}', 'Completed', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
@@ -1173,7 +1224,6 @@
             if(detRow) detRow.classList.toggle('hidden');
         }
 
-        // --- BULLETPROOF UPDATE LOGIC ---
         async function updateStatus(orderId, newStatus, event, minsStr = null) {
             if(event) event.stopPropagation(); 
             let payload = { status: newStatus };
@@ -1208,29 +1258,87 @@
             }
         }
 
+        // --- SLA BREACH CAROUSEL ENGINE ---
+        let slaDelayedOrders = [];
+        let slaCarouselInterval = null;
+        let currentSlaIndex = 0;
+
         function checkSLABreaches() {
             const now = Date.now();
+            slaDelayedOrders = []; 
+
             dashboardFilteredOrders.forEach(order => {
                 let isLate = false;
+                let delayText = '';
                 const row = document.getElementById(`row-sum-${order.id}`);
                 
                 if (order.status === 'Pending') {
-                    if (Math.floor((now - new Date(order.created_at).getTime()) / 60000) >= 2) {
+                    const pendingMins = Math.floor((now - new Date(order.created_at).getTime()) / 60000);
+                    if (pendingMins >= 2) {
                         isLate = true;
+                        delayText = `${pendingMins - 2}m OVER`;
+                        slaDelayedOrders.push({ order: order, delay: delayText, status: 'PENDING', color: 'text-orange-500' });
                         if (!order.alerted_pending) { addNotification(`Order ${order.order_number} pending > 2 mins!`, 'sla_pending'); order.alerted_pending = true; }
                     }
                 }
+                
                 if (order.status === 'Cooking' && order.target_completion_time) {
-                    if (now > new Date(order.target_completion_time).getTime()) {
+                    const targetTime = new Date(order.target_completion_time).getTime();
+                    if (now > targetTime) {
                         isLate = true;
+                        const overMins = Math.floor((now - targetTime) / 60000);
+                        delayText = `${overMins}m OVER`;
+                        slaDelayedOrders.push({ order: order, delay: delayText, status: 'COOKING', color: 'text-yellow-500' });
                         if (!order.alerted_cooking) { addNotification(`Order ${order.order_number} cooking delayed!`, 'sla_cooking'); order.alerted_cooking = true; }
                     }
                 }
+                
                 if (row) {
                     if (isLate) { row.classList.add('bg-red-50/80'); row.classList.remove('hover:bg-gray-50'); } 
                     else { row.classList.remove('bg-red-50/80'); row.classList.add('hover:bg-gray-50'); }
                 }
             });
+
+            renderSlaCarousel(); 
+        }
+
+        function renderSlaCarousel() {
+            const container = document.getElementById('sla-carousel-content');
+            if (!container) return;
+
+            if (slaDelayedOrders.length === 0) {
+                if(slaCarouselInterval) clearInterval(slaCarouselInterval);
+                container.innerHTML = `<div class="text-xs font-bold text-red-200 flex items-center gap-1"><i class="fas fa-check-circle"></i> All on time</div>`;
+                return;
+            }
+
+            function showSlide(index) {
+                const item = slaDelayedOrders[index];
+                container.innerHTML = `
+                    <div class="flex justify-between items-end h-full animate-[pulse_0.5s_ease-in-out]">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-black bg-white px-1.5 py-0.5 rounded shadow-sm inline-block w-fit mb-0.5 ${item.color}">${item.status}</span>
+                            <span class="text-lg font-black leading-none">${item.order.order_number}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[9px] font-bold text-red-200 uppercase block leading-none">Delayed</span>
+                            <span class="text-base font-black text-yellow-300 leading-none">${item.delay}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if(currentSlaIndex >= slaDelayedOrders.length) currentSlaIndex = 0;
+            showSlide(currentSlaIndex);
+
+            if(slaCarouselInterval) clearInterval(slaCarouselInterval);
+            if(slaDelayedOrders.length > 1) {
+                slaCarouselInterval = setInterval(() => {
+                    currentSlaIndex++;
+                    if (currentSlaIndex >= slaDelayedOrders.length) currentSlaIndex = 0;
+                    showSlide(currentSlaIndex);
+                }, 3000);
+            }
         }
 
         function startLiveTimers() {
@@ -1291,33 +1399,15 @@
             }
         }
 
-        // --- GROUPED BAR CHART ENGINE (With Filters & Data Labels) ---
-        function setGraphFilter(f) {
-            graphActiveFilter = f;
-            ['week', 'month', 'year', 'all'].forEach(btnId => {
-                const btn = document.getElementById(`gflt-${btnId}`);
-                if(btn) btn.className = btnId === f ? "px-2 py-1 rounded text-[9px] font-black bg-white shadow-sm text-blue-600 transition" : "px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition";
-            });
-            renderGroupedChart();
-        }
-
+        // --- GROUPED BAR CHART ENGINE ---
         function renderGroupedChart() {
             const ctx = document.getElementById('dashboardChart');
             if (!ctx) return;
 
-            const now = new Date();
-            const graphData = allOrders.filter(order => {
-                const orderDate = new Date(order.created_at);
-                if (graphActiveFilter === 'week') return Math.ceil(Math.abs(now - orderDate) / (1000 * 60 * 60 * 24)) <= 7;
-                if (graphActiveFilter === 'month') return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
-                if (graphActiveFilter === 'year') return orderDate.getFullYear() === now.getFullYear();
-                return true; // All
-            });
-
             let cTot=0, cPen=0, cCok=0, cCmp=0, cCan=0;
             let rTot=0, rPen=0, rCok=0, rCmp=0, rCan=0;
 
-            graphData.forEach(o => {
+            dashboardFilteredOrders.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
                 cTot++; rTot += amt;
                 if(o.status==='Pending') { cPen++; rPen+=amt; }
@@ -1346,7 +1436,7 @@
                         }
                     },
                     plugins: { 
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } },
+                        legend: { display: false },
                         datalabels: {
                             anchor: 'end', align: 'top', color: '#4b5563', font: { weight: '900', size: 10 },
                             formatter: function(value, context) {
