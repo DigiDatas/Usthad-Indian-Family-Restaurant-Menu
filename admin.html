@@ -26,11 +26,11 @@
     </div>
 
     <!-- ================= LEFT SIDEBAR ================= -->
-    <aside class="w-16 hover:w-64 bg-gray-900 text-white transition-all duration-300 flex flex-col justify-between group relative z-50 shrink-0 shadow-2xl overflow-x-hidden">
+    <aside class="w-[72px] hover:w-64 bg-gray-900 text-white transition-all duration-300 flex flex-col justify-between group relative z-50 shrink-0 shadow-2xl overflow-x-hidden">
         <div>
             <!-- Branding -->
-            <div class="h-16 flex items-center justify-center group-hover:justify-start px-3 border-b border-gray-800">
-                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
+            <div class="h-16 flex items-center justify-center group-hover:justify-start px-4 border-b border-gray-800">
+                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all">
                     <img id="admin-brand-logo" src="" class="w-full h-full object-cover hidden rounded-xl">
                     <i id="admin-default-icon" class="fas fa-store text-red-600 text-xl"></i>
                 </div>
@@ -39,36 +39,36 @@
 
             <!-- Navigation Links (PERFECTLY CENTERED ICONS) -->
             <nav class="flex flex-col gap-2 p-3 mt-4">
-                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="flex items-center p-2 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-colors w-full group/btn">
-                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-chart-pie text-lg"></i></div>
-                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Dashboard</span>
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="sidebar-btn flex items-center p-3 rounded-xl bg-red-600 text-white transition-colors w-full relative">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all"><i class="fas fa-chart-pie text-lg"></i></div>
+                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity absolute left-12">Dashboard</span>
                 </button>
-                <button onclick="switchTab('menu')" id="tab-btn-menu" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
-                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-utensils text-lg"></i></div>
-                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Menu Manager</span>
+                <button onclick="switchTab('menu')" id="tab-btn-menu" class="sidebar-btn flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full relative">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all"><i class="fas fa-utensils text-lg"></i></div>
+                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity absolute left-12">Menu Manager</span>
                 </button>
-                <button onclick="switchTab('users')" id="tab-btn-users" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
-                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-users text-lg"></i></div>
-                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Customers</span>
+                <button onclick="switchTab('users')" id="tab-btn-users" class="sidebar-btn flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full relative">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all"><i class="fas fa-users text-lg"></i></div>
+                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity absolute left-12">Customers</span>
                 </button>
-                <button onclick="switchTab('offers')" id="tab-btn-offers" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
-                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-tags text-lg"></i></div>
-                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Offers</span>
+                <button onclick="switchTab('offers')" id="tab-btn-offers" class="sidebar-btn flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full relative">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all"><i class="fas fa-tags text-lg"></i></div>
+                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity absolute left-12">Offers</span>
                 </button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
-                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-cog text-lg"></i></div>
-                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="sidebar-btn flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full relative">
+                    <div class="w-6 h-6 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all"><i class="fas fa-cog text-lg"></i></div>
+                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity absolute left-12">Settings</span>
                 </button>
             </nav>
         </div>
 
         <!-- Profile & Logout at Bottom -->
         <div class="p-3 border-t border-gray-800">
-            <div class="flex items-center justify-center group-hover:justify-start p-2 w-full">
-                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0 border border-gray-600">
+            <div class="flex items-center p-2 w-full relative">
+                <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0 border border-gray-600 mx-auto group-hover:mx-0 transition-all">
                     <i class="fas fa-user text-gray-300 text-sm"></i>
                 </div>
-                <div class="ml-3 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
+                <div class="ml-3 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden absolute left-12">
                     <span id="admin-profile-name" class="text-xs font-black truncate max-w-[120px]">Admin</span>
                     <button onclick="logoutAdmin()" id="btn-admin-logout" class="text-[10px] font-bold text-red-400 hover:text-red-300 text-left uppercase tracking-wider mt-0.5">Sign Out</button>
                 </div>
@@ -81,13 +81,9 @@
         
         <!-- Top Action Bar -->
         <header class="h-16 bg-white shadow-sm border-b border-gray-200 flex justify-between items-center px-6 shrink-0 z-40">
-            <!-- Time Filters as Buttons -->
-            <div class="flex gap-2 items-center bg-gray-50 p-1 rounded-lg border border-gray-200 overflow-x-auto hide-scrollbar">
-                <button onclick="setDashFilter('today')" id="flt-today" class="px-3 py-1.5 rounded text-xs font-black bg-white shadow-sm text-red-600 transition">Today</button>
-                <button onclick="setDashFilter('week')" id="flt-week" class="px-3 py-1.5 rounded text-xs font-bold text-gray-500 hover:text-gray-900 transition">This Week</button>
-                <button onclick="setDashFilter('month')" id="flt-month" class="px-3 py-1.5 rounded text-xs font-bold text-gray-500 hover:text-gray-900 transition">This Month</button>
-                <button onclick="setDashFilter('year')" id="flt-year" class="px-3 py-1.5 rounded text-xs font-bold text-gray-500 hover:text-gray-900 transition">This Year</button>
-                <button onclick="setDashFilter('all')" id="flt-all" class="px-3 py-1.5 rounded text-xs font-bold text-gray-500 hover:text-gray-900 transition">All Time</button>
+            <!-- Dynamic Date Filters -->
+            <div class="flex gap-1.5 items-center bg-gray-50 p-1 rounded-lg border border-gray-200 overflow-x-auto hide-scrollbar" id="time-filter-container">
+                <!-- JS WILL INJECT MONTHS HERE -->
             </div>
 
             <!-- Global Actions -->
@@ -100,9 +96,9 @@
                     <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Preview</span>
                 </a>
 
-                <!-- Notification Center (Added notif-container class) -->
+                <!-- Notification Center -->
                 <div class="relative notif-container">
-                    <button onclick="toggleNotifications()" class="relative text-gray-500 hover:text-red-600 transition p-1">
+                    <button onclick="toggleNotifications(event)" class="relative text-gray-500 hover:text-red-600 transition p-1">
                         <i class="fas fa-bell text-lg"></i>
                         <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full hidden animate-bounce border-2 border-white shadow-sm">0</span>
                     </button>
@@ -183,16 +179,11 @@
                         <!-- Orders Table with Filters & Sorting -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
                             
-                            <!-- Table Action Header -->
+                            <!-- Table Action Header (Color-Coded Filters) -->
                             <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 gap-3">
                                 <h3 class="font-black text-gray-800 text-base flex items-center shrink-0"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders</h3>
-                                <!-- Status Filters -->
-                                <div class="flex gap-1 bg-gray-200 p-1 rounded-lg overflow-x-auto w-full md:w-auto hide-scrollbar">
-                                    <button onclick="setTableFilter('All')" id="t-flt-All" class="px-3 py-1.5 rounded text-[10px] font-black bg-white text-gray-800 shadow-sm transition">ALL</button>
-                                    <button onclick="setTableFilter('Pending')" id="t-flt-Pending" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">PENDING</button>
-                                    <button onclick="setTableFilter('Cooking')" id="t-flt-Cooking" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">COOKING</button>
-                                    <button onclick="setTableFilter('Completed')" id="t-flt-Completed" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">COMPLETED</button>
-                                    <button onclick="setTableFilter('Cancelled')" id="t-flt-Cancelled" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">CANCELED</button>
+                                <div class="flex gap-1 overflow-x-auto w-full md:w-auto hide-scrollbar" id="table-status-filters">
+                                    <!-- Dynamic Color Filters injected here -->
                                 </div>
                             </div>
                             
@@ -202,8 +193,7 @@
                                         <tr class="border-b border-gray-200 text-[11px] font-black text-gray-500 uppercase tracking-wider bg-gray-50/50">
                                             <th class="p-4 whitespace-nowrap cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('date')">ID / Date <i id="sort-icon-date" class="fas fa-sort-down ml-1 text-blue-500"></i></th>
                                             <th class="p-4 cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('customer')">Customer <i id="sort-icon-customer" class="fas fa-sort ml-1 opacity-50"></i></th>
-                                            <th class="p-4">Items Summary</th>
-                                            <th class="p-4 whitespace-nowrap cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('wait')">Wait Time <i id="sort-icon-wait" class="fas fa-sort ml-1 opacity-50"></i></th>
+                                            <th class="p-4 cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('urgent')"><i class="fas fa-exclamation-triangle text-red-400 me-1"></i> Priority <i id="sort-icon-urgent" class="fas fa-sort ml-1 opacity-50"></i></th>
                                             <th class="p-4 text-center">Live Status</th>
                                         </tr>
                                     </thead>
@@ -842,44 +832,64 @@
             menu.classList.toggle('flex');
         }
 
-        // Close dropdowns if clicked outside
+        / FIXED TABS ENGINE (Preserves Sidebar Classes)
+        function switchTab(tabName) {
+            ['dashboard', 'menu', 'users', 'offers', 'settings'].forEach(t => {
+                const section = document.getElementById(`section-${t}`);
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if(section) section.classList.add('hidden');
+                // Reset Inactive Buttons
+                if(btn) btn.className = "sidebar-btn flex items-center p-3 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full relative";
+            });
+            const activeSection = document.getElementById(`section-${tabName}`);
+            if(activeSection) activeSection.classList.remove('hidden');
+            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+            // Set Active Button
+            if(activeBtn) activeBtn.className = "sidebar-btn flex items-center p-3 rounded-xl bg-red-600 text-white transition-colors w-full relative";
+        }
+
+        // GLOBAL CLICK LISTENER (Fixes Dropdown Glitches)
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.profile-container')) {
-                const profileMenu = document.getElementById('profile-dropdown');
-                if (profileMenu && !profileMenu.classList.contains('hidden')) {
-                    profileMenu.classList.add('hidden'); profileMenu.classList.remove('flex');
-                }
-            }
-            // NEW: Notification Close Listener
-            if (!e.target.closest('.notif-container')) {
-                const notifMenu = document.getElementById('notif-dropdown');
-                if (notifMenu && !notifMenu.classList.contains('hidden')) {
-                    notifMenu.classList.add('hidden'); notifMenu.classList.remove('flex');
-                }
+            const notifMenu = document.getElementById('notif-dropdown');
+            const notifBtn = e.target.closest('.notif-container');
+            if (!notifBtn && notifMenu && !notifMenu.classList.contains('hidden')) {
+                notifMenu.classList.add('hidden'); notifMenu.classList.remove('flex');
             }
         });
 
-        // --- MASTER DASHBOARD LOGIC & NOTIFICATION ENGINE ---
+        // --- MASTER DASHBOARD LOGIC ---
         let dashboardFilteredOrders = [];
         let dashChartInstance = null;
         let activeFilter = 'today';
         let systemNotifications = []; 
         
-        // Table Sorting State
         let tableStatusFilter = 'All';
         let tableSortCol = 'date';
-        let tableSortDir = 'desc';
+        let tableSortDir = 'desc'; // Default Newest Top
+
+        // DYNAMIC MONTH FILTERS
+        const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+        
+        function renderTimeFilters() {
+            const container = document.getElementById('time-filter-container');
+            const nowMonth = new Date().getMonth(); 
+            
+            let html = `
+                <button onclick="setDashFilter('all')" class="${activeFilter==='all' ? 'px-3 py-1.5 rounded text-[10px] font-black bg-white shadow-sm text-red-600' : 'px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-900 hover:bg-white'} transition">ALL</button>
+                <button onclick="setDashFilter('today')" class="${activeFilter==='today' ? 'px-3 py-1.5 rounded text-[10px] font-black bg-white shadow-sm text-red-600' : 'px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-900 hover:bg-white'} transition">TODAY</button>
+                <button onclick="setDashFilter('week')" class="${activeFilter==='week' ? 'px-3 py-1.5 rounded text-[10px] font-black bg-white shadow-sm text-red-600' : 'px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-900 hover:bg-white'} transition">WEEK</button>
+            `;
+            months.forEach((m, idx) => {
+                const isActive = activeFilter === `month-${idx}`;
+                const cls = isActive ? 'px-3 py-1.5 rounded text-[10px] font-black bg-white shadow-sm text-red-600' : 'px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-900 hover:bg-white';
+                html += `<button onclick="setDashFilter('month-${idx}')" class="${cls} transition">${m}</button>`;
+            });
+            container.innerHTML = html;
+        }
 
         function setDashFilter(filterName) {
             activeFilter = filterName;
-            ['today', 'week', 'month', 'year', 'all'].forEach(f => {
-                const btn = document.getElementById(`flt-${f}`);
-                if(btn) {
-                    btn.className = f === filterName 
-                        ? "px-3 py-1.5 rounded text-xs font-black bg-white shadow-sm text-red-600 transition" 
-                        : "px-3 py-1.5 rounded text-xs font-bold text-gray-500 hover:text-gray-900 transition";
-                }
-            });
+            renderTimeFilters();
             processDashboardFilters();
         }
 
@@ -900,7 +910,6 @@
             allOrders = ordersRes.data || [];
             allMenuItems = menuRes.data || [];
 
-            // Detect NEW orders
             const currentPendingCount = allOrders.filter(o => o.status === 'Pending').length;
             if (isBackground && currentPendingCount > lastKnownOrderCount) {
                 const newCount = currentPendingCount - lastKnownOrderCount;
@@ -908,6 +917,8 @@
             }
             lastKnownOrderCount = currentPendingCount;
 
+            renderTimeFilters(); // Initialize Top Bar
+            renderTableFilters(); // Initialize Table Filters
             processDashboardFilters();
         }
 
@@ -918,9 +929,11 @@
                 const orderDate = new Date(order.created_at);
                 if (activeFilter === 'today') return orderDate.toDateString() === now.toDateString();
                 if (activeFilter === 'week') return Math.ceil(Math.abs(now - orderDate) / (1000 * 60 * 60 * 24)) <= 7;
-                if (activeFilter === 'month') return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
-                if (activeFilter === 'year') return orderDate.getFullYear() === now.getFullYear();
-                return true; 
+                if (activeFilter.startsWith('month-')) {
+                    const m = parseInt(activeFilter.split('-')[1]);
+                    return orderDate.getMonth() === m && orderDate.getFullYear() === now.getFullYear();
+                }
+                return true; // All Time
             });
 
             updateDetailedAnalytics();
@@ -930,12 +943,13 @@
             checkSLABreaches();
         }
 
-        // --- NOTIFICATION ENGINE ---
-        function toggleNotifications() {
+        // --- NOTIFICATIONS ---
+        function toggleNotifications(event) {
+            if(event) event.stopPropagation();
             const drop = document.getElementById('notif-dropdown');
             drop.classList.toggle('hidden');
             drop.classList.toggle('flex');
-            document.getElementById('notif-badge').classList.add('hidden'); // Clear red dot
+            document.getElementById('notif-badge').classList.add('hidden');
         }
         
         function addNotification(message, type) {
@@ -950,7 +964,6 @@
             const badge = document.getElementById('notif-badge');
             badge.textContent = systemNotifications.length;
             badge.classList.remove('hidden');
-
             renderNotifications();
         }
 
@@ -972,62 +985,27 @@
         }
         function clearNotifications() { systemNotifications = []; renderNotifications(); document.getElementById('notif-badge').classList.add('hidden'); toggleNotifications();}
 
-        function checkSLABreaches() {
-            const now = Date.now();
-            dashboardFilteredOrders.forEach(order => {
-                let isLate = false;
-                const row = document.getElementById(`row-sum-${order.id}`);
-                
-                if (order.status === 'Pending') {
-                    const minsPending = Math.floor((now - new Date(order.created_at).getTime()) / 60000);
-                    if (minsPending >= 2) {
-                        isLate = true;
-                        if (!order.alerted_pending) {
-                            addNotification(`Order ${order.order_number} pending > 2 mins!`, 'sla_pending');
-                            order.alerted_pending = true;
-                        }
-                    }
-                }
-                
-                if (order.status === 'Cooking' && order.target_completion_time) {
-                    if (now > new Date(order.target_completion_time).getTime()) {
-                        isLate = true;
-                        if (!order.alerted_cooking) {
-                            addNotification(`Order ${order.order_number} cooking delayed!`, 'sla_cooking');
-                            order.alerted_cooking = true;
-                        }
-                    }
-                }
-
-                if (row) {
-                    if (isLate) {
-                        row.classList.add('bg-red-50/80');
-                        row.classList.remove('hover:bg-gray-50');
-                    } else {
-                        row.classList.remove('bg-red-50/80');
-                        row.classList.add('hover:bg-gray-50');
-                    }
-                }
-            });
-        }
-
-        function getWaitTimeStr(dateString) {
-            const orderTime = new Date(dateString).getTime();
-            const diffMins = Math.floor((Date.now() - orderTime) / 60000);
-            return diffMins > 60 ? `${Math.floor(diffMins/60)}h ${diffMins%60}m` : `${diffMins}m`;
-        }
-
         // --- TABLE SORTING & FILTERING ---
+        function renderTableFilters() {
+            const container = document.getElementById('table-status-filters');
+            if(!container) return;
+            const filters = [
+                { id: 'All', color: 'bg-white text-gray-800 shadow-sm' },
+                { id: 'Pending', color: 'bg-yellow-100 text-yellow-800 shadow-sm' },
+                { id: 'Cooking', color: 'bg-blue-100 text-blue-800 shadow-sm' },
+                { id: 'Completed', color: 'bg-green-100 text-green-800 shadow-sm' },
+                { id: 'Cancelled', color: 'bg-gray-200 text-gray-800 shadow-sm' }
+            ];
+            container.innerHTML = filters.map(f => {
+                const active = tableStatusFilter === f.id;
+                const cls = active ? f.color : 'bg-transparent text-gray-400 hover:bg-gray-100 hover:text-gray-700';
+                return `<button onclick="setTableFilter('${f.id}')" class="px-3 py-1.5 rounded text-[10px] font-black transition ${cls}">${f.id.toUpperCase()}</button>`;
+            }).join('');
+        }
+
         function setTableFilter(status) {
             tableStatusFilter = status;
-            ['All', 'Pending', 'Cooking', 'Completed', 'Cancelled'].forEach(s => {
-                const btn = document.getElementById(`t-flt-${s}`);
-                if(btn) {
-                    btn.className = s === status 
-                        ? "px-3 py-1.5 rounded text-[10px] font-black bg-white text-gray-800 shadow-sm transition"
-                        : "px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition";
-                }
-            });
+            renderTableFilters();
             renderOrdersTable();
         }
 
@@ -1038,43 +1016,45 @@
                 tableSortCol = col;
                 tableSortDir = 'desc';
             }
-            
-            ['date', 'customer', 'wait'].forEach(c => {
+            ['date', 'customer', 'urgent'].forEach(c => {
                 const icon = document.getElementById(`sort-icon-${c}`);
-                if(icon) {
-                    icon.className = c === col 
-                        ? `fas fa-sort-${tableSortDir === 'asc' ? 'up' : 'down'} ml-1 text-blue-500`
-                        : `fas fa-sort ml-1 opacity-50`;
-                }
+                if(icon) icon.className = c === col ? `fas fa-sort-${tableSortDir === 'asc' ? 'up' : 'down'} ml-1 text-blue-500` : `fas fa-sort ml-1 opacity-50`;
             });
             renderOrdersTable();
+        }
+
+        function getWaitTimeStr(dateString) {
+            const orderTime = new Date(dateString).getTime();
+            const diffMins = Math.floor((Date.now() - orderTime) / 60000);
+            return diffMins > 60 ? `${Math.floor(diffMins/60)}h ${diffMins%60}m` : `${diffMins}m`;
         }
 
         function renderOrdersTable() {
             const tbody = document.getElementById('orders-table-body');
             const urgentContainer = document.getElementById('urgent-orders-container');
             const urgentWrapper = document.getElementById('urgent-orders-wrapper');
-            tbody.innerHTML = '';
-            urgentContainer.innerHTML = '';
+            tbody.innerHTML = ''; urgentContainer.innerHTML = '';
 
-            // Apply Status Filter
-            let tableData = dashboardFilteredOrders;
-            if(tableStatusFilter !== 'All') {
-                tableData = tableData.filter(o => o.status === tableStatusFilter);
-            }
+            let tableData = [...dashboardFilteredOrders];
+            if(tableStatusFilter !== 'All') tableData = tableData.filter(o => o.status === tableStatusFilter);
 
-            // Apply Sorting Logic
+            // SMART SORTING ENGINE
             tableData.sort((a, b) => {
-                let valA, valB;
-                if(tableSortCol === 'date' || tableSortCol === 'wait') {
-                    valA = new Date(a.created_at).getTime();
-                    valB = new Date(b.created_at).getTime();
-                } else if(tableSortCol === 'customer') {
-                    valA = (a.customer_name || '').toLowerCase();
-                    valB = (b.customer_name || '').toLowerCase();
+                if (tableSortCol === 'urgent') {
+                    // Urgent Sort: Pending/Cooking grouped at top, sorted by OLDEST first.
+                    const aUrg = (a.status === 'Pending' || a.status === 'Cooking');
+                    const bUrg = (b.status === 'Pending' || b.status === 'Cooking');
+                    if (aUrg && !bUrg) return -1;
+                    if (!aUrg && bUrg) return 1;
+                    if (aUrg && bUrg) return new Date(a.created_at) - new Date(b.created_at); // Oldest first
+                    return new Date(b.created_at) - new Date(a.created_at); // Newest first for others
+                } else if (tableSortCol === 'date') {
+                    return tableSortDir === 'asc' ? new Date(a.created_at) - new Date(b.created_at) : new Date(b.created_at) - new Date(a.created_at);
+                } else if (tableSortCol === 'customer') {
+                    const cA = (a.customer_name || '').toLowerCase(); const cB = (b.customer_name || '').toLowerCase();
+                    if(cA < cB) return tableSortDir === 'asc' ? -1 : 1;
+                    if(cA > cB) return tableSortDir === 'asc' ? 1 : -1;
                 }
-                if(valA < valB) return tableSortDir === 'asc' ? -1 : 1;
-                if(valA > valB) return tableSortDir === 'asc' ? 1 : -1;
                 return 0;
             });
 
@@ -1084,11 +1064,8 @@
                 return;
             }
 
-            // Urgent Top 5
-            const pendingOrders = dashboardFilteredOrders
-                .filter(o => o.status === 'Pending' || o.status === 'Cooking')
-                .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-
+            // Render Urgent Top 5
+            const pendingOrders = dashboardFilteredOrders.filter(o => o.status === 'Pending' || o.status === 'Cooking').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
             if (pendingOrders.length > 0) {
                 urgentWrapper.classList.remove('hidden');
                 pendingOrders.slice(0, 3).forEach((order) => {
@@ -1102,17 +1079,13 @@
                                 <span class="text-[10px] font-black text-red-600 bg-red-50 px-1.5 rounded live-ticker" data-time="${order.created_at}">${waitStr}</span>
                             </div>
                             <p class="text-xs font-bold text-gray-600 truncate pl-2">${order.customer_name || 'Guest'}</p>
-                        </div>
-                    `;
+                        </div>`;
                 });
-            } else {
-                urgentWrapper.classList.add('hidden');
-            }
+            } else { urgentWrapper.classList.add('hidden'); }
 
-            // Table Body Render
+            // Render Table Rows
             tableData.slice(0, 20).forEach(order => {
                 const date = new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
-                const displayNo = order.order_number || 'ORD-XXXX';
                 const waitStr = getWaitTimeStr(order.created_at);
                 
                 let badge = `<span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Pending</span>`;
@@ -1120,58 +1093,49 @@
                 if(order.status === 'Completed') badge = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Completed</span>`;
                 if(order.status === 'Cancelled') badge = `<span class="bg-gray-100 text-gray-500 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Cancelled</span>`;
 
-                let itemsSummary = [];
                 let fullItemsHtml = '';
                 if (order.items && Array.isArray(order.items)) {
-                    itemsSummary = order.items.map(i => `<span class="text-red-500 font-bold">${i.qty}x</span> ${i.name}`);
                     order.items.forEach(i => {
                         fullItemsHtml += `<div class="flex justify-between text-sm py-1 border-b border-gray-50"><span class="font-medium text-gray-800">${i.qty}x ${i.name}</span><span class="text-gray-500 font-black">${(i.price * i.qty).toFixed(2)}</span></div>`;
                     });
                 }
-                const shortSummary = itemsSummary.length > 0 ? itemsSummary.join(', ') : 'No details';
 
-                // Visible Row
                 tbody.innerHTML += `
                     <tr onclick="toggleOrderDetails('${order.id}')" class="hover:bg-gray-50 transition cursor-pointer group border-b border-gray-100" id="row-sum-${order.id}">
                         <td class="p-4 align-middle">
-                            <div class="font-black text-gray-900 text-xs tracking-wide">${displayNo}</div>
+                            <div class="font-black text-gray-900 text-xs tracking-wide">${order.order_number}</div>
                             <div class="text-[10px] text-gray-400 font-bold mt-1">${date}</div>
                         </td>
                         <td class="p-4 align-middle">
                             <div class="font-bold text-gray-800 text-xs truncate max-w-[130px]">${order.customer_name || 'Guest'}</div>
                             <div class="text-[10px] font-bold text-blue-600 mt-1">${order.order_type}</div>
                         </td>
-                        <td class="p-4 align-middle text-[11px] text-gray-600 max-w-[180px] truncate leading-relaxed">${shortSummary}</td>
                         <td class="p-4 align-middle font-black text-red-500 text-xs live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</td>
                         <td class="p-4 align-middle text-center">${badge}</td>
                     </tr>
-                `;
-
-                // Detailed Card (Hidden by Default)
-                tbody.innerHTML += `
+                    <!-- INLINE COOKING INPUT ADDED BELOW -->
                     <tr id="row-det-${order.id}" class="hidden bg-gray-50 shadow-inner">
-                        <td colspan="5" class="p-5 border-b-4 border-gray-200">
+                        <td colspan="4" class="p-5 border-b-4 border-gray-200">
                             <div class="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col md:flex-row gap-5">
                                 <div class="flex-1">
                                     <h4 class="font-black text-gray-900 text-sm mb-2"><i class="fas fa-receipt text-gray-400 me-2"></i> Details</h4>
                                     <div class="grid grid-cols-2 gap-2 text-xs mb-3">
                                         <div><span class="text-gray-400 font-bold">Phone:</span> <a href="tel:${order.customer_phone}" class="text-blue-600 font-bold">${order.customer_phone || 'N/A'}</a></div>
                                         ${order.table_number ? `<div><span class="text-gray-400 font-bold">Table:</span> <span class="text-red-500 font-black">${order.table_number}</span></div>` : ''}
-                                        ${order.delivery_address ? `<div class="col-span-2"><span class="text-gray-400 font-bold">Address:</span> ${order.delivery_address}</div>` : ''}
                                     </div>
                                     <div class="bg-gray-50 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">${fullItemsHtml}</div>
-                                    <div class="flex justify-between items-center text-base font-black text-gray-800 border-t border-gray-100 pt-2">
-                                        <span>Total:</span> <span class="text-green-600">${parseFloat(order.total_amount).toFixed(2)}</span>
-                                    </div>
                                 </div>
                                 <div class="w-full md:w-48 flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-5">
                                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Update Status</p>
-                                    
-                                    <!-- NEW: event.stopPropagation() PREVENTS THE UI FROM COLLAPSING! -->
                                     <button onclick="updateStatus('${order.id}', 'Pending', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm">Pending</button>
-                                    <button onclick="updateStatus('${order.id}', 'Cooking', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">Cooking <i class="fas fa-clock text-[10px] opacity-70"></i></button>
+                                    
+                                    <div class="flex gap-1">
+                                        <input type="number" id="cook-time-${order.id}" value="15" class="w-12 text-center text-[10px] font-black rounded-lg border border-blue-200 bg-white focus:outline-none">
+                                        <button onclick="updateStatus('${order.id}', 'Cooking', event, document.getElementById('cook-time-${order.id}').value)" class="flex-1 py-2.5 text-[10px] font-black uppercase rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm">Cook</button>
+                                    </div>
+
                                     <button onclick="updateStatus('${order.id}', 'Completed', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
-                                    <button onclick="updateStatus('${order.id}', 'Cancelled', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition shadow-sm">Cancel</button>
+                                    <button onclick="updateStatus('${order.id}', 'Cancelled', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 transition shadow-sm">Cancel</button>
                                 </div>
                             </div>
                         </td>
@@ -1185,35 +1149,59 @@
             if(detRow) detRow.classList.toggle('hidden');
         }
 
-        // --- THE FIXED UPDATE STATUS ENGINE ---
-        async function updateStatus(orderId, newStatus, event) {
-            if(event) event.stopPropagation(); // Stops the row from violently snapping closed!
+        // --- FIXED STATUS UPDATER (With Error Logs) ---
+        async function updateStatus(orderId, newStatus, event, minsStr = null) {
+            if(event) event.stopPropagation(); // Stops UI Glitching!
             
             let payload = { status: newStatus };
 
-            if (newStatus === 'Cooking') {
-                const mins = prompt("Enter target cooking time in minutes (e.g., 10, 15, 30):", "15");
-                if (mins === null) return; 
-                const parsedMins = parseInt(mins);
+            if (newStatus === 'Cooking' && minsStr) {
+                const parsedMins = parseInt(minsStr);
                 if (!isNaN(parsedMins) && parsedMins > 0) {
                     payload.target_completion_time = new Date(Date.now() + parsedMins * 60000).toISOString();
                 }
             }
 
-            // 1. INSTANT OPTIMISTIC UI UPDATE
+            // 1. Instant Optimistic UI Update
             const localOrder = allOrders.find(o => o.id === orderId);
             if(localOrder) {
                 localOrder.status = newStatus;
                 if(payload.target_completion_time) localOrder.target_completion_time = payload.target_completion_time;
             }
-            processDashboardFilters(); // Visually changes everything before DB answers
+            processDashboardFilters(); // Re-renders UI instantly
 
-            // 2. BACKGROUND DATABASE SYNC
+            // 2. Database Sync
             const { error } = await supabaseClient.from('orders').update(payload).eq('id', orderId);
             if (error) {
-                alert("Server Sync Failed: " + error.message);
-                fetchDashboardData(); // Hard reset if DB fails
+                console.error("DB Update Failed:", error);
+                alert("Status sync failed. Refreshing...");
+                fetchDashboardData(); 
             }
+        }
+
+        function checkSLABreaches() {
+            const now = Date.now();
+            dashboardFilteredOrders.forEach(order => {
+                let isLate = false;
+                const row = document.getElementById(`row-sum-${order.id}`);
+                
+                if (order.status === 'Pending') {
+                    if (Math.floor((now - new Date(order.created_at).getTime()) / 60000) >= 2) {
+                        isLate = true;
+                        if (!order.alerted_pending) { addNotification(`Order ${order.order_number} pending > 2 mins!`, 'sla_pending'); order.alerted_pending = true; }
+                    }
+                }
+                if (order.status === 'Cooking' && order.target_completion_time) {
+                    if (now > new Date(order.target_completion_time).getTime()) {
+                        isLate = true;
+                        if (!order.alerted_cooking) { addNotification(`Order ${order.order_number} cooking delayed!`, 'sla_cooking'); order.alerted_cooking = true; }
+                    }
+                }
+                if (row) {
+                    if (isLate) { row.classList.add('bg-red-50/80'); row.classList.remove('hover:bg-gray-50'); } 
+                    else { row.classList.remove('bg-red-50/80'); row.classList.add('hover:bg-gray-50'); }
+                }
+            });
         }
 
         function startLiveTimers() {
@@ -1228,11 +1216,8 @@
         }
 
         function updateDetailedAnalytics() {
-            let totRev = 0, totOrd = 0;
-            let penRev = 0, penOrd = 0;
-            let cookRev = 0, cookOrd = 0;
-            let oldestPendingTime = null;
-            let itemCounts = {};
+            let totRev = 0, totOrd = 0, penRev = 0, penOrd = 0, cookRev = 0, cookOrd = 0;
+            let oldestPendingTime = null, itemCounts = {};
 
             dashboardFilteredOrders.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
@@ -1246,12 +1231,7 @@
                     cookRev += amt; cookOrd++;
                 }
 
-                if (o.items && Array.isArray(o.items)) {
-                    o.items.forEach(item => {
-                        if (!itemCounts[item.name]) itemCounts[item.name] = 0;
-                        itemCounts[item.name] += item.qty;
-                    });
-                }
+                if (o.items && Array.isArray(o.items)) o.items.forEach(item => { itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty; });
             });
 
             document.getElementById('stat-tot-rev').textContent = totRev.toFixed(2);
@@ -1262,42 +1242,22 @@
             document.getElementById('stat-cook-ord').textContent = `${cookOrd} Orders Cooking`;
             
             const waitEl = document.getElementById('stat-wait-time');
-            if (oldestPendingTime) {
-                waitEl.dataset.time = new Date(oldestPendingTime).toISOString();
-                waitEl.textContent = getWaitTimeStr(oldestPendingTime);
-            } else {
-                waitEl.dataset.time = ""; waitEl.textContent = "0m";
-            }
+            if (oldestPendingTime) { waitEl.dataset.time = new Date(oldestPendingTime).toISOString(); waitEl.textContent = getWaitTimeStr(oldestPendingTime); } 
+            else { waitEl.dataset.time = ""; waitEl.textContent = "0m"; }
 
             const bestSellersContainer = document.getElementById('analytics-best-sellers');
             if (bestSellersContainer) {
                 const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
                 bestSellersContainer.innerHTML = sortedItems.length > 0 
-                    ? sortedItems.map(([name, qty], index) => `
-                        <div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-100 shrink-0">
-                            <span class="font-bold text-gray-700 flex items-center gap-2 truncate">
-                                <span class="${index < 3 ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-200 text-gray-500'} w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0">${index+1}</span> 
-                                <span class="truncate">${name}</span>
-                            </span>
-                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg font-black text-[10px] shrink-0">${qty} Sold</span>
-                        </div>`).join('')
+                    ? sortedItems.map(([name, qty], index) => `<div class="flex justify-between items-center text-xs p-2.5 bg-gray-50 rounded-xl border border-gray-100 shrink-0"><span class="font-bold text-gray-700 flex items-center gap-2 truncate"><span class="${index < 3 ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-200 text-gray-500'} w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black shrink-0">${index+1}</span><span class="truncate">${name}</span></span><span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg font-black text-[10px] shrink-0">${qty} Sold</span></div>`).join('')
                     : '<div class="text-center text-gray-400 py-6 text-xs font-bold">No sales data found.</div>';
             }
 
             const lowStockContainer = document.getElementById('analytics-low-stock');
             if (lowStockContainer && typeof allMenuItems !== 'undefined') {
-                const lowStockItems = allMenuItems
-                    .filter(i => i.stock_quantity !== null && i.stock_quantity <= 10 && i.language === 'en')
-                    .sort((a, b) => a.stock_quantity - b.stock_quantity);
-                
+                const lowStockItems = allMenuItems.filter(i => i.stock_quantity !== null && i.stock_quantity <= 10 && i.language === 'en').sort((a, b) => a.stock_quantity - b.stock_quantity);
                 lowStockContainer.innerHTML = lowStockItems.length > 0
-                    ? lowStockItems.map(item => `
-                        <div class="flex justify-between items-center text-xs p-2.5 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group">
-                            <span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span>
-                            <button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition shadow-sm flex items-center gap-1 shrink-0">
-                                ${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i>
-                            </button>
-                        </div>`).join('')
+                    ? lowStockItems.map(item => `<div class="flex justify-between items-center text-xs p-2.5 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group"><span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span><button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition shadow-sm flex items-center gap-1 shrink-0">${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i></button></div>`).join('')
                     : '<div class="text-center py-6 text-xs font-bold text-green-600 uppercase">All stock optimal</div>';
             }
         }
@@ -1326,25 +1286,11 @@
                 data: {
                     labels: ['TOTAL', 'PENDING', 'COOKING', 'COMPLETED', 'CANCELED'],
                     datasets: [
-                        {
-                            label: 'Total Orders',
-                            data: [cTot, cPen, cCok, cCmp, cCan],
-                            backgroundColor: ['#1e3a8a', '#ea580c', '#ca8a04', '#16a34a', '#dc2626'], 
-                            borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 
-                        },
-                        {
-                            label: 'Revenue ($)',
-                            data: [rTot, rPen, rCok, rCmp, rCan],
-                            backgroundColor: ['#3b82f6', '#f59e0b', '#facc15', '#84cc16', '#f472b6'], 
-                            borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4
-                        }
+                        { label: 'Orders', data: [cTot, cPen, cCok, cCmp, cCan], backgroundColor: ['#1e3a8a', '#ea580c', '#ca8a04', '#16a34a', '#dc2626'], borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 },
+                        { label: 'Revenue ($)', data: [rTot, rPen, rCok, rCmp, rCan], backgroundColor: ['#3b82f6', '#f59e0b', '#facc15', '#84cc16', '#f472b6'], borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 }
                     ]
                 },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } },
-                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
             });
         }
         
