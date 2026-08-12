@@ -26,10 +26,10 @@
     </div>
 
     <!-- ================= LEFT SIDEBAR ================= -->
-    <aside class="w-16 hover:w-64 bg-gray-900 text-white transition-all duration-300 flex flex-col justify-between group relative z-50 shrink-0 shadow-2xl">
+    <aside class="w-16 hover:w-64 bg-gray-900 text-white transition-all duration-300 flex flex-col justify-between group relative z-50 shrink-0 shadow-2xl overflow-x-hidden">
         <div>
             <!-- Branding -->
-            <div class="h-16 flex items-center px-3 border-b border-gray-800 overflow-hidden">
+            <div class="h-16 flex items-center justify-center group-hover:justify-start px-3 border-b border-gray-800">
                 <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0">
                     <img id="admin-brand-logo" src="" class="w-full h-full object-cover hidden rounded-xl">
                     <i id="admin-default-icon" class="fas fa-store text-red-600 text-xl"></i>
@@ -37,38 +37,38 @@
                 <h1 class="text-xl font-black ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 tracking-tight">Admin Suite</h1>
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="flex flex-col gap-2 p-3 overflow-hidden mt-4">
-                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="flex items-center p-2 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-colors w-full">
-                    <i class="fas fa-chart-pie w-6 text-center text-lg shrink-0"></i>
-                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Dashboard</span>
+            <!-- Navigation Links (PERFECTLY CENTERED ICONS) -->
+            <nav class="flex flex-col gap-2 p-3 mt-4">
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="flex items-center p-2 rounded-xl bg-red-600 text-white hover:bg-red-500 transition-colors w-full group/btn">
+                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-chart-pie text-lg"></i></div>
+                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Dashboard</span>
                 </button>
-                <button onclick="switchTab('menu')" id="tab-btn-menu" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full">
-                    <i class="fas fa-utensils w-6 text-center text-lg shrink-0"></i>
-                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Menu Manager</span>
+                <button onclick="switchTab('menu')" id="tab-btn-menu" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
+                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-utensils text-lg"></i></div>
+                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Menu Manager</span>
                 </button>
-                <button onclick="switchTab('users')" id="tab-btn-users" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full">
-                    <i class="fas fa-users w-6 text-center text-lg shrink-0"></i>
-                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Customers</span>
+                <button onclick="switchTab('users')" id="tab-btn-users" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
+                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-users text-lg"></i></div>
+                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Customers</span>
                 </button>
-                <button onclick="switchTab('offers')" id="tab-btn-offers" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full">
-                    <i class="fas fa-tags w-6 text-center text-lg shrink-0"></i>
-                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Offers</span>
+                <button onclick="switchTab('offers')" id="tab-btn-offers" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
+                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-tags text-lg"></i></div>
+                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Offers</span>
                 </button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full">
-                    <i class="fas fa-cog w-6 text-center text-lg shrink-0"></i>
-                    <span class="ml-4 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="flex items-center p-2 rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors w-full group/btn">
+                    <div class="w-8 h-8 flex items-center justify-center shrink-0"><i class="fas fa-cog text-lg"></i></div>
+                    <span class="ml-3 font-bold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
                 </button>
             </nav>
         </div>
 
         <!-- Profile & Logout at Bottom -->
-        <div class="p-3 border-t border-gray-800 overflow-hidden">
-            <div class="flex items-center p-2 w-full">
+        <div class="p-3 border-t border-gray-800">
+            <div class="flex items-center justify-center group-hover:justify-start p-2 w-full">
                 <div class="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center shrink-0 border border-gray-600">
                     <i class="fas fa-user text-gray-300 text-sm"></i>
                 </div>
-                <div class="ml-4 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap flex-1">
+                <div class="ml-3 flex flex-col opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden">
                     <span id="admin-profile-name" class="text-xs font-black truncate max-w-[120px]">Admin</span>
                     <button onclick="logoutAdmin()" id="btn-admin-logout" class="text-[10px] font-bold text-red-400 hover:text-red-300 text-left uppercase tracking-wider mt-0.5">Sign Out</button>
                 </div>
@@ -77,7 +77,7 @@
     </aside>
 
     <!-- ================= MAIN CONTENT WRAPPER ================= -->
-    <div class="flex-1 flex flex-col h-screen overflow-hidden relative">
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative bg-gray-100">
         
         <!-- Top Action Bar -->
         <header class="h-16 bg-white shadow-sm border-b border-gray-200 flex justify-between items-center px-6 shrink-0 z-40">
@@ -100,15 +100,15 @@
                     <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Preview</span>
                 </a>
 
-                <!-- Notification Center -->
-                <div class="relative">
+                <!-- Notification Center (Added notif-container class) -->
+                <div class="relative notif-container">
                     <button onclick="toggleNotifications()" class="relative text-gray-500 hover:text-red-600 transition p-1">
                         <i class="fas fa-bell text-lg"></i>
-                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full hidden animate-bounce border-2 border-white">0</span>
+                        <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full hidden animate-bounce border-2 border-white shadow-sm">0</span>
                     </button>
                     <!-- Notification Dropdown -->
                     <div id="notif-dropdown" class="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 hidden flex-col z-50 overflow-hidden transform origin-top-right transition-all">
-                        <div class="px-4 py-2 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                        <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                             <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Alerts & Events</span>
                             <button onclick="clearNotifications()" class="text-[9px] text-blue-500 font-bold hover:underline">Clear All</button>
                         </div>
@@ -166,57 +166,84 @@
                     </div>
                 </div>
 
-                <!-- Graphs & Demand -->
+                <!-- ================= NEW LAYOUT: LEFT & RIGHT COLUMNS ================= -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                    <!-- Grouped Bar Chart -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 lg:col-span-2 flex flex-col">
-                        <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-4"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Order Status Trends</h3>
-                        <div class="relative flex-grow min-h-[250px]">
-                            <canvas id="dashboardChart"></canvas>
+                    
+                    <!-- LEFT COLUMN (Span 2): Urgent & Recent Orders -->
+                    <div class="lg:col-span-2 flex flex-col gap-6">
+                        
+                        <!-- Top 5 Urgent Orders Cards -->
+                        <div id="urgent-orders-wrapper" class="hidden">
+                            <h3 class="text-sm font-black text-gray-800 mb-3 uppercase tracking-wider"><i class="fas fa-exclamation-circle text-red-500 me-2"></i> Most Urgent Orders</h3>
+                            <div id="urgent-orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Cards injected via JS -->
+                            </div>
                         </div>
-                    </div>
 
+                        <!-- Orders Table with Filters & Sorting -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
+                            
+                            <!-- Table Action Header -->
+                            <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 gap-3">
+                                <h3 class="font-black text-gray-800 text-base flex items-center shrink-0"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders</h3>
+                                <!-- Status Filters -->
+                                <div class="flex gap-1 bg-gray-200 p-1 rounded-lg overflow-x-auto w-full md:w-auto hide-scrollbar">
+                                    <button onclick="setTableFilter('All')" id="t-flt-All" class="px-3 py-1.5 rounded text-[10px] font-black bg-white text-gray-800 shadow-sm transition">ALL</button>
+                                    <button onclick="setTableFilter('Pending')" id="t-flt-Pending" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">PENDING</button>
+                                    <button onclick="setTableFilter('Cooking')" id="t-flt-Cooking" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">COOKING</button>
+                                    <button onclick="setTableFilter('Completed')" id="t-flt-Completed" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">COMPLETED</button>
+                                    <button onclick="setTableFilter('Cancelled')" id="t-flt-Cancelled" class="px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition">CANCELED</button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-y-auto overflow-x-auto min-h-[400px] max-h-[600px] relative">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="sticky top-0 bg-white shadow-sm z-10">
+                                        <tr class="border-b border-gray-200 text-[11px] font-black text-gray-500 uppercase tracking-wider bg-gray-50/50">
+                                            <th class="p-4 whitespace-nowrap cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('date')">ID / Date <i id="sort-icon-date" class="fas fa-sort-down ml-1 text-blue-500"></i></th>
+                                            <th class="p-4 cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('customer')">Customer <i id="sort-icon-customer" class="fas fa-sort ml-1 opacity-50"></i></th>
+                                            <th class="p-4">Items Summary</th>
+                                            <th class="p-4 whitespace-nowrap cursor-pointer hover:text-blue-500 transition select-none" onclick="setTableSort('wait')">Wait Time <i id="sort-icon-wait" class="fas fa-sort ml-1 opacity-50"></i></th>
+                                            <th class="p-4 text-center">Live Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orders-table-body" class="divide-y divide-gray-100 text-sm">
+                                        <tr><td colspan="5" class="p-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin me-2"></i> Loading Data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                    </div> <!-- End Left Column -->
+
+                    <!-- RIGHT COLUMN (Span 1): Graph, Low Stock, Demand -->
                     <div class="flex flex-col gap-6">
+                        
+                        <!-- Grouped Bar Chart -->
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
+                            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-4"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Status Trends</h3>
+                            <div class="relative w-full h-[220px]">
+                                <canvas id="dashboardChart"></canvas>
+                            </div>
+                        </div>
+
                         <!-- Low Stock Alerts -->
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex flex-col flex-1 relative overflow-hidden max-h-56">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex flex-col relative overflow-hidden flex-1 min-h-[200px] max-h-[300px]">
                             <h3 class="text-sm font-black text-gray-800 mb-2 shrink-0 uppercase tracking-wider"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
                             <div id="analytics-low-stock" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar pb-2"></div>
                         </div>
+                        
                         <!-- Trending Demand -->
-                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-blue-100 flex flex-col flex-1 relative overflow-hidden max-h-56">
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-blue-100 flex flex-col relative overflow-hidden flex-1 min-h-[200px] max-h-[300px]">
                             <h3 class="text-sm font-black text-gray-800 mb-2 shrink-0 uppercase tracking-wider"><i class="fas fa-chart-line text-blue-500 me-2"></i> Trending Demand</h3>
                             <div id="analytics-best-sellers" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar pb-2"></div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Enlarged Recent Orders Table -->
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
-                    <div class="bg-gray-50 px-6 py-5 border-b border-gray-200 flex justify-between items-center shrink-0">
-                        <h3 class="font-black text-gray-800 text-lg"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders (Latest 20)</h3>
-                        <span class="text-xs font-bold text-gray-400 uppercase bg-white px-3 py-1 rounded shadow-sm border border-gray-100">Click row to expand</span>
-                    </div>
-                    
-                    <div class="overflow-y-auto overflow-x-auto max-h-[600px] relative">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="sticky top-0 bg-white shadow-sm z-10">
-                                <tr class="border-b border-gray-200 text-xs font-black text-gray-500 uppercase tracking-wider bg-gray-50/50">
-                                    <th class="p-5 whitespace-nowrap">ID / Date <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="p-5">Customer <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="p-5">Items Summary</th>
-                                    <th class="p-5">Wait Time <i class="fas fa-sort ml-1 opacity-50"></i></th>
-                                    <th class="p-5 text-center">Live Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="orders-table-body" class="divide-y divide-gray-100 text-base">
-                                <tr><td colspan="5" class="p-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin me-2"></i> Loading Dashboard...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                    </div> <!-- End Right Column -->
                 </div>
             </section>
             
-            <!-- (PASTE YOUR OTHER TABS HERE IN STEP 3) -->
+            
         <!-- ================= TAB 2: MENU MANAGER ================= -->
         <section id="section-menu" class="tab-section hidden">
             <div class="flex flex-col mb-6 gap-4">
@@ -815,71 +842,33 @@
             menu.classList.toggle('flex');
         }
 
-        // Close dropdown if clicked outside
+        // Close dropdowns if clicked outside
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.relative')) {
+            if (!e.target.closest('.profile-container')) {
                 const profileMenu = document.getElementById('profile-dropdown');
                 if (profileMenu && !profileMenu.classList.contains('hidden')) {
-                    profileMenu.classList.add('hidden');
-                    profileMenu.classList.remove('flex');
+                    profileMenu.classList.add('hidden'); profileMenu.classList.remove('flex');
+                }
+            }
+            // NEW: Notification Close Listener
+            if (!e.target.closest('.notif-container')) {
+                const notifMenu = document.getElementById('notif-dropdown');
+                if (notifMenu && !notifMenu.classList.contains('hidden')) {
+                    notifMenu.classList.add('hidden'); notifMenu.classList.remove('flex');
                 }
             }
         });
-
-        // Notifications Toggle (Clears badge on click)
-        function toggleNotifications() {
-            const badge = document.getElementById('notif-badge');
-            badge.classList.add('hidden');
-            alert("No new system notifications at this time.");
-        }
-
-        function switchTab(tabName) {
-            ['dashboard', 'menu', 'users', 'offers', 'settings'].forEach(t => {
-                const section = document.getElementById(`section-${t}`);
-                const btn = document.getElementById(`tab-btn-${t}`);
-                if(section) section.classList.add('hidden');
-                if(btn) btn.className = "px-4 py-2 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-100 transition";
-            });
-            document.getElementById(`section-${tabName}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-            if(activeBtn) activeBtn.className = "px-4 py-2 rounded-xl font-bold text-sm bg-red-50 text-red-600 transition";
-        }
-            
-// NEW: The missing secure logout function!
-        async function logoutAdmin() {
-            const btn = document.getElementById('btn-admin-logout');
-            if (btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span class="hidden sm:inline">Logging out...</span>`;
-            
-            // 1. Securely log out of Supabase
-            await supabaseClient.auth.signOut();
-            
-            // 2. Redirect back to the main app homepage (Logged out completely)
-            window.location.href = 'index.html';
-        }
-
-		async function saveOfferOrder() {
-            const btn = document.getElementById('btn-save-offer-order');
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
-
-            const rows = document.querySelectorAll('.offer-row');
-            for (let i = 0; i < rows.length; i++) {
-                const id = rows[i].dataset.id;
-                await supabaseClient.from('special_offers').update({ order_index: i + 1 }).eq('id', id);
-            }
-
-            btn.innerHTML = `<i class="fas fa-save"></i> Save Order`;
-            btn.classList.add('hidden');
-            btn.classList.remove('flex');
-            alert("Special Offers order saved successfully!");
-            fetchOffers();
-        }
-        
 
         // --- MASTER DASHBOARD LOGIC & NOTIFICATION ENGINE ---
         let dashboardFilteredOrders = [];
         let dashChartInstance = null;
         let activeFilter = 'today';
-        let systemNotifications = []; // Stores live alerts
+        let systemNotifications = []; 
+        
+        // Table Sorting State
+        let tableStatusFilter = 'All';
+        let tableSortCol = 'date';
+        let tableSortDir = 'desc';
 
         function setDashFilter(filterName) {
             activeFilter = filterName;
@@ -911,11 +900,13 @@
             allOrders = ordersRes.data || [];
             allMenuItems = menuRes.data || [];
 
-            // Detect NEW orders for notifications
-            if (isBackground && allOrders.length > oldOrders.length && oldOrders.length > 0) {
-                const newCount = allOrders.length - oldOrders.length;
-                addNotification(`You have ${newCount} new order(s)!`, 'new_order');
+            // Detect NEW orders
+            const currentPendingCount = allOrders.filter(o => o.status === 'Pending').length;
+            if (isBackground && currentPendingCount > lastKnownOrderCount) {
+                const newCount = currentPendingCount - lastKnownOrderCount;
+                addNotification(`You have ${newCount} new Pending order(s)!`, 'new_order');
             }
+            lastKnownOrderCount = currentPendingCount;
 
             processDashboardFilters();
         }
@@ -936,7 +927,7 @@
             renderOrdersTable();
             renderGroupedChart();
             startLiveTimers();
-            checkSLABreaches(); // Check if orders are late!
+            checkSLABreaches();
         }
 
         // --- NOTIFICATION ENGINE ---
@@ -954,9 +945,8 @@
             if(type === 'sla_cooking') icon = 'fa-fire text-orange-500';
             
             systemNotifications.unshift({ message, icon, timeStr });
-            if (systemNotifications.length > 20) systemNotifications.pop(); // Keep latest 20
+            if (systemNotifications.length > 20) systemNotifications.pop(); 
             
-            // Show red dot
             const badge = document.getElementById('notif-badge');
             badge.textContent = systemNotifications.length;
             badge.classList.remove('hidden');
@@ -974,7 +964,7 @@
                 <div class="px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition flex items-start gap-3">
                     <i class="fas ${n.icon} mt-0.5 shrink-0"></i>
                     <div>
-                        <p class="text-xs font-bold text-gray-800">${n.message}</p>
+                        <p class="text-xs font-bold text-gray-800 leading-tight">${n.message}</p>
                         <p class="text-[9px] font-black text-gray-400 mt-1">${n.timeStr}</p>
                     </div>
                 </div>
@@ -982,45 +972,37 @@
         }
         function clearNotifications() { systemNotifications = []; renderNotifications(); document.getElementById('notif-badge').classList.add('hidden'); toggleNotifications();}
 
-        // --- LIVE SLA (Service Level Agreement) CHECKER ---
         function checkSLABreaches() {
             const now = Date.now();
-            let hasRedRows = false;
-
             dashboardFilteredOrders.forEach(order => {
                 let isLate = false;
                 const row = document.getElementById(`row-sum-${order.id}`);
                 
-                // Rule 1: Pending for more than 2 minutes
                 if (order.status === 'Pending') {
                     const minsPending = Math.floor((now - new Date(order.created_at).getTime()) / 60000);
                     if (minsPending >= 2) {
                         isLate = true;
-                        // Avoid spamming notifications for the same order
                         if (!order.alerted_pending) {
-                            addNotification(`Order ${order.order_number} has been Pending for >2 mins!`, 'sla_pending');
-                            order.alerted_pending = true; // Mark as alerted locally
+                            addNotification(`Order ${order.order_number} pending > 2 mins!`, 'sla_pending');
+                            order.alerted_pending = true;
                         }
                     }
                 }
                 
-                // Rule 2: Cooking time expired
                 if (order.status === 'Cooking' && order.target_completion_time) {
                     if (now > new Date(order.target_completion_time).getTime()) {
                         isLate = true;
                         if (!order.alerted_cooking) {
-                            addNotification(`Order ${order.order_number} exceeded target cooking time!`, 'sla_cooking');
+                            addNotification(`Order ${order.order_number} cooking delayed!`, 'sla_cooking');
                             order.alerted_cooking = true;
                         }
                     }
                 }
 
-                // Highlight Row visually
                 if (row) {
                     if (isLate) {
                         row.classList.add('bg-red-50/80');
                         row.classList.remove('hover:bg-gray-50');
-                        hasRedRows = true;
                     } else {
                         row.classList.remove('bg-red-50/80');
                         row.classList.add('hover:bg-gray-50');
@@ -1029,83 +1011,167 @@
             });
         }
 
-        // TIME FORMATTER HELPER
         function getWaitTimeStr(dateString) {
             const orderTime = new Date(dateString).getTime();
             const diffMins = Math.floor((Date.now() - orderTime) / 60000);
             return diffMins > 60 ? `${Math.floor(diffMins/60)}h ${diffMins%60}m` : `${diffMins}m`;
         }
 
-        // --- RENDER TABLE WITH STATUS CHANGE LOGIC ---
+        // --- TABLE SORTING & FILTERING ---
+        function setTableFilter(status) {
+            tableStatusFilter = status;
+            ['All', 'Pending', 'Cooking', 'Completed', 'Cancelled'].forEach(s => {
+                const btn = document.getElementById(`t-flt-${s}`);
+                if(btn) {
+                    btn.className = s === status 
+                        ? "px-3 py-1.5 rounded text-[10px] font-black bg-white text-gray-800 shadow-sm transition"
+                        : "px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-800 transition";
+                }
+            });
+            renderOrdersTable();
+        }
+
+        function setTableSort(col) {
+            if(tableSortCol === col) {
+                tableSortDir = tableSortDir === 'asc' ? 'desc' : 'asc';
+            } else {
+                tableSortCol = col;
+                tableSortDir = 'desc';
+            }
+            
+            ['date', 'customer', 'wait'].forEach(c => {
+                const icon = document.getElementById(`sort-icon-${c}`);
+                if(icon) {
+                    icon.className = c === col 
+                        ? `fas fa-sort-${tableSortDir === 'asc' ? 'up' : 'down'} ml-1 text-blue-500`
+                        : `fas fa-sort ml-1 opacity-50`;
+                }
+            });
+            renderOrdersTable();
+        }
+
         function renderOrdersTable() {
             const tbody = document.getElementById('orders-table-body');
+            const urgentContainer = document.getElementById('urgent-orders-container');
+            const urgentWrapper = document.getElementById('urgent-orders-wrapper');
             tbody.innerHTML = '';
+            urgentContainer.innerHTML = '';
 
-            if (dashboardFilteredOrders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold text-sm">No orders found for this time period.</td></tr>`;
+            // Apply Status Filter
+            let tableData = dashboardFilteredOrders;
+            if(tableStatusFilter !== 'All') {
+                tableData = tableData.filter(o => o.status === tableStatusFilter);
+            }
+
+            // Apply Sorting Logic
+            tableData.sort((a, b) => {
+                let valA, valB;
+                if(tableSortCol === 'date' || tableSortCol === 'wait') {
+                    valA = new Date(a.created_at).getTime();
+                    valB = new Date(b.created_at).getTime();
+                } else if(tableSortCol === 'customer') {
+                    valA = (a.customer_name || '').toLowerCase();
+                    valB = (b.customer_name || '').toLowerCase();
+                }
+                if(valA < valB) return tableSortDir === 'asc' ? -1 : 1;
+                if(valA > valB) return tableSortDir === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            if (tableData.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-10 text-center text-gray-400 font-bold text-sm">No orders match this filter.</td></tr>`;
+                urgentWrapper.classList.add('hidden');
                 return;
             }
 
-            dashboardFilteredOrders.slice(0, 20).forEach(order => {
+            // Urgent Top 5
+            const pendingOrders = dashboardFilteredOrders
+                .filter(o => o.status === 'Pending' || o.status === 'Cooking')
+                .sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+
+            if (pendingOrders.length > 0) {
+                urgentWrapper.classList.remove('hidden');
+                pendingOrders.slice(0, 3).forEach((order) => {
+                    const waitStr = getWaitTimeStr(order.created_at);
+                    const statColor = order.status === 'Cooking' ? 'bg-blue-500' : 'bg-yellow-500';
+                    urgentContainer.innerHTML += `
+                        <div onclick="toggleOrderDetails('${order.id}')" class="bg-white p-3 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1 h-full ${statColor}"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-black text-gray-800 uppercase pl-2">${order.order_number}</span>
+                                <span class="text-[10px] font-black text-red-600 bg-red-50 px-1.5 rounded live-ticker" data-time="${order.created_at}">${waitStr}</span>
+                            </div>
+                            <p class="text-xs font-bold text-gray-600 truncate pl-2">${order.customer_name || 'Guest'}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                urgentWrapper.classList.add('hidden');
+            }
+
+            // Table Body Render
+            tableData.slice(0, 20).forEach(order => {
                 const date = new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                 const displayNo = order.order_number || 'ORD-XXXX';
                 const waitStr = getWaitTimeStr(order.created_at);
                 
-                let badge = `<span class="bg-yellow-100 text-yellow-700 px-4 py-1.5 rounded-lg text-xs font-black uppercase shadow-sm">Pending</span>`;
-                if(order.status === 'Cooking') badge = `<span class="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-lg text-xs font-black uppercase shadow-sm">Cooking</span>`;
-                if(order.status === 'Completed') badge = `<span class="bg-green-100 text-green-700 px-4 py-1.5 rounded-lg text-xs font-black uppercase shadow-sm">Completed</span>`;
-                if(order.status === 'Cancelled') badge = `<span class="bg-gray-100 text-gray-500 px-4 py-1.5 rounded-lg text-xs font-black uppercase shadow-sm">Cancelled</span>`;
+                let badge = `<span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Pending</span>`;
+                if(order.status === 'Cooking') badge = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Cooking</span>`;
+                if(order.status === 'Completed') badge = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Completed</span>`;
+                if(order.status === 'Cancelled') badge = `<span class="bg-gray-100 text-gray-500 px-3 py-1 rounded text-[10px] font-black uppercase shadow-sm">Cancelled</span>`;
 
                 let itemsSummary = [];
                 let fullItemsHtml = '';
                 if (order.items && Array.isArray(order.items)) {
                     itemsSummary = order.items.map(i => `<span class="text-red-500 font-bold">${i.qty}x</span> ${i.name}`);
                     order.items.forEach(i => {
-                        fullItemsHtml += `<div class="flex justify-between text-base py-1 border-b border-gray-50"><span class="font-medium text-gray-800">${i.qty}x ${i.name}</span><span class="text-gray-500 font-black">${(i.price * i.qty).toFixed(2)}</span></div>`;
+                        fullItemsHtml += `<div class="flex justify-between text-sm py-1 border-b border-gray-50"><span class="font-medium text-gray-800">${i.qty}x ${i.name}</span><span class="text-gray-500 font-black">${(i.price * i.qty).toFixed(2)}</span></div>`;
                     });
                 }
                 const shortSummary = itemsSummary.length > 0 ? itemsSummary.join(', ') : 'No details';
 
-                // Enlarged Row
+                // Visible Row
                 tbody.innerHTML += `
                     <tr onclick="toggleOrderDetails('${order.id}')" class="hover:bg-gray-50 transition cursor-pointer group border-b border-gray-100" id="row-sum-${order.id}">
-                        <td class="p-5 align-middle">
-                            <div class="font-black text-gray-900 text-sm tracking-wide">${displayNo}</div>
-                            <div class="text-[11px] text-gray-400 font-bold mt-1">${date}</div>
+                        <td class="p-4 align-middle">
+                            <div class="font-black text-gray-900 text-xs tracking-wide">${displayNo}</div>
+                            <div class="text-[10px] text-gray-400 font-bold mt-1">${date}</div>
                         </td>
-                        <td class="p-5 align-middle">
-                            <div class="font-bold text-gray-800 text-sm truncate max-w-[150px]">${order.customer_name || 'Guest'}</div>
-                            <div class="text-[11px] font-bold text-blue-600 mt-1">${order.order_type}</div>
+                        <td class="p-4 align-middle">
+                            <div class="font-bold text-gray-800 text-xs truncate max-w-[130px]">${order.customer_name || 'Guest'}</div>
+                            <div class="text-[10px] font-bold text-blue-600 mt-1">${order.order_type}</div>
                         </td>
-                        <td class="p-5 align-middle text-xs text-gray-600 max-w-[200px] truncate leading-relaxed">${shortSummary}</td>
-                        <td class="p-5 align-middle font-black text-red-500 text-sm live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</td>
-                        <td class="p-5 align-middle text-center">${badge}</td>
+                        <td class="p-4 align-middle text-[11px] text-gray-600 max-w-[180px] truncate leading-relaxed">${shortSummary}</td>
+                        <td class="p-4 align-middle font-black text-red-500 text-xs live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</td>
+                        <td class="p-4 align-middle text-center">${badge}</td>
                     </tr>
                 `;
 
-                // Detailed Card
+                // Detailed Card (Hidden by Default)
                 tbody.innerHTML += `
-                    <tr id="row-det-${order.id}" class="hidden bg-gray-50 border-b-4 border-gray-200 shadow-inner">
-                        <td colspan="5" class="p-6">
-                            <div class="bg-white rounded-2xl shadow border border-gray-200 p-5 flex flex-col md:flex-row gap-6">
+                    <tr id="row-det-${order.id}" class="hidden bg-gray-50 shadow-inner">
+                        <td colspan="5" class="p-5 border-b-4 border-gray-200">
+                            <div class="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col md:flex-row gap-5">
                                 <div class="flex-1">
-                                    <h4 class="font-black text-gray-900 text-base mb-3"><i class="fas fa-receipt text-gray-400 me-2"></i> Order Details</h4>
-                                    <div class="grid grid-cols-2 gap-3 text-sm mb-4">
+                                    <h4 class="font-black text-gray-900 text-sm mb-2"><i class="fas fa-receipt text-gray-400 me-2"></i> Details</h4>
+                                    <div class="grid grid-cols-2 gap-2 text-xs mb-3">
                                         <div><span class="text-gray-400 font-bold">Phone:</span> <a href="tel:${order.customer_phone}" class="text-blue-600 font-bold">${order.customer_phone || 'N/A'}</a></div>
                                         ${order.table_number ? `<div><span class="text-gray-400 font-bold">Table:</span> <span class="text-red-500 font-black">${order.table_number}</span></div>` : ''}
                                         ${order.delivery_address ? `<div class="col-span-2"><span class="text-gray-400 font-bold">Address:</span> ${order.delivery_address}</div>` : ''}
                                     </div>
-                                    <div class="bg-gray-50 rounded-xl p-3 mb-4 max-h-40 overflow-y-auto">${fullItemsHtml}</div>
-                                    <div class="flex justify-between items-center text-lg font-black text-gray-800 border-t border-gray-100 pt-3">
+                                    <div class="bg-gray-50 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">${fullItemsHtml}</div>
+                                    <div class="flex justify-between items-center text-base font-black text-gray-800 border-t border-gray-100 pt-2">
                                         <span>Total:</span> <span class="text-green-600">${parseFloat(order.total_amount).toFixed(2)}</span>
                                     </div>
                                 </div>
-                                <div class="w-full md:w-56 flex flex-col gap-3 justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">
-                                    <p class="text-xs font-black text-gray-400 uppercase tracking-widest text-center mb-1">Update Status</p>
-                                    <button onclick="updateStatus('${order.id}', 'Pending')" class="w-full py-3 text-xs font-black uppercase rounded-xl bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm">Pending</button>
-                                    <button onclick="updateStatus('${order.id}', 'Cooking')" class="w-full py-3 text-xs font-black uppercase rounded-xl bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">Cooking <i class="fas fa-clock text-[10px] opacity-70"></i></button>
-                                    <button onclick="updateStatus('${order.id}', 'Completed')" class="w-full py-3 text-xs font-black uppercase rounded-xl bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
-                                    <button onclick="updateStatus('${order.id}', 'Cancelled')" class="w-full py-3 text-xs font-black uppercase rounded-xl bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition shadow-sm">Cancel</button>
+                                <div class="w-full md:w-48 flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-5">
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Update Status</p>
+                                    
+                                    <!-- NEW: event.stopPropagation() PREVENTS THE UI FROM COLLAPSING! -->
+                                    <button onclick="updateStatus('${order.id}', 'Pending', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm">Pending</button>
+                                    <button onclick="updateStatus('${order.id}', 'Cooking', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">Cooking <i class="fas fa-clock text-[10px] opacity-70"></i></button>
+                                    <button onclick="updateStatus('${order.id}', 'Completed', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
+                                    <button onclick="updateStatus('${order.id}', 'Cancelled', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition shadow-sm">Cancel</button>
                                 </div>
                             </div>
                         </td>
@@ -1119,28 +1185,37 @@
             if(detRow) detRow.classList.toggle('hidden');
         }
 
-        async function updateStatus(orderId, newStatus) {
+        // --- THE FIXED UPDATE STATUS ENGINE ---
+        async function updateStatus(orderId, newStatus, event) {
+            if(event) event.stopPropagation(); // Stops the row from violently snapping closed!
+            
             let payload = { status: newStatus };
 
-            // Prompt for Cooking Time
             if (newStatus === 'Cooking') {
                 const mins = prompt("Enter target cooking time in minutes (e.g., 10, 15, 30):", "15");
-                if (mins === null) return; // User cancelled prompt
+                if (mins === null) return; 
                 const parsedMins = parseInt(mins);
                 if (!isNaN(parsedMins) && parsedMins > 0) {
                     payload.target_completion_time = new Date(Date.now() + parsedMins * 60000).toISOString();
                 }
             }
 
+            // 1. INSTANT OPTIMISTIC UI UPDATE
+            const localOrder = allOrders.find(o => o.id === orderId);
+            if(localOrder) {
+                localOrder.status = newStatus;
+                if(payload.target_completion_time) localOrder.target_completion_time = payload.target_completion_time;
+            }
+            processDashboardFilters(); // Visually changes everything before DB answers
+
+            // 2. BACKGROUND DATABASE SYNC
             const { error } = await supabaseClient.from('orders').update(payload).eq('id', orderId);
             if (error) {
-                alert("Could not update status: " + error.message);
-            } else {
-                fetchDashboardData(); // Fresh pull to verify!
+                alert("Server Sync Failed: " + error.message);
+                fetchDashboardData(); // Hard reset if DB fails
             }
         }
 
-        // --- GLOBAL TICKER ENGINE ---
         function startLiveTimers() {
             if (window.liveTickerInterval) clearInterval(window.liveTickerInterval);
             window.liveTickerInterval = setInterval(() => {
@@ -1148,7 +1223,7 @@
                     const t = el.dataset.time;
                     if (t) el.textContent = getWaitTimeStr(t);
                 });
-                checkSLABreaches(); // Recheck red warnings every 1 min
+                checkSLABreaches();
             }, 60000); 
         }
 
@@ -1161,18 +1236,14 @@
 
             dashboardFilteredOrders.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
-                totRev += amt;
-                totOrd++;
+                totRev += amt; totOrd++;
                 
                 if (o.status === 'Pending') {
-                    penRev += amt;
-                    penOrd++;
+                    penRev += amt; penOrd++;
                     const t = new Date(o.created_at).getTime();
                     if (!oldestPendingTime || t < oldestPendingTime) oldestPendingTime = t;
-                }
-                else if (o.status === 'Cooking') {
-                    cookRev += amt;
-                    cookOrd++;
+                } else if (o.status === 'Cooking') {
+                    cookRev += amt; cookOrd++;
                 }
 
                 if (o.items && Array.isArray(o.items)) {
@@ -1185,10 +1256,8 @@
 
             document.getElementById('stat-tot-rev').textContent = totRev.toFixed(2);
             document.getElementById('stat-tot-ord').textContent = `${totOrd} Orders`;
-            
             document.getElementById('stat-pen-rev').textContent = penRev.toFixed(2);
             document.getElementById('stat-pen-ord').textContent = `${penOrd} Orders Waiting`;
-
             document.getElementById('stat-cook-rev').textContent = cookRev.toFixed(2);
             document.getElementById('stat-cook-ord').textContent = `${cookOrd} Orders Cooking`;
             
@@ -1197,11 +1266,9 @@
                 waitEl.dataset.time = new Date(oldestPendingTime).toISOString();
                 waitEl.textContent = getWaitTimeStr(oldestPendingTime);
             } else {
-                waitEl.dataset.time = "";
-                waitEl.textContent = "0m";
+                waitEl.dataset.time = ""; waitEl.textContent = "0m";
             }
 
-            // Demand List
             const bestSellersContainer = document.getElementById('analytics-best-sellers');
             if (bestSellersContainer) {
                 const sortedItems = Object.entries(itemCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
@@ -1214,10 +1281,9 @@
                             </span>
                             <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-lg font-black text-[10px] shrink-0">${qty} Sold</span>
                         </div>`).join('')
-                    : '<div class="text-center text-gray-400 py-6 text-xs">No sales data found.</div>';
+                    : '<div class="text-center text-gray-400 py-6 text-xs font-bold">No sales data found.</div>';
             }
 
-            // Clickable Low Stock
             const lowStockContainer = document.getElementById('analytics-low-stock');
             if (lowStockContainer && typeof allMenuItems !== 'undefined') {
                 const lowStockItems = allMenuItems
@@ -1228,7 +1294,7 @@
                     ? lowStockItems.map(item => `
                         <div class="flex justify-between items-center text-xs p-2.5 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group">
                             <span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span>
-                            <button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-yellow-400 text-yellow-900 hover:bg-yellow-500'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition shadow-sm flex items-center gap-1 shrink-0">
+                            <button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition shadow-sm flex items-center gap-1 shrink-0">
                                 ${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i>
                             </button>
                         </div>`).join('')
@@ -1236,7 +1302,7 @@
             }
         }
 
-        // --- GROUPED BAR CHART ---
+        // --- GROUPED BAR CHART ENGINE ---
         function renderGroupedChart() {
             const ctx = document.getElementById('dashboardChart');
             if (!ctx) return;
@@ -1263,31 +1329,21 @@
                         {
                             label: 'Total Orders',
                             data: [cTot, cPen, cCok, cCmp, cCan],
-                            backgroundColor: ['#1e3a8a', '#ea580c', '#ca8a04', '#16a34a', '#dc2626'], // Darker shades
-                            borderRadius: 4,
-                            barPercentage: 0.8,
-                            categoryPercentage: 0.4 
+                            backgroundColor: ['#1e3a8a', '#ea580c', '#ca8a04', '#16a34a', '#dc2626'], 
+                            borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 
                         },
                         {
                             label: 'Revenue ($)',
                             data: [rTot, rPen, rCok, rCmp, rCan],
-                            backgroundColor: ['#3b82f6', '#f59e0b', '#facc15', '#84cc16', '#f472b6'], // Lighter shades
-                            borderRadius: 4,
-                            barPercentage: 0.8,
-                            categoryPercentage: 0.4
+                            backgroundColor: ['#3b82f6', '#f59e0b', '#facc15', '#84cc16', '#f472b6'], 
+                            borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4
                         }
                     ]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } }
-                    },
-                    scales: { 
-                        y: { beginAtZero: true, grid: { color: '#f3f4f6' } },
-                        x: { grid: { display: false } }
-                    }
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } }
                 }
             });
         }
