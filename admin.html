@@ -9,6 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
         body { font-family: 'Poppins', sans-serif; background-color: #f3f4f6; }
@@ -28,16 +29,17 @@
     <!-- ================= LEFT SIDEBAR ================= -->
     <aside class="w-[72px] hover:w-64 bg-gray-900 text-white transition-all duration-300 flex flex-col justify-between group relative z-50 shrink-0 shadow-2xl overflow-x-hidden">
         <div>
-            <!-- Branding -->
-            <div class="h-16 flex items-center justify-center group-hover:justify-start px-4 border-b border-gray-800">
-                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all">
+            <!-- Branding (FIXED LOGO ALIGNMENT) -->
+            <div class="h-16 flex items-center justify-center px-4 border-b border-gray-800 relative">
+                <div class="w-10 h-10 bg-red-50 rounded-xl flex items-center justify-center shrink-0 z-10">
                     <img id="admin-brand-logo" src="" class="w-full h-full object-cover hidden rounded-xl">
                     <i id="admin-default-icon" class="fas fa-store text-red-600 text-xl"></i>
                 </div>
-                <h1 class="text-xl font-black ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 tracking-tight">Admin Suite</h1>
+                <!-- Using absolute positioning stops the text from pushing the logo! -->
+                <h1 class="text-xl font-black whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 tracking-tight absolute left-16">Admin Suite</h1>
             </div>
 
-            <!-- Navigation Links (PERFECTLY CENTERED ICONS) -->
+            <!-- Navigation Links -->
             <nav class="flex flex-col gap-2 p-3 mt-4">
                 <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="sidebar-btn flex items-center p-3 rounded-xl bg-red-600 text-white transition-colors w-full relative">
                     <div class="w-6 h-6 flex items-center justify-center shrink-0 mx-auto group-hover:mx-0 transition-all"><i class="fas fa-chart-pie text-lg"></i></div>
@@ -82,7 +84,7 @@
         <!-- Top Action Bar -->
         <header class="h-16 bg-white shadow-sm border-b border-gray-200 flex justify-between items-center px-6 shrink-0 z-40">
             <!-- Dynamic Date Filters -->
-            <div class="flex gap-1.5 items-center bg-gray-50 p-1 rounded-lg border border-gray-200 overflow-x-auto hide-scrollbar" id="time-filter-container">
+            <div class="flex gap-1.5 items-center bg-gray-50 p-1 rounded-lg border border-gray-200 overflow-x-auto hide-scrollbar max-w-[60%]" id="time-filter-container">
                 <!-- JS WILL INJECT MONTHS HERE -->
             </div>
 
@@ -102,7 +104,6 @@
                         <i class="fas fa-bell text-lg"></i>
                         <span id="notif-badge" class="absolute -top-1 -right-1 bg-red-600 text-white text-[9px] font-black w-4 h-4 flex items-center justify-center rounded-full hidden animate-bounce border-2 border-white shadow-sm">0</span>
                     </button>
-                    <!-- Notification Dropdown -->
                     <div id="notif-dropdown" class="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl border border-gray-100 hidden flex-col z-50 overflow-hidden transform origin-top-right transition-all">
                         <div class="px-4 py-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                             <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Alerts & Events</span>
@@ -121,65 +122,60 @@
             
             <!-- ================= TAB 1: UNIFIED DASHBOARD ================= -->
             <section id="section-dashboard" class="tab-section">
-                <!-- Merged Analytics Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    <!-- Card 1: Total Orders & Rev -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex justify-between items-end">
-                        <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="fas fa-chart-pie text-blue-500 me-1"></i> Total Overall</p>
-                            <p class="text-3xl font-black text-gray-900" id="stat-tot-rev">0.00</p>
-                            <p class="text-xs font-bold text-blue-600 mt-1" id="stat-tot-ord">0 Orders</p>
-                        </div>
-                    </div>
-                    
-                    <!-- Card 2: Pending Orders & Rev -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-orange-200 flex justify-between items-end relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-orange-50 rounded-bl-full -z-10"></div>
-                        <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="fas fa-hourglass-half text-orange-500 me-1"></i> Pending Action</p>
-                            <p class="text-3xl font-black text-orange-600" id="stat-pen-rev">0.00</p>
-                            <p class="text-xs font-bold text-orange-600 mt-1" id="stat-pen-ord">0 Orders Waiting</p>
-                        </div>
-                    </div>
-
-                    <!-- Card 3: Cooking Orders & Rev -->
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-yellow-200 flex justify-between items-end relative overflow-hidden">
-                        <div class="absolute top-0 right-0 w-16 h-16 bg-yellow-50 rounded-bl-full -z-10"></div>
-                        <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="fas fa-fire text-yellow-500 me-1"></i> Cooking Now</p>
-                            <p class="text-3xl font-black text-yellow-600" id="stat-cook-rev">0.00</p>
-                            <p class="text-xs font-bold text-yellow-600 mt-1" id="stat-cook-ord">0 Orders Cooking</p>
-                        </div>
-                    </div>
-
-                    <!-- Card 4: Max Wait Time -->
-                    <div class="bg-gray-900 p-5 rounded-2xl shadow-sm border border-gray-800 flex justify-between items-end text-white">
-                        <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="far fa-clock text-red-500 me-1 animate-pulse"></i> Longest Wait</p>
-                            <p class="text-3xl font-black text-white live-ticker" id="stat-wait-time" data-time="">0m</p>
-                            <p class="text-xs font-bold text-gray-400 mt-1">Pending Orders Only</p>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- ================= NEW LAYOUT: LEFT & RIGHT COLUMNS ================= -->
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                     
-                    <!-- LEFT COLUMN (Span 2): Urgent & Recent Orders -->
+                    <!-- LEFT COLUMN (Span 2): Stat Cards, Urgent, Table -->
                     <div class="lg:col-span-2 flex flex-col gap-6">
                         
-                        <!-- Top 5 Urgent Orders Cards -->
+                        <!-- Merged Analytics Cards (Moved inside Left Column) -->
+                        <div class="grid grid-cols-2 xl:grid-cols-4 gap-4 shrink-0">
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex justify-between items-end">
+                                <div>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="fas fa-chart-pie text-blue-500 me-1"></i> Total Overall</p>
+                                    <p class="text-2xl font-black text-gray-900" id="stat-tot-rev">0.00</p>
+                                    <p class="text-xs font-bold text-blue-600 mt-1" id="stat-tot-ord">0 Orders</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-orange-200 flex justify-between items-end relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-12 h-12 bg-orange-50 rounded-bl-full -z-10"></div>
+                                <div>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="fas fa-hourglass-half text-orange-500 me-1"></i> Pending</p>
+                                    <p class="text-2xl font-black text-orange-600" id="stat-pen-rev">0.00</p>
+                                    <p class="text-xs font-bold text-orange-600 mt-1" id="stat-pen-ord">0 Waiting</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-4 rounded-2xl shadow-sm border border-yellow-200 flex justify-between items-end relative overflow-hidden">
+                                <div class="absolute top-0 right-0 w-12 h-12 bg-yellow-50 rounded-bl-full -z-10"></div>
+                                <div>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="fas fa-fire text-yellow-500 me-1"></i> Cooking</p>
+                                    <p class="text-2xl font-black text-yellow-600" id="stat-cook-rev">0.00</p>
+                                    <p class="text-xs font-bold text-yellow-600 mt-1" id="stat-cook-ord">0 Cooking</p>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-900 p-4 rounded-2xl shadow-sm border border-gray-800 flex justify-between items-end text-white">
+                                <div>
+                                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1"><i class="far fa-clock text-red-500 me-1 animate-pulse"></i> Longest Wait</p>
+                                    <p class="text-2xl font-black text-white live-ticker" id="stat-wait-time" data-time="">0m</p>
+                                    <p class="text-[10px] font-bold text-gray-400 mt-1">Pending Only</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top 5 Urgent Orders Cards (Reduced Width, up to 5 items) -->
                         <div id="urgent-orders-wrapper" class="hidden">
                             <h3 class="text-sm font-black text-gray-800 mb-3 uppercase tracking-wider"><i class="fas fa-exclamation-circle text-red-500 me-2"></i> Most Urgent Orders</h3>
-                            <div id="urgent-orders-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                            <div id="urgent-orders-container" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
                                 <!-- Cards injected via JS -->
                             </div>
                         </div>
 
                         <!-- Orders Table with Filters & Sorting -->
                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1">
-                            
-                            <!-- Table Action Header (Color-Coded Filters) -->
                             <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex flex-col md:flex-row justify-between items-start md:items-center shrink-0 gap-3">
                                 <h3 class="font-black text-gray-800 text-base flex items-center shrink-0"><i class="fas fa-list-ul text-gray-400 me-2"></i> Recent Orders</h3>
                                 <div class="flex gap-1 overflow-x-auto w-full md:w-auto hide-scrollbar" id="table-status-filters">
@@ -209,10 +205,20 @@
                     <!-- RIGHT COLUMN (Span 1): Graph, Low Stock, Demand -->
                     <div class="flex flex-col gap-6">
                         
-                        <!-- Grouped Bar Chart -->
+                        <!-- Grouped Bar Chart (Moved to Top) -->
                         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
-                            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-4"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Status Trends</h3>
-                            <div class="relative w-full h-[220px]">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Status Trends</h3>
+                                <!-- Custom Graph Filter -->
+                                <select id="graph-time-filter" onchange="renderGroupedChart()" class="bg-gray-50 border border-gray-200 text-[10px] font-bold rounded px-2 py-1 focus:outline-none cursor-pointer">
+                                    <option value="today">Today</option>
+                                    <option value="week">This Week</option>
+                                    <option value="month">This Month</option>
+                                    <option value="year">This Year</option>
+                                    <option value="all" selected>All Time</option>
+                                </select>
+                            </div>
+                            <div class="relative w-full h-[250px]">
                                 <canvas id="dashboardChart"></canvas>
                             </div>
                         </div>
@@ -232,60 +238,6 @@
                     </div> <!-- End Right Column -->
                 </div>
             </section>
-            
-            
-        <!-- ================= TAB 2: MENU MANAGER ================= -->
-        <section id="section-menu" class="tab-section hidden">
-            <div class="flex flex-col mb-6 gap-4">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800">Menu Manager</h2>
-                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical mx-1 text-gray-400"></i> to reorder. Drag between groups to change categories.</p>
-                    </div>
-                    
-                    <div class="flex bg-gray-200 p-1 rounded-lg">
-                        <button onclick="switchAdminLanguage('en')" id="filter-lang-en" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition">English (EN)</button>
-                        <button onclick="switchAdminLanguage('ar')" id="filter-lang-ar" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition">Arabic (AR)</button>
-                    </div>
-                </div>
-
-                <div class="flex gap-2 w-full justify-end border-t border-gray-200 pt-4">
-                    <button onclick="saveMenuOrder()" id="btn-save-order" class="hidden bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center justify-center gap-2 animate-pulse">
-                        <i class="fas fa-save"></i> Save Order Changes
-                    </button>
-                    <button onclick="openMenuModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-plus"></i> Add New Item
-                    </button>
-                    <button onclick="openJsonModal()" class="bg-gray-900 text-white px-4 py-2 rounded-xl shadow-md hover:bg-gray-800 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-file-code"></i> Bulk JSON
-                    </button>
-                </div>
-            </div>
-
-            <!-- Menu Table Grid -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto pb-20">
-                    <table class="w-full text-left border-collapse" id="menu-table">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="p-4 w-10"></th> 
-                                <th class="p-4 w-12 text-center">SL#</th>
-                                <th class="p-4 w-12 text-center">Index</th>
-                                <th class="p-4">Item</th>
-                                <th class="p-4">Price / Stock</th>
-                                <th class="p-4">Special</th>
-                                <th class="p-4 text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="menu-table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Menu Items...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
 
         <!-- ================= TAB 3: CUSTOMERS & USER ORDERS ================= -->
         <section id="section-users" class="tab-section hidden">
@@ -862,18 +814,19 @@
         let dashChartInstance = null;
         let activeFilter = 'today';
         let systemNotifications = []; 
+        let adminCurrency = 'SR'; // Global Currency Tracker
         
         let tableStatusFilter = 'All';
         let tableSortCol = 'date';
-        let tableSortDir = 'desc'; // Default Newest Top
+        let tableSortDir = 'desc'; 
 
-        // DYNAMIC MONTH FILTERS
         const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
         
+        // Register the DataLabels plugin for Chart.js
+        Chart.register(ChartDataLabels);
+
         function renderTimeFilters() {
             const container = document.getElementById('time-filter-container');
-            const nowMonth = new Date().getMonth(); 
-            
             let html = `
                 <button onclick="setDashFilter('all')" class="${activeFilter==='all' ? 'px-3 py-1.5 rounded text-[10px] font-black bg-white shadow-sm text-red-600' : 'px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-900 hover:bg-white'} transition">ALL</button>
                 <button onclick="setDashFilter('today')" class="${activeFilter==='today' ? 'px-3 py-1.5 rounded text-[10px] font-black bg-white shadow-sm text-red-600' : 'px-3 py-1.5 rounded text-[10px] font-black text-gray-500 hover:text-gray-900 hover:bg-white'} transition">TODAY</button>
@@ -899,9 +852,14 @@
                 if (icon) { icon.classList.add('fa-spin'); setTimeout(() => icon.classList.remove('fa-spin'), 1000); }
             }
 
-            const [ordersRes, menuRes] = await Promise.all([
+            // Sync Currency
+            const savedCurr = document.getElementById('set-currency')?.value;
+            if(savedCurr) adminCurrency = savedCurr;
+
+            const [ordersRes, menuRes, custRes] = await Promise.all([
                 supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
-                supabaseClient.from('menu_items').select('*')
+                supabaseClient.from('menu_items').select('*'),
+                supabaseClient.from('customers').select('id, name, created_at').order('created_at', { ascending: false }).limit(10) // Fails silently if table doesn't exist yet
             ]);
 
             if (ordersRes.error || menuRes.error) return;
@@ -910,6 +868,7 @@
             allOrders = ordersRes.data || [];
             allMenuItems = menuRes.data || [];
 
+            // Detect NEW orders
             const currentPendingCount = allOrders.filter(o => o.status === 'Pending').length;
             if (isBackground && currentPendingCount > lastKnownOrderCount) {
                 const newCount = currentPendingCount - lastKnownOrderCount;
@@ -917,8 +876,17 @@
             }
             lastKnownOrderCount = currentPendingCount;
 
-            renderTimeFilters(); // Initialize Top Bar
-            renderTableFilters(); // Initialize Table Filters
+            // Detect NEW Users (If table exists)
+            if (custRes.data && !isBackground) {
+                const todayUsers = custRes.data.filter(u => new Date(u.created_at).toDateString() === new Date().toDateString());
+                if (todayUsers.length > 0 && !window.alertedNewUsers) {
+                    addNotification(`${todayUsers.length} new users registered today!`, 'new_user');
+                    window.alertedNewUsers = true;
+                }
+            }
+
+            renderTimeFilters(); 
+            renderTableFilters(); 
             processDashboardFilters();
         }
 
@@ -933,7 +901,7 @@
                     const m = parseInt(activeFilter.split('-')[1]);
                     return orderDate.getMonth() === m && orderDate.getFullYear() === now.getFullYear();
                 }
-                return true; // All Time
+                return true; 
             });
 
             updateDetailedAnalytics();
@@ -947,8 +915,7 @@
         function toggleNotifications(event) {
             if(event) event.stopPropagation();
             const drop = document.getElementById('notif-dropdown');
-            drop.classList.toggle('hidden');
-            drop.classList.toggle('flex');
+            drop.classList.toggle('hidden'); drop.classList.toggle('flex');
             document.getElementById('notif-badge').classList.add('hidden');
         }
         
@@ -957,6 +924,7 @@
             let icon = 'fa-bell text-blue-500';
             if(type === 'sla_pending') icon = 'fa-exclamation-circle text-red-500';
             if(type === 'sla_cooking') icon = 'fa-fire text-orange-500';
+            if(type === 'new_user') icon = 'fa-user-plus text-green-500';
             
             systemNotifications.unshift({ message, icon, timeStr });
             if (systemNotifications.length > 20) systemNotifications.pop(); 
@@ -1038,16 +1006,14 @@
             let tableData = [...dashboardFilteredOrders];
             if(tableStatusFilter !== 'All') tableData = tableData.filter(o => o.status === tableStatusFilter);
 
-            // SMART SORTING ENGINE
             tableData.sort((a, b) => {
                 if (tableSortCol === 'urgent') {
-                    // Urgent Sort: Pending/Cooking grouped at top, sorted by OLDEST first.
                     const aUrg = (a.status === 'Pending' || a.status === 'Cooking');
                     const bUrg = (b.status === 'Pending' || b.status === 'Cooking');
                     if (aUrg && !bUrg) return -1;
                     if (!aUrg && bUrg) return 1;
-                    if (aUrg && bUrg) return new Date(a.created_at) - new Date(b.created_at); // Oldest first
-                    return new Date(b.created_at) - new Date(a.created_at); // Newest first for others
+                    if (aUrg && bUrg) return new Date(a.created_at) - new Date(b.created_at); 
+                    return new Date(b.created_at) - new Date(a.created_at); 
                 } else if (tableSortCol === 'date') {
                     return tableSortDir === 'asc' ? new Date(a.created_at) - new Date(b.created_at) : new Date(b.created_at) - new Date(a.created_at);
                 } else if (tableSortCol === 'customer') {
@@ -1064,11 +1030,11 @@
                 return;
             }
 
-            // Render Urgent Top 5
+            // Urgent Top 5 (Allow up to 5 items due to smaller width)
             const pendingOrders = dashboardFilteredOrders.filter(o => o.status === 'Pending' || o.status === 'Cooking').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
             if (pendingOrders.length > 0) {
                 urgentWrapper.classList.remove('hidden');
-                pendingOrders.slice(0, 3).forEach((order) => {
+                pendingOrders.slice(0, 5).forEach((order) => {
                     const waitStr = getWaitTimeStr(order.created_at);
                     const statColor = order.status === 'Cooking' ? 'bg-blue-500' : 'bg-yellow-500';
                     urgentContainer.innerHTML += `
@@ -1078,12 +1044,12 @@
                                 <span class="text-[10px] font-black text-gray-800 uppercase pl-2">${order.order_number}</span>
                                 <span class="text-[10px] font-black text-red-600 bg-red-50 px-1.5 rounded live-ticker" data-time="${order.created_at}">${waitStr}</span>
                             </div>
-                            <p class="text-xs font-bold text-gray-600 truncate pl-2">${order.customer_name || 'Guest'}</p>
+                            <p class="text-[10px] font-bold text-gray-600 truncate pl-2">${order.customer_name || 'Guest'}</p>
                         </div>`;
                 });
             } else { urgentWrapper.classList.add('hidden'); }
 
-            // Render Table Rows
+            // Table Rows
             tableData.slice(0, 20).forEach(order => {
                 const date = new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                 const waitStr = getWaitTimeStr(order.created_at);
@@ -1096,7 +1062,7 @@
                 let fullItemsHtml = '';
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(i => {
-                        fullItemsHtml += `<div class="flex justify-between text-sm py-1 border-b border-gray-50"><span class="font-medium text-gray-800">${i.qty}x ${i.name}</span><span class="text-gray-500 font-black">${(i.price * i.qty).toFixed(2)}</span></div>`;
+                        fullItemsHtml += `<div class="flex justify-between text-sm py-1 border-b border-gray-50"><span class="font-medium text-gray-800">${i.qty}x ${i.name}</span><span class="text-gray-500 font-black">${adminCurrency} ${(i.price * i.qty).toFixed(2)}</span></div>`;
                     });
                 }
 
@@ -1113,7 +1079,6 @@
                         <td class="p-4 align-middle font-black text-red-500 text-xs live-ticker" data-time="${order.created_at}">${order.status === 'Pending' || order.status === 'Cooking' ? waitStr : '-'}</td>
                         <td class="p-4 align-middle text-center">${badge}</td>
                     </tr>
-                    <!-- INLINE COOKING INPUT ADDED BELOW -->
                     <tr id="row-det-${order.id}" class="hidden bg-gray-50 shadow-inner">
                         <td colspan="4" class="p-5 border-b-4 border-gray-200">
                             <div class="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col md:flex-row gap-5">
@@ -1124,16 +1089,17 @@
                                         ${order.table_number ? `<div><span class="text-gray-400 font-bold">Table:</span> <span class="text-red-500 font-black">${order.table_number}</span></div>` : ''}
                                     </div>
                                     <div class="bg-gray-50 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">${fullItemsHtml}</div>
+                                    <div class="flex justify-between items-center text-base font-black text-gray-800 border-t border-gray-100 pt-2">
+                                        <span>Total:</span> <span class="text-green-600">${adminCurrency} ${parseFloat(order.total_amount).toFixed(2)}</span>
+                                    </div>
                                 </div>
                                 <div class="w-full md:w-48 flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-5">
                                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Update Status</p>
                                     <button onclick="updateStatus('${order.id}', 'Pending', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm">Pending</button>
-                                    
                                     <div class="flex gap-1">
-                                        <input type="number" id="cook-time-${order.id}" value="15" class="w-12 text-center text-[10px] font-black rounded-lg border border-blue-200 bg-white focus:outline-none">
+                                        <input type="number" id="cook-time-${order.id}" value="15" class="w-12 text-center text-[10px] font-black rounded-lg border border-blue-200 bg-white focus:outline-none" onclick="(e) => e.stopPropagation()">
                                         <button onclick="updateStatus('${order.id}', 'Cooking', event, document.getElementById('cook-time-${order.id}').value)" class="flex-1 py-2.5 text-[10px] font-black uppercase rounded-lg bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition shadow-sm">Cook</button>
                                     </div>
-
                                     <button onclick="updateStatus('${order.id}', 'Completed', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
                                     <button onclick="updateStatus('${order.id}', 'Cancelled', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 transition shadow-sm">Cancel</button>
                                 </div>
@@ -1149,10 +1115,8 @@
             if(detRow) detRow.classList.toggle('hidden');
         }
 
-        // --- THE FIXED UPDATE STATUS ENGINE ---
         async function updateStatus(orderId, newStatus, event, minsStr = null) {
-            if(event) event.stopPropagation(); // Stops UI Glitching!
-            
+            if(event) event.stopPropagation(); 
             let payload = { status: newStatus };
 
             if (newStatus === 'Cooking' && minsStr) {
@@ -1162,38 +1126,26 @@
                 }
             }
 
-            // 1. FIX: Enforce strict String matching for IDs!
             const localOrder = allOrders.find(o => String(o.id) === String(orderId));
             if(localOrder) {
                 localOrder.status = newStatus;
                 if(payload.target_completion_time) localOrder.target_completion_time = payload.target_completion_time;
             }
 
-            // 2. FIX: Remember if the card was open before re-rendering!
             const detRow = document.getElementById(`row-det-${orderId}`);
             const wasExpanded = detRow && !detRow.classList.contains('hidden');
 
-            processDashboardFilters(); // Visually changes everything before DB answers
+            processDashboardFilters(); 
 
-            // Re-open the card instantly so it doesn't snap closed
             if (wasExpanded) {
                 const newDetRow = document.getElementById(`row-det-${orderId}`);
                 if (newDetRow) newDetRow.classList.remove('hidden');
             }
 
-            // 3. BACKGROUND DATABASE SYNC
-            const { error } = await supabaseClient.from('orders').update(payload).eq('id', orderId);
+            const { data, error } = await supabaseClient.from('orders').update(payload).eq('id', orderId).select();
             if (error) {
-                console.error("DB Update Failed:", error);
-                
-                // Smart Error Catching
-                if (error.message.includes('target_completion_time')) {
-                    alert("DATABASE ERROR: You need to run the SQL command in Supabase to add the 'target_completion_time' column!");
-                } else {
-                    alert("Server Sync Failed: " + error.message);
-                }
-                
-                fetchDashboardData(); // Hard reset if DB fails
+                alert("Server Sync Failed: " + error.message);
+                fetchDashboardData(); 
             }
         }
 
@@ -1252,11 +1204,12 @@
                 if (o.items && Array.isArray(o.items)) o.items.forEach(item => { itemCounts[item.name] = (itemCounts[item.name] || 0) + item.qty; });
             });
 
-            document.getElementById('stat-tot-rev').textContent = totRev.toFixed(2);
+            // Added dynamic adminCurrency to the revenue text!
+            document.getElementById('stat-tot-rev').textContent = `${adminCurrency} ${totRev.toFixed(2)}`;
             document.getElementById('stat-tot-ord').textContent = `${totOrd} Orders`;
-            document.getElementById('stat-pen-rev').textContent = penRev.toFixed(2);
+            document.getElementById('stat-pen-rev').textContent = `${adminCurrency} ${penRev.toFixed(2)}`;
             document.getElementById('stat-pen-ord').textContent = `${penOrd} Orders Waiting`;
-            document.getElementById('stat-cook-rev').textContent = cookRev.toFixed(2);
+            document.getElementById('stat-cook-rev').textContent = `${adminCurrency} ${cookRev.toFixed(2)}`;
             document.getElementById('stat-cook-ord').textContent = `${cookOrd} Orders Cooking`;
             
             const waitEl = document.getElementById('stat-wait-time');
@@ -1275,20 +1228,34 @@
             if (lowStockContainer && typeof allMenuItems !== 'undefined') {
                 const lowStockItems = allMenuItems.filter(i => i.stock_quantity !== null && i.stock_quantity <= 10 && i.language === 'en').sort((a, b) => a.stock_quantity - b.stock_quantity);
                 lowStockContainer.innerHTML = lowStockItems.length > 0
-                    ? lowStockItems.map(item => `<div class="flex justify-between items-center text-xs p-2.5 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group"><span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span><button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'} px-2.5 py-1 rounded-lg font-black text-[9px] uppercase transition shadow-sm flex items-center gap-1 shrink-0">${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i></button></div>`).join('')
+                    // Enlarged text-xs for better readability on Low Stock buttons
+                    ? lowStockItems.map(item => `<div class="flex justify-between items-center text-sm p-3 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group"><span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span><button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'} px-3 py-1.5 rounded-lg font-black text-xs uppercase transition shadow-sm flex items-center gap-1 shrink-0">${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i></button></div>`).join('')
                     : '<div class="text-center py-6 text-xs font-bold text-green-600 uppercase">All stock optimal</div>';
             }
         }
 
-        // --- GROUPED BAR CHART ENGINE ---
+        // --- GROUPED BAR CHART ENGINE (WITH LABELS & CLICK FILTERS) ---
         function renderGroupedChart() {
             const ctx = document.getElementById('dashboardChart');
             if (!ctx) return;
 
+            // Apply independent graph time filter!
+            const gFilter = document.getElementById('graph-time-filter')?.value || 'all';
+            const now = new Date();
+            
+            const graphData = allOrders.filter(order => {
+                const orderDate = new Date(order.created_at);
+                if (gFilter === 'today') return orderDate.toDateString() === now.toDateString();
+                if (gFilter === 'week') return Math.ceil(Math.abs(now - orderDate) / (1000 * 60 * 60 * 24)) <= 7;
+                if (gFilter === 'month') return orderDate.getMonth() === now.getMonth() && orderDate.getFullYear() === now.getFullYear();
+                if (gFilter === 'year') return orderDate.getFullYear() === now.getFullYear();
+                return true; 
+            });
+
             let cTot=0, cPen=0, cCok=0, cCmp=0, cCan=0;
             let rTot=0, rPen=0, rCok=0, rCmp=0, rCan=0;
 
-            dashboardFilteredOrders.forEach(o => {
+            graphData.forEach(o => {
                 const amt = parseFloat(o.total_amount || 0);
                 cTot++; rTot += amt;
                 if(o.status==='Pending') { cPen++; rPen+=amt; }
@@ -1305,10 +1272,35 @@
                     labels: ['TOTAL', 'PENDING', 'COOKING', 'COMPLETED', 'CANCELED'],
                     datasets: [
                         { label: 'Orders', data: [cTot, cPen, cCok, cCmp, cCan], backgroundColor: ['#1e3a8a', '#ea580c', '#ca8a04', '#16a34a', '#dc2626'], borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 },
-                        { label: 'Revenue ($)', data: [rTot, rPen, rCok, rCmp, rCan], backgroundColor: ['#3b82f6', '#f59e0b', '#facc15', '#84cc16', '#f472b6'], borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 }
+                        { label: 'Revenue', data: [rTot, rPen, rCok, rCmp, rCan], backgroundColor: ['#3b82f6', '#f59e0b', '#facc15', '#84cc16', '#f472b6'], borderRadius: 4, barPercentage: 0.8, categoryPercentage: 0.4 }
                     ]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } }
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    onClick: (e, elements) => {
+                        // Makes the Graph clickable to filter the main table!
+                        if(elements.length > 0) {
+                            const statuses = ['All', 'Pending', 'Cooking', 'Completed', 'Cancelled'];
+                            setTableFilter(statuses[elements[0].index]);
+                        }
+                    },
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } },
+                        // Renders native text labels floating on top of the bars!
+                        datalabels: {
+                            anchor: 'end',
+                            align: 'top',
+                            color: '#4b5563',
+                            font: { weight: '900', size: 10 },
+                            formatter: function(value, context) {
+                                if (value === 0) return '';
+                                if (context.datasetIndex === 1) return adminCurrency + ' ' + value.toLocaleString();
+                                return value;
+                            }
+                        }
+                    }, 
+                    scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } 
+                }
             });
         }
         
