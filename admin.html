@@ -228,7 +228,24 @@
                     <!-- RIGHT COLUMN (Span 1) -->
                     <div class="flex flex-col gap-6">
                         
-                        <!-- 1. DINE-IN VS TAKEAWAY COMPARISON (DONUT + STATS) -->
+                        <!-- Grouped Bar Chart with Inline Buttons -->
+                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Status Trends</h3>
+                                <!-- Inline Graph Filters -->
+                                <div class="flex bg-gray-50 p-1 rounded border border-gray-200" id="graph-filter-btns">
+                                    <button onclick="setGraphFilter('week')" id="gflt-week" class="px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition">WEEK</button>
+                                    <button onclick="setGraphFilter('month')" id="gflt-month" class="px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition">MONTH</button>
+                                    <button onclick="setGraphFilter('year')" id="gflt-year" class="px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition">YEAR</button>
+                                    <button onclick="setGraphFilter('all')" id="gflt-all" class="px-2 py-1 rounded text-[9px] font-black bg-white shadow-sm text-blue-600 transition">ALL</button>
+                                </div>
+                            </div>
+                            <div class="relative w-full h-[250px]">
+                                <canvas id="dashboardChart"></canvas>
+                            </div>
+                        </div>
+
+			<!-- DINE-IN VS TAKEAWAY COMPARISON (DONUT + STATS) -->
                         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
                             <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-4"><i class="fas fa-utensils text-emerald-500 me-2"></i> Dine-In vs Takeaway</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
@@ -252,32 +269,14 @@
                             </div>
                         </div>
 
-                        <!-- 2. Grouped Bar Chart with Inline Buttons -->
-                        <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
-                            <div class="flex justify-between items-center mb-4">
-                                <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider"><i class="fas fa-chart-bar text-purple-500 me-2"></i> Status Trends</h3>
-                                <!-- Inline Graph Filters -->
-                                <div class="flex bg-gray-50 p-1 rounded border border-gray-200" id="graph-filter-btns">
-                                    <button onclick="setGraphFilter('week')" id="gflt-week" class="px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition">WEEK</button>
-                                    <button onclick="setGraphFilter('month')" id="gflt-month" class="px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition">MONTH</button>
-                                    <button onclick="setGraphFilter('year')" id="gflt-year" class="px-2 py-1 rounded text-[9px] font-bold text-gray-500 hover:text-gray-900 transition">YEAR</button>
-                                    <button onclick="setGraphFilter('all')" id="gflt-all" class="px-2 py-1 rounded text-[9px] font-black bg-white shadow-sm text-blue-600 transition">ALL</button>
-                                </div>
-                            </div>
-                            <div class="relative w-full h-[250px]">
-                                <canvas id="dashboardChart"></canvas>
-                            </div>
-                        </div>
-
-                        <!-- 3. Low Stock Alerts -->
+                        <!-- Low Stock Alerts -->
                         <div class="bg-white p-4 rounded-2xl shadow-sm border border-red-100 flex flex-col relative overflow-hidden flex-1 min-h-[200px] max-h-[300px]">
                             <h3 class="text-sm font-black text-gray-800 mb-2 shrink-0 uppercase tracking-wider"><i class="fas fa-exclamation-triangle text-red-500 me-2"></i> Low Stock Alerts</h3>
                             <div id="analytics-low-stock" class="flex flex-col gap-2 overflow-y-auto flex-grow hide-scrollbar pb-2"></div>
                         </div>
                         
-                    </div> <!-- End Right Column -->
-
-
+                </div>
+            </section>
 <!-- ================= TAB 2: MENU MANAGER ================= -->
         <section id="section-menu" class="tab-section hidden">
             <div class="flex flex-col mb-6 gap-4">
