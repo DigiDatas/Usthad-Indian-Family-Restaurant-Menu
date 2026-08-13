@@ -233,21 +233,26 @@
                             </div>
                         </div>
 
-			<!-- 🌟 NEW: DINE-IN VS TAKEAWAY COMPARISON CARD -->
+			<!-- DINE-IN VS TAKEAWAY COMPARISON (DONUT + STATS) -->
                         <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
-                            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-3"><i class="fas fa-utensils text-emerald-500 me-2"></i> Dine-In vs Takeaway</h3>
-                            <div class="grid grid-cols-2 gap-3">
-                                <!-- Dine-In Box -->
-                                <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl">
-                                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-wider mb-1">Dine-In</p>
-                                    <p class="text-base font-black text-emerald-900 truncate" id="stat-dinein-rev">0.00</p>
-                                    <p class="text-[11px] font-bold text-emerald-700 mt-0.5" id="stat-dinein-ord">0 Orders</p>
+                            <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider mb-4"><i class="fas fa-utensils text-emerald-500 me-2"></i> Dine-In vs Takeaway</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                                <!-- Left: Compact Donut Chart -->
+                                <div class="relative w-full h-[140px] flex items-center justify-center">
+                                    <canvas id="dineInTakeawayChart"></canvas>
                                 </div>
-                                <!-- Takeaway Box -->
-                                <div class="bg-indigo-50 border border-indigo-100 p-3 rounded-xl">
-                                    <p class="text-[10px] font-black text-indigo-600 uppercase tracking-wider mb-1">Takeaway</p>
-                                    <p class="text-base font-black text-indigo-900 truncate" id="stat-takeaway-rev">0.00</p>
-                                    <p class="text-[11px] font-bold text-indigo-700 mt-0.5" id="stat-takeaway-ord">0 Orders</p>
+                                <!-- Right: Merged Revenue & Order Stats -->
+                                <div class="flex flex-col gap-2.5">
+                                    <div class="bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">
+                                        <p class="text-[9px] font-black text-emerald-600 uppercase tracking-wider">Dine-In</p>
+                                        <p class="text-sm font-black text-emerald-900 truncate" id="stat-dinein-rev">0.00</p>
+                                        <p class="text-[10px] font-bold text-emerald-700" id="stat-dinein-ord">0 Orders</p>
+                                    </div>
+                                    <div class="bg-indigo-50 border border-indigo-100 p-2.5 rounded-xl">
+                                        <p class="text-[9px] font-black text-indigo-600 uppercase tracking-wider">Takeaway</p>
+                                        <p class="text-sm font-black text-indigo-900 truncate" id="stat-takeaway-rev">0.00</p>
+                                        <p class="text-[10px] font-bold text-indigo-700" id="stat-takeaway-ord">0 Orders</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1448,6 +1453,7 @@
             document.getElementById('stat-dinein-ord').textContent = `${dineInOrd} Orders`;
             document.getElementById('stat-takeaway-rev').innerHTML = `<span class="flex items-center gap-0.5">${getCurrencyHtml()} ${takeawayRev.toFixed(2)}</span>`;
             document.getElementById('stat-takeaway-ord').textContent = `${takeawayOrd} Orders`;
+		renderDineInChart(dineInOrd, takeawayOrd);
 
             const waitEl = document.getElementById('stat-wait-time');
             if (oldestPendingTime) { waitEl.dataset.time = new Date(oldestPendingTime).toISOString(); waitEl.textContent = getWaitTimeStr(oldestPendingTime); } 
@@ -1468,6 +1474,49 @@
                     ? lowStockItems.map(item => `<div class="flex justify-between items-center text-sm p-3 ${item.stock_quantity <= 0 ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-xl shrink-0 group"><span class="font-bold truncate pr-2 ${item.stock_quantity <= 0 ? 'text-red-700' : 'text-gray-800'}">${item.name}</span><button onclick="switchTab('menu'); openMenuModal('edit', '${item.id}');" class="${item.stock_quantity <= 0 ? 'bg-red-600 text-white' : 'bg-yellow-400 text-yellow-900'} px-3 py-1.5 rounded-lg font-black text-xs uppercase transition shadow-sm flex items-center gap-1 shrink-0">${item.stock_quantity <= 0 ? 'SOLD OUT' : item.stock_quantity + ' Left'} <i class="fas fa-edit opacity-50 ml-1"></i></button></div>`).join('')
                     : '<div class="text-center py-6 text-xs font-bold text-green-600 uppercase">All stock optimal</div>';
             }
+        }
+let dineInChartInstance = null;
+
+        function renderDineInChart(dineInOrd, takeawayOrd) {
+            const ctx = document.getElementById('dineInTakeawayChart');
+            if (!ctx) return;
+
+            if (dineInChartInstance) dineInChartInstance.destroy();
+
+            // Handle empty state gracefully so chart doesn't break
+            const total = dineInOrd + takeawayOrd;
+            const dataVals = total === 0 ? [1, 1] : [dineInOrd, takeawayOrd];
+            const bgColors = total === 0 ? ['#e5e7eb', '#e5e7eb'] : ['#10b981', '#6366f1']; // Emerald vs Indigo
+
+            dineInChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Dine-In', 'Takeaway'],
+                    datasets: [{
+                        data: dataVals,
+                        backgroundColor: bgColors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: total > 0,
+                            callbacks: {
+                                label: function(context) {
+                                    if (total === 0) return ' No orders';
+                                    return ` ${context.label}: ${context.raw} orders`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
         }
 
         function renderGroupedChart() {
