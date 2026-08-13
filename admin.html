@@ -122,10 +122,10 @@
             
             <section id="section-dashboard" class="tab-section">
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-3 h-[calc(100vh-85px)] mb-0">
+                <div class="grid grid-cols-1 lg:grid-cols-4 gap-3 h-[calc(100vh-85px)] mb-0">
                     
-                    <!-- LEFT COLUMN (Span 2) -->
-                    <div class="lg:col-span-2 flex flex-col gap-3 min-h-0">
+                    <!-- LEFT COLUMN (Span 3) -->
+                    <div class="lg:col-span-3 flex flex-col gap-3 min-h-0">
                         
                         <!-- 🌟 TOP DASHBOARD MASTER GRID (Left: Metrics & Urgent | Right: Trending Demand) -->
                         <div class="grid grid-cols-1 xl:grid-cols-5 gap-3 items-stretch shrink-0">
@@ -900,6 +900,18 @@
             const activeBtn = document.getElementById(`tab-btn-${tabName}`);
             // Set Active Button (Now using h-14 and rounded-2xl)
             if(activeBtn) activeBtn.className = "sidebar-btn relative h-14 w-full rounded-2xl bg-red-600 text-white transition-colors flex items-center shadow-sm";
+
+            // 🌟 NEW: Toggle Date Filters Visibility based on Active Tab
+            const timeFilters = document.getElementById('time-filter-container');
+            if (timeFilters) {
+                if (tabName === 'dashboard') {
+                    timeFilters.classList.remove('hidden');
+                    timeFilters.classList.add('flex');
+                } else {
+                    timeFilters.classList.add('hidden');
+                    timeFilters.classList.remove('flex');
+                }
+            }
         }
 
         // GLOBAL CLICK LISTENER (Fixes Dropdown Glitches)
@@ -1144,6 +1156,32 @@
             const urgentWrapper = document.getElementById('urgent-orders-wrapper');
             tbody.innerHTML = ''; urgentContainer.innerHTML = '';
 
+            // 🌟 1. PERMANENTLY SHOW URGENT ORDERS BOX (Never hide it!)
+            if (urgentWrapper) urgentWrapper.classList.remove('hidden');
+
+            // 🌟 2. BUILD URGENT ORDERS FIRST (Completely independent of Table Filters)
+            const pendingOrders = dashboardFilteredOrders.filter(o => o.status === 'Pending' || o.status === 'Cooking').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+            
+            if (pendingOrders.length > 0) {
+                pendingOrders.slice(0, 8).forEach((order) => {
+                    const waitStr = getWaitTimeStr(order.created_at);
+                    const statColor = order.status === 'Cooking' ? 'bg-yellow-400' : 'bg-orange-400';
+                    urgentContainer.innerHTML += `
+                        <div onclick="toggleOrderDetails('${order.id}')" class="bg-white p-3 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden">
+                            <div class="absolute top-0 left-0 w-1.5 h-full ${statColor}"></div>
+                            <div class="flex justify-between items-start mb-1">
+                                <span class="text-[10px] font-black text-gray-800 uppercase pl-2">${order.order_number}</span>
+                                <span class="text-[10px] font-black text-red-600 bg-red-50 px-1.5 rounded live-ticker" data-time="${order.created_at}">${waitStr}</span>
+                            </div>
+                            <p class="text-[10px] font-bold text-gray-600 truncate pl-2">${order.customer_name || 'Guest'}</p>
+                        </div>`;
+                });
+            } else { 
+                // Show the empty state message instead of hiding the box
+                urgentContainer.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center h-full pt-4 text-gray-400 font-bold text-xs"><i class="fas fa-check-circle text-2xl mb-2 text-gray-300"></i> No urgent orders right now.</div>`;
+            }
+
+            // 🌟 3. NOW BUILD THE RECENT ORDERS TABLE
             let tableData = [...dashboardFilteredOrders];
             if(tableStatusFilter !== 'All') tableData = tableData.filter(o => o.status === tableStatusFilter);
 
@@ -1166,8 +1204,7 @@
 
             if (tableData.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="p-10 text-center text-gray-400 font-bold text-sm">No orders match this filter.</td></tr>`;
-                urgentWrapper.classList.add('hidden');
-                return;
+                return; // Early return now safely stops the table but keeps the Urgent Orders perfectly intact!
             }
 
             const pendingOrders = dashboardFilteredOrders.filter(o => o.status === 'Pending' || o.status === 'Cooking').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
@@ -1391,15 +1428,20 @@
             function showSlide(index) {
                 const item = slaDelayedOrders[index];
                 container.innerHTML = `
-                    <div class="flex justify-between items-end h-full animate-[pulse_0.5s_ease-in-out]">
-                        <div class="flex flex-col">
-                            <span class="text-[9px] font-black bg-white px-1.5 py-0.5 rounded shadow-sm inline-block w-fit mb-0.5 ${item.color}">${item.status}</span>
-                            <span class="text-lg font-black leading-none">${item.order.order_number}</span>
+                    <div class="flex flex-col justify-between h-full animate-[pulse_0.5s_ease-in-out] pb-1">
+                        
+                        <!-- Top Half: Status & Order Number -->
+                        <div class="flex flex-col items-start gap-1.5 mt-1">
+                            <span class="text-[10px] font-black bg-white px-2 py-1 rounded shadow-sm inline-block ${item.color}">${item.status}</span>
+                            <span class="text-[22px] font-black leading-none">${item.order.order_number}</span>
                         </div>
-                        <div class="text-right">
-                            <span class="text-[9px] font-bold text-red-200 uppercase block leading-none">Delayed</span>
-                            <span class="text-base font-black text-yellow-300 leading-none">${item.delay}</span>
+
+                        <!-- Bottom Half: Delayed Time -->
+                        <div class="flex flex-col items-start gap-0.5">
+                            <span class="text-[10px] font-bold text-red-200 uppercase block leading-none tracking-widest">Delayed</span>
+                            <span class="text-[26px] font-black text-yellow-300 leading-none drop-shadow-md">${item.delay}</span>
                         </div>
+
                     </div>
                 `;
             }
@@ -1535,6 +1577,12 @@ let dineInChartInstance = null;
                     maintainAspectRatio: false,
                     plugins: {
                         legend: { display: false },
+                        // 🌟 FIX: Force data labels to be white and bold
+                        datalabels: {
+                            color: '#ffffff',
+                            font: { weight: '900', size: 12 },
+                            formatter: (value) => total === 0 ? '' : value // Hides the numbers if chart is empty
+                        },
                         tooltip: {
                             enabled: total > 0,
                             callbacks: {
@@ -1545,7 +1593,7 @@ let dineInChartInstance = null;
                             }
                         }
                     },
-                    cutout: '70%'
+                    cutout: '50%'
                 }
             });
         }
@@ -1930,9 +1978,13 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
 
         
 
-        // --- MENU ITEM MODAL & SUPABASE STORAGE UPLOADS ---
         async function openMenuModal(mode, id = null) {
             const modal = document.getElementById('menuModal');
+            
+            // 🌟 FIX: OPEN MODAL INSTANTLY TO PREVENT UI FREEZE DELAY
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
             document.getElementById('edit-item-id').value = id || '';
             document.getElementById('form-related').value = ''; // Reset related mapping
             
@@ -2011,6 +2063,8 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
 
                     // UPDATED: FETCH RELATED ITEMS MAP AND LOAD INTO DRAG & DROP GALLERY
                     currentEditingRelated = [];
+                    document.getElementById('related-preview-gallery').innerHTML = `<span class="text-xs text-gray-400 font-bold my-auto mx-auto"><i class="fas fa-spinner fa-spin me-1"></i> Fetching related items...</span>`;
+                    
                     if (item.item_code) {
                         const { data: relData } = await supabaseClient
                             .from('related_items_map')
@@ -2025,8 +2079,6 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
                     renderRelatedGallery();
                 }
             }
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
         }
 
         function closeMenuModal() {
