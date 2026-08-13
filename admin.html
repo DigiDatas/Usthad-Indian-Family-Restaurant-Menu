@@ -1207,25 +1207,7 @@
                 return; // Early return now safely stops the table but keeps the Urgent Orders perfectly intact!
             }
 
-            const pendingOrders = dashboardFilteredOrders.filter(o => o.status === 'Pending' || o.status === 'Cooking').sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
-            if (pendingOrders.length > 0) {
-                urgentWrapper.classList.remove('hidden');
-                pendingOrders.slice(0, 8).forEach((order) => {
-                    const waitStr = getWaitTimeStr(order.created_at);
-                    const statColor = order.status === 'Cooking' ? 'bg-yellow-400' : 'bg-orange-400';
-                    urgentContainer.innerHTML += `
-                        <div onclick="toggleOrderDetails('${order.id}')" class="bg-white p-3 rounded-xl border border-red-200 shadow-sm hover:shadow-md transition cursor-pointer relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-1.5 h-full ${statColor}"></div>
-                            <div class="flex justify-between items-start mb-1">
-                                <span class="text-[10px] font-black text-gray-800 uppercase pl-2">${order.order_number}</span>
-                                <span class="text-[10px] font-black text-red-600 bg-red-50 px-1.5 rounded live-ticker" data-time="${order.created_at}">${waitStr}</span>
-                            </div>
-                            <p class="text-[10px] font-bold text-gray-600 truncate pl-2">${order.customer_name || 'Guest'}</p>
-                        </div>`;
-                });
-            } else { 
-                urgentContainer.innerHTML = `<div class="col-span-full flex flex-col items-center justify-center h-full pt-4 text-gray-400 font-bold text-xs"><i class="fas fa-check-circle text-2xl mb-2 text-gray-300"></i> No urgent orders right now.</div>`;
-            }
+            
 
             tableData.slice(0, 20).forEach(order => {
                 const date = new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
