@@ -88,7 +88,7 @@
             </div>
 
             <!-- Global Actions -->
-            <div class="flex items-center gap-4 border-l border-gray-200 pl-4 ml-4">
+            <div class="flex items-center gap-4 border-l border-gray-200 pl-4 ml-auto">
                 <button onclick="fetchDashboardData(this, false)" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-1.5 text-xs font-bold">
                     <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                 </button>
@@ -118,7 +118,7 @@
         </header>
 
         <!-- Scrollable Main Content -->
-        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 relative">
+        <main class="flex-1 overflow-hidden p-4 sm:p-6 lg:p-8 relative">
             
             <section id="section-dashboard" class="tab-section">
 
@@ -214,7 +214,7 @@
                                 </div>
                             </div>
                             
-                            <div class="overflow-y-auto overflow-x-auto relative flex-1 hide-scrollbar">
+                            <div class="overflow-y-auto overflow-x-auto relative flex-1 max-h-full hide-scrollbar">
                                 <table class="w-full text-left border-collapse">
                                     <thead class="sticky top-0 bg-white shadow-sm z-10">
                                         <tr class="border-b border-gray-200 text-[11px] font-black text-gray-500 uppercase tracking-wider bg-gray-50/50">
@@ -1361,6 +1361,9 @@
         function checkSLABreaches() {
             const now = Date.now();
             slaDelayedOrders = []; 
+            
+            // 🌟 FIX: Helper to format minutes into hours and minutes
+            const formatDelay = (mins) => mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
 
             dashboardFilteredOrders.forEach(order => {
                 let isLate = false;
@@ -1371,7 +1374,8 @@
                     const pendingMins = Math.floor((now - new Date(order.created_at).getTime()) / 60000);
                     if (pendingMins >= 2) {
                         isLate = true;
-                        delayText = `${pendingMins - 2}m OVER`;
+                        // Applies the new formatting
+                        delayText = `${formatDelay(pendingMins - 2)} OVER`;
                         slaDelayedOrders.push({ order: order, delay: delayText, status: 'PENDING', color: 'text-orange-500' });
                         if (!order.alerted_pending) { addNotification(`Order ${order.order_number} pending > 2 mins!`, 'sla_pending'); order.alerted_pending = true; }
                     }
@@ -1382,7 +1386,8 @@
                     if (now > targetTime) {
                         isLate = true;
                         const overMins = Math.floor((now - targetTime) / 60000);
-                        delayText = `${overMins}m OVER`;
+                        // Applies the new formatting
+                        delayText = `${formatDelay(overMins)} OVER`;
                         slaDelayedOrders.push({ order: order, delay: delayText, status: 'COOKING', color: 'text-yellow-500' });
                         if (!order.alerted_cooking) { addNotification(`Order ${order.order_number} cooking delayed!`, 'sla_cooking'); order.alerted_cooking = true; }
                     }
