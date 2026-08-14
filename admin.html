@@ -2693,58 +2693,73 @@ let currentMediaTarget = 'product';
         // ==========================================
         // CUSTOMER HISTORY MODAL LOGIC
         // ==========================================
-        function openCustomerHistory(phone) {
+        function openCustomerHistory(phone, email) {
             const modal = document.getElementById('customerHistoryModal');
             const container = document.getElementById('ch-orders-container');
             
-            // Filter all orders for this specific phone number
-            const customerOrders = window.allCustomerOrders.filter(o => o.customer_phone === phone);
+            // Filter all orders for this specific email address (fallback to phone if email is missing)
+            const customerOrders = window.allCustomerOrders.filter(o => {
+                const oEmail = (o.customer_email || '').trim().toLowerCase();
+                const targetEmail = (email || '').trim().toLowerCase();
+                if (targetEmail && targetEmail !== 'n/a') {
+                    return oEmail === targetEmail;
+                }
+                return o.customer_phone === phone;
+            });
             
             if (customerOrders.length > 0) {
-                document.getElementById('ch-name').innerHTML = `<i class="fas fa-user-circle text-gray-300"></i> ${customerOrders[0].customer_name || 'Guest'}`;
-                document.getElementById('ch-phone').innerHTML = `<i class="fas fa-phone-alt text-gray-400 me-1"></i> ${phone}`;
+                document.getElementById('ch-name').innerHTML = `<i class="fas fa-user-circle text-gray-300"></i> ${customerOrders[0].customer_name || 'Customer'} <span class="text-xs font-normal text-gray-400 ml-2">(${email})</span>`;
+                document.getElementById('ch-phone').innerHTML = `<i class="fas fa-phone-alt text-gray-400 me-1"></i> ${phone || 'N/A'}`;
                 
                 const totalLifetime = customerOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
-                document.getElementById('ch-total-spent').innerHTML = `Lifetime: <span class="font-black">${totalLifetime.toFixed(2)}</span>`;
+                document.getElementById('ch-total-spent').innerHTML = `LIFETIME: <span class="font-black">${totalLifetime.toFixed(2)}</span>`;
+            } else {
+                document.getElementById('ch-name').innerHTML = `<i class="fas fa-user-circle text-gray-300"></i> Customer <span class="text-xs font-normal text-gray-400 ml-2">(${email})</span>`;
+                document.getElementById('ch-phone').innerHTML = `<i class="fas fa-phone-alt text-gray-400 me-1"></i> ${phone || 'N/A'}`;
+                document.getElementById('ch-total-spent').innerHTML = `LIFETIME: <span class="font-black">0.00</span>`;
             }
 
             container.innerHTML = '';
 
+            if (customerOrders.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-xs italic">No orders found for this customer profile.</div>`;
+            }
+
             customerOrders.forEach(order => {
-                const date = new Date(order.created_at).toLocaleString();
+                const date = order.created_at ? new Date(order.created_at).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit'}) : 'N/A';
                 
-                // Color code the status
                 let statusColor = "bg-green-100 text-green-700 border-green-200";
                 if(order.status === 'Cancelled') statusColor = "bg-red-100 text-red-700 border-red-200";
                 else if(order.status === 'Pending') statusColor = "bg-yellow-100 text-yellow-700 border-yellow-200";
                 else if(order.status === 'Cooking') statusColor = "bg-blue-100 text-blue-700 border-blue-200";
 
-                // Build the list of items they bought
                 let itemsHtml = '';
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
                         itemsHtml += `
-                        <div class="flex justify-between text-sm py-1.5 border-b border-gray-100 last:border-0">
-                            <span class="font-bold text-gray-700"><span class="text-red-500">${item.qty}x</span> ${item.name}</span>
-                            <span class="text-gray-500 font-medium">${(item.price * item.qty).toFixed(2)}</span>
+                        <div class="flex justify-between text-xs py-1.5 border-b border-gray-100 last:border-0">
+                            <span class="font-bold text-gray-700"><span class="text-red-500 font-black">${item.qty}x</span> ${item.name}</span>
+                            <span class="text-gray-500 font-bold">${(item.price * item.qty).toFixed(2)}</span>
                         </div>`;
                     });
+                } else {
+                    itemsHtml = `<div class="text-xs text-gray-400 italic">Item details not recorded.</div>`;
                 }
 
                 container.innerHTML += `
-                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden group">
-                        <div class="flex justify-between items-start mb-3">
+                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
                             <div>
-                                <span class="px-2 py-1 rounded border text-[10px] font-black uppercase ${statusColor}">${order.status}</span>
-                                <h4 class="font-black text-gray-900 mt-2 text-lg">${order.order_type}</h4>
-                                <p class="text-xs text-gray-400 font-bold mt-0.5"><i class="far fa-clock"></i> ${date}</p>
+                                <span class="px-2 py-0.5 rounded border text-[9px] font-black uppercase ${statusColor}">${order.status}</span>
+                                <h4 class="font-black text-gray-900 mt-1.5 text-base">${order.order_type || 'Takeaway'}</h4>
+                                <p class="text-[10px] text-gray-400 font-bold mt-0.5"><i class="far fa-clock"></i> ${date}</p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Order Total</p>
-                                <p class="text-xl font-black text-green-600 mt-0.5">${parseFloat(order.total_amount).toFixed(2)}</p>
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Order Total</p>
+                                <p class="text-lg font-black text-green-600 mt-0.5">${parseFloat(order.total_amount || 0).toFixed(2)}</p>
                             </div>
                         </div>
-                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
+                        <div class="bg-gray-50 rounded-xl p-2.5 border border-gray-100 mt-2">
                             ${itemsHtml}
                         </div>
                     </div>
