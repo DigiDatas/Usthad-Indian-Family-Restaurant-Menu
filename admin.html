@@ -2573,30 +2573,26 @@ let currentMediaTarget = 'product';
             }
 
             const tbody = document.getElementById('users-table-body');
-            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500"><i class="fas fa-spinner fa-spin me-2"></i> Loading Customer Analytics...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500"><i class="fas fa-spinner fa-spin me-2"></i> Loading Customer Directory...</td></tr>`;
 
             try {
-                // 🌟 FIX: Safely fetch orders and handle profiles without throwing a client error
-                const ordersRes = await supabaseClient.from('orders').select('*').order('created_at', { ascending: false });
-                
-                let profilesRes = { data: [] };
-                try {
-                    profilesRes = await supabaseClient.from('profiles').select('*');
-                } catch (e) {
-                    // Profiles table might not exist yet, default to empty array safely
-                }
+                // Fetch orders and optional public profiles table concurrently
+                const [ordersRes, profilesRes] = await Promise.all([
+                    supabaseClient.from('orders').select('*').order('created_at', { ascending: false }),
+                    supabaseClient.from('profiles').select('*').catch(() => ({ data: [] }))
+                ]);
 
                 if (icon) icon.classList.remove('fa-spin');
 
                 if (ordersRes.error) {
-                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Error loading customer data: ${ordersRes.error.message}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500">Error: ${ordersRes.error.message}</td></tr>`;
                     return;
                 }
 
                 window.allCustomerOrders = ordersRes.data || [];
                 const userMap = {};
 
-                // 1. First, map out all users from orders
+                // 1. Map all users from orders
                 window.allCustomerOrders.forEach(order => {
                     const email = (order.customer_email || '').trim().toLowerCase() || 'no-email';
                     const phone = order.customer_phone || 'No Phone';
@@ -2630,7 +2626,7 @@ let currentMediaTarget = 'product';
                     }
                 });
 
-                // 2. Merge registered database users who haven't ordered yet
+                // 2. Merge registered profiles from database
                 const profiles = profilesRes.data || [];
                 profiles.forEach(prof => {
                     const email = (prof.email || '').trim().toLowerCase();
@@ -2665,14 +2661,22 @@ let currentMediaTarget = 'product';
                         rowBg = 'bg-yellow-50/30 hover:bg-yellow-50';
                     }
 
-                    const regDate = u.created_at && u.created_at !== 'N/A' ? new Date(u.created_at).toLocaleDateString() : 'N/A';
+                    // Format signup and last login dates nicely
+                    const regDate = u.created_at && u.created_at !== 'N/A' ? new Date(u.created_at).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '<span class="text-gray-300 italic">Not Tracked</span>';
+                    const loginDate = u.last_sign_in && u.last_sign_in !== 'N/A' ? new Date(u.last_sign_in).toLocaleString([], {month:'short', day:'numeric', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '<span class="text-gray-300 italic">Active Session</span>';
 
                     tbody.innerHTML += `
                         <tr class="${rowBg} transition">
-                            <td class="p-4 font-bold text-gray-900 flex items-center">${rankBadge} ${u.name}</td>
+                            <td class="p-4">
+                                <div class="font-bold text-gray-900 flex items-center">${rankBadge} ${u.name}</div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">Joined: ${regDate}</div>
+                            </td>
                             <td class="p-4 text-blue-600 font-semibold"><a href="tel:${u.phone}">${u.phone}</a></td>
-                            <td class="p-4 text-gray-600 text-xs font-medium"><a href="mailto:${u.email}">${u.email}</a></td>
-                            <td class="p-4 text-gray-500 text-xs truncate max-w-[150px]" title="${u.address}">${u.address}</td>
+                            <td class="p-4">
+                                <div class="text-gray-700 text-xs font-medium"><a href="mailto:${u.email}">${u.email}</a></div>
+                                <div class="text-[10px] text-gray-400 mt-0.5">Last Login: ${loginDate}</div>
+                            </td>
+                            <td class="p-4 text-gray-500 text-xs truncate max-w-[140px]" title="${u.address}">${u.address}</td>
                             <td class="p-4 text-center"><span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-lg font-black text-xs border border-gray-200">${u.count}</span></td>
                             <td class="p-4 font-black text-green-600">${u.totalSpent.toFixed(2)}</td>
                             <td class="p-4 text-end">
@@ -2737,29 +2741,30 @@ let currentMediaTarget = 'product';
                 if (order.items && Array.isArray(order.items)) {
                     order.items.forEach(item => {
                         itemsHtml += `
-                        <div class="flex justify-between text-xs py-1.5 border-b border-gray-100 last:border-0">
-                            <span class="font-bold text-gray-700"><span class="text-red-500 font-black">${item.qty}x</span> ${item.name}</span>
-                            <span class="text-gray-500 font-bold">${(item.price * item.qty).toFixed(2)}</span>
+                        <div class="flex justify-between items-center text-xs py-2 border-b border-gray-100 last:border-0">
+                            <span class="font-bold text-gray-800"><span class="text-red-600 font-black mr-1.5">${item.qty}x</span> ${item.name}</span>
+                            <span class="text-gray-600 font-bold">${(item.price * item.qty).toFixed(2)}</span>
                         </div>`;
                     });
                 } else {
-                    itemsHtml = `<div class="text-xs text-gray-400 italic">Item details not recorded.</div>`;
+                    itemsHtml = `<div class="text-xs text-gray-400 italic py-1">Item details not recorded.</div>`;
                 }
 
                 container.innerHTML += `
-                    <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden group">
-                        <div class="flex justify-between items-start mb-2">
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden flex flex-col gap-3">
+                        <div class="flex justify-between items-start">
                             <div>
-                                <span class="px-2 py-0.5 rounded border text-[9px] font-black uppercase ${statusColor}">${order.status}</span>
-                                <h4 class="font-black text-gray-900 mt-1.5 text-base">${order.order_type || 'Takeaway'}</h4>
-                                <p class="text-[10px] text-gray-400 font-bold mt-0.5"><i class="far fa-clock"></i> ${date}</p>
+                                <span class="px-2.5 py-1 rounded-md border text-[10px] font-black uppercase ${statusColor}">${order.status}</span>
+                                <h4 class="font-black text-gray-900 mt-2 text-base">${order.order_type || 'Takeaway'} <span class="text-xs text-gray-400 font-normal">(${order.order_number || 'N/A'})</span></h4>
+                                <p class="text-[11px] text-gray-400 font-bold mt-0.5"><i class="far fa-clock mr-1"></i> ${date}</p>
                             </div>
                             <div class="text-right">
                                 <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Order Total</p>
-                                <p class="text-lg font-black text-green-600 mt-0.5">${parseFloat(order.total_amount || 0).toFixed(2)}</p>
+                                <p class="text-xl font-black text-green-600 mt-0.5">${parseFloat(order.total_amount || 0).toFixed(2)}</p>
                             </div>
                         </div>
-                        <div class="bg-gray-50 rounded-xl p-2.5 border border-gray-100 mt-2">
+                        <div class="bg-gray-50 rounded-xl p-3 border border-gray-100 flex flex-col">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1.5">Purchased Items</p>
                             ${itemsHtml}
                         </div>
                     </div>
