@@ -349,8 +349,8 @@
         </section>
 
         <!-- ================= TAB 3: CUSTOMERS & USER ORDERS ================= -->
-        <section id="section-users" class="tab-section hidden">
-            <div class="flex justify-between items-end mb-6">
+        <section id="section-users" class="tab-section hidden h-full flex flex-col">
+            <div class="flex justify-between items-end mb-4 shrink-0">
                 <div>
                     <h2 class="text-2xl font-black text-gray-800">Customer Directory</h2>
                     <p class="text-sm text-gray-500">View customer contact details, lifetime spend, and order history.</p>
@@ -360,76 +360,84 @@
                 </button>
             </div>
 
-<!-- 🌟 NEW: CUSTOMER ANALYTICS DASHBOARD -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="customer-analytics-grid">
+            <!-- 🌟 PHASE 1: CUSTOMER ANALYTICS DASHBOARD (Kept Safe!) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 shrink-0" id="customer-analytics-grid">
                 <!-- KPI Card -->
-                <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-users"></i></div>
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col justify-center">
+                    <div class="flex items-center gap-3 mb-1.5">
+                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fas fa-users text-sm"></i></div>
                         <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Total Registered</p>
-                            <h3 class="text-2xl font-black text-gray-900 leading-none" id="ca-total-users">0</h3>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-wider">Total Registered</p>
+                            <h3 class="text-xl font-black text-gray-900 leading-none" id="ca-total-users">0</h3>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-                        <div class="w-10 h-10 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-wallet"></i></div>
+                    <div class="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-gray-100">
+                        <div class="w-8 h-8 rounded-full bg-green-50 text-green-500 flex items-center justify-center"><i class="fas fa-wallet text-sm"></i></div>
                         <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-wider">Avg. Lifetime Spend</p>
-                            <h3 class="text-lg font-black text-green-600 leading-none" id="ca-avg-spend">0.00</h3>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-wider">Avg. Lifetime Spend</p>
+                            <h3 class="text-base font-black text-green-600 leading-none" id="ca-avg-spend">0.00</h3>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Gender Chart -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 text-center">Gender Demographics</h3>
-                    <div class="relative w-full h-[120px] flex items-center justify-center">
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 text-center">Gender Demographics</h3>
+                    <div class="relative w-full h-[95px] flex items-center justify-center">
                         <canvas id="customerGenderChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Success vs Cancelled Chart -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
-                    <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 text-center">Success vs Cancellations</h3>
-                    <div class="relative w-full h-[120px] flex items-center justify-center">
+                <div class="bg-white p-3 rounded-2xl shadow-sm border border-gray-200 flex flex-col">
+                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-wider mb-1 text-center">Success vs Cancellations</h3>
+                    <div class="relative w-full h-[95px] flex items-center justify-center">
                         <canvas id="customerStatusChart"></canvas>
                     </div>
                 </div>
             </div>
             <!-- 🌟 END OF ANALYTICS -->
 
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="p-4">Customer Name</th>
-                                <th class="p-4">Phone / WhatsApp</th>
-                                <th class="p-4">Email Address</th>
-                                <th class="p-4">Latest Address</th>
-                                <th class="p-4 text-center">Total Orders</th>
-                                <th class="p-4">Lifetime Spent</th>
-                                <th class="p-4 text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="users-table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Customer Data...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- 🌟 SPLIT SCREEN LAYOUT (Table Left, Wishlists Right) -->
+            <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden pb-2">
+                
+                <!-- LEFT COLUMN: Customer Table -->
+                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-w-0">
+                    <div class="overflow-y-auto overflow-x-auto flex-1 hide-scrollbar relative">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="sticky top-0 bg-gray-50 shadow-sm z-10">
+                                <tr class="border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                                    <th class="p-4">Customer Name</th>
+                                    <th class="p-4">Phone / WhatsApp</th>
+                                    <th class="p-4">Email Address</th>
+                                    <th class="p-4">Latest Address</th>
+                                    <th class="p-4 text-center">Total Orders</th>
+                                    <th class="p-4">Lifetime Spent</th>
+                                    <th class="p-4 text-end">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="divide-y divide-gray-100 text-sm">
+                                <tr>
+                                    <td colspan="7" class="p-8 text-center text-gray-400">Loading Customer Data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-<!-- 🌟 NEW: CUSTOMER WISHLISTS GRID (PASTE THIS HERE) -->
-            <div class="mt-8 mb-4">
-                <h3 class="text-xl font-black text-gray-800 mb-4 flex items-center gap-2">
-                    <i class="fas fa-heart text-red-500"></i> Customer Wishlists
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4" id="wishlist-cards-container">
+
+                <!-- RIGHT COLUMN: Wishlist Sidebar -->
+                <div class="w-full lg:w-80 xl:w-96 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col shrink-0">
+                    <div class="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center gap-2 shrink-0">
+                        <i class="fas fa-heart text-red-500"></i>
+                        <h3 class="font-black text-gray-800 text-sm uppercase tracking-wider">Recent Wishlists</h3>
+                    </div>
                     <!-- Wishlist Cards Injected Here via JS -->
+                    <div class="overflow-y-auto flex-1 p-3 flex flex-col gap-2 hide-scrollbar" id="wishlist-cards-container">
+                    </div>
                 </div>
+
             </div>
-            <!-- 🌟 END WISHLISTS GRID -->
+            <!-- 🌟 END SPLIT SCREEN -->
         </section>
 <!-- ================= TAB 5: OFFERS, BANNERS & FLASHCARDS ================= -->
         <section id="section-offers" class="tab-section hidden">
@@ -2809,36 +2817,38 @@ let currentMediaTarget = 'product';
 
                 renderCustomerAnalytics(users, window.allCustomerOrders);
 
-            // 🌟 NEW: RENDER THE WISHLIST CARDS
+            // 🌟 FIX: RENDER THE WISHLIST SIDEBAR (SORTED BY RECENT)
                 const wishContainer = document.getElementById('wishlist-cards-container');
                 if (wishContainer) {
                     wishContainer.innerHTML = '';
-                    let wishCount = 0;
                     
-                    users.forEach(u => {
-                        if (u.wishlist && u.wishlist.length > 0) {
-                            wishCount++;
-                            // Convert saved IDs back into actual food names for preview
+                    // Filter users who have a wishlist, then sort by Last Sign In (Newest at the top!)
+                    const wishUsers = users.filter(u => u.wishlist && u.wishlist.length > 0).sort((a, b) => {
+                        const dateA = new Date(a.last_sign_in !== 'N/A' ? a.last_sign_in : a.created_at);
+                        const dateB = new Date(b.last_sign_in !== 'N/A' ? b.last_sign_in : b.created_at);
+                        return dateB - dateA;
+                    });
+
+                    if (wishUsers.length === 0) {
+                        wishContainer.innerHTML = `<div class="p-4 text-center text-gray-400 text-xs font-bold italic">No active wishlists found.</div>`;
+                    } else {
+                        wishUsers.forEach(u => {
                             const itemNames = allMenuItems.filter(m => u.wishlist.includes(String(m.id))).map(m => m.name);
                             const itemsText = itemNames.length > 0 ? itemNames.join(', ') : 'Unknown Items';
                             
                             wishContainer.innerHTML += `
-                                <div class="bg-white p-4 rounded-xl shadow-sm border border-red-100 flex flex-col gap-2 cursor-pointer hover:shadow-md hover:-translate-y-1 transition-all" onclick="openCustomerHistory('${u.phone}', '${u.email}')">
-                                    <div class="flex justify-between items-start">
-                                        <div>
-                                            <h4 class="font-bold text-gray-900 text-sm truncate w-32">${u.name}</h4>
-                                            <p class="text-[10px] text-gray-500 truncate w-32">${u.email}</p>
-                                        </div>
-                                        <span class="bg-red-50 text-red-600 px-2 py-1 rounded text-[10px] font-black shrink-0"><i class="fas fa-heart"></i> ${u.wishlist.length} Items</span>
+                                <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm hover:border-red-200 cursor-pointer transition group" onclick="openCustomerHistory('${u.phone}', '${u.email}')">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <h4 class="font-black text-gray-800 text-xs truncate flex-1 group-hover:text-red-500 transition">${u.name}</h4>
+                                        <span class="bg-red-50 text-red-600 px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 ml-2">${u.wishlist.length} Items</span>
                                     </div>
-                                    <p class="text-xs text-gray-600 line-clamp-2 mt-1"><span class="font-bold text-gray-800">Wishes:</span> ${itemsText}</p>
+                                    <p class="text-[10px] text-gray-400 truncate mb-1">${u.email !== 'N/A' ? u.email : u.phone}</p>
+                                    <div class="text-[10px] text-gray-500 line-clamp-2 leading-tight bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                                        <span class="font-bold text-gray-700">Wishes:</span> ${itemsText}
+                                    </div>
                                 </div>
                             `;
-                        }
-                    });
-                    
-                    if (wishCount === 0) {
-                        wishContainer.innerHTML = `<div class="col-span-full p-4 text-center text-gray-400 text-sm font-bold bg-gray-50 rounded-xl border border-gray-100">No active wishlists found.</div>`;
+                        });
                     }
                 }
 
@@ -3909,6 +3919,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 `;
             });
         }
+
         async function updateReviewStatus(reviewId, newStatus) {
             // Optimistic UI
             const review = allReviews.find(r => String(r.id) === String(reviewId));
