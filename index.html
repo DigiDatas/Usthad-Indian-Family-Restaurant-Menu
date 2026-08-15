@@ -449,6 +449,15 @@
                 </div>
                 <!-- 🌟 END IN-APP REVIEW FORM -->
 
+                <!-- 🌟 NEW: DISPLAY APPROVED REVIEWS -->
+                <div id="modalApprovedReviewsArea" class="hidden mb-4 flex-col gap-3">
+                    <h4 class="font-bold text-gray-800 text-sm border-b border-gray-100 pb-1 flex items-center gap-2"><i class="fas fa-star text-yellow-400"></i> Customer Reviews</h4>
+                    <div id="approved-reviews-container" class="flex flex-col gap-2 max-h-48 overflow-y-auto hide-scrollbar">
+                        <!-- Reviews injected here -->
+                    </div>
+                </div>
+                <!-- 🌟 END APPROVED REVIEWS -->
+
                 <div id="modalRelatedArea" class="hidden mt-4 mb-2 flex-col gap-2">
                     <h4 class="font-bold text-gray-800 text-sm mb-1">Frequently Bought Together</h4>
                     <div id="related-slider" class="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x">
@@ -1149,8 +1158,9 @@ let relatedItemsData = []; // (You did this perfectly!)
                     rawBranding = {};
                 }
 
-                // 2. FETCH LIVE OFFERS & FLASHCARDS
-                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
+                // 2.5 FETCH APPROVED REVIEWS
+                const { data: dbReviews } = await supabaseClient.from('reviews').select('*').eq('status', 'Approved').order('created_at', { ascending: false });
+                window.liveReviews = dbReviews || [];
                 if (dbOffers && dbOffers.length > 0) {
                     rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
                         B: o.offer_name, C: o.description, D: o.price_before, E: o.price_after, F: o.image_url
@@ -2342,6 +2352,40 @@ function setupVerticalDraggable(elementId) {
                 relatedArea.classList.add('hidden');
                 relatedArea.classList.remove('flex');
             }
+// --- 🌟 NEW: RENDER APPROVED REVIEWS LOGIC ---
+            const reviewsArea = document.getElementById('modalApprovedReviewsArea');
+            const reviewsContainer = document.getElementById('approved-reviews-container');
+            reviewsContainer.innerHTML = '';
+            
+            // Find reviews that match this specific food item
+            const itemReviews = (window.liveReviews || []).filter(r => r.item_name === item.name);
+            
+            if (itemReviews.length > 0) {
+                itemReviews.forEach(review => {
+                    let starsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        starsHtml += `<i class="fas fa-star ${i <= review.rating ? 'text-yellow-400' : 'text-gray-200'}"></i>`;
+                    }
+                    const dateStr = new Date(review.created_at).toLocaleDateString();
+                    
+                    reviewsContainer.innerHTML += `
+                        <div class="bg-white border border-gray-100 rounded-xl p-3 flex flex-col gap-1 shadow-sm">
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-gray-800 text-xs"><i class="fas fa-user-circle text-gray-300 me-1"></i> ${review.customer_name}</span>
+                                <span class="text-[9px] font-bold text-gray-400">${dateStr}</span>
+                            </div>
+                            <div class="flex gap-0.5 text-[10px] my-0.5">${starsHtml}</div>
+                            ${review.comment ? `<p class="text-xs text-gray-600 mt-1 italic">"${review.comment}"</p>` : ''}
+                        </div>
+                    `;
+                });
+                reviewsArea.classList.remove('hidden');
+                reviewsArea.classList.add('flex');
+            } else {
+                reviewsArea.classList.add('hidden');
+                reviewsArea.classList.remove('flex');
+            }
+            // --- END REVIEWS LOGIC ---
 
             const modal = document.getElementById('productModal');
             const backdrop = document.getElementById('modalBackdrop');
