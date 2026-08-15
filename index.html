@@ -1075,8 +1075,7 @@ async function handleGoogleLogin() {
 
         
 
-        // Trigger the check when the page finishes loading
-        window.addEventListener('load', checkSession);
+      
         // --- Core State ---
 const CUSTOMER_ID = "CS02-2026-08";
       let rawBranding = {};
@@ -1218,9 +1217,11 @@ let relatedItemsData = []; // (You did this perfectly!)
                 // 4. SET LANGUAGE PREFERENCES
                 applySystemSetup();
 
+                // 🌟 FIX: WAIT FOR SESSION AND DOWNLOAD HEARTS BEFORE BUILDING THE MENU!
+                await checkSession();
+
                 // 5. FETCH MENU FOR CURRENT LANGUAGE
                 await fetchMenuDataForLang(currentLang);
-
             } catch (error) {
                 console.error("Initialization Error:", error);
                 document.getElementById('loading-state').classList.add('hidden');
@@ -3992,7 +3993,8 @@ function toggleQuickCart(id) {
             }
         }
 
-             window.onload = init;
+        
+        window.onload = init;
         setupSearch(); 
 
         // --- Register PWA Service Worker ---
