@@ -1100,7 +1100,6 @@ let relatedItemsData = []; // (You did this perfectly!)
             }
         };
 
-        /// --- Master DB-Only Initialization Engine ---
         async function init() {
             try {
                 // ==========================================
@@ -1160,7 +1159,6 @@ let relatedItemsData = []; // (You did this perfectly!)
 
                 // 2. FETCH LIVE OFFERS & FLASHCARDS
                 const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
-                window.liveReviews = dbReviews || [];
                 if (dbOffers && dbOffers.length > 0) {
                     rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
                         B: o.offer_name, C: o.description, D: o.price_before, E: o.price_after, F: o.image_url
@@ -1168,9 +1166,10 @@ let relatedItemsData = []; // (You did this perfectly!)
                     const flashcardRow = dbOffers.find(o => o.flashcard);
                     if (flashcardRow) window.liveFlashcards = flashcardRow.flashcard.split(',').map(u => u.trim()).filter(Boolean);
                 }
-		// 2.5 FETCH APPROVED REVIEWS
-                const { data: dbReviews } = await supabaseClient.from('reviews').select('*').eq('status', 'Approved').order('created_at', { ascending: false });
-                window.liveReviews = dbReviews || [];
+
+                // 2.5 FETCH APPROVED REVIEWS
+                const reviewsResponse = await supabaseClient.from('reviews').select('*').eq('status', 'Approved').order('created_at', { ascending: false });
+                window.liveReviews = reviewsResponse.data || [];
 
                 // 3. FETCH LIVE RELATED ITEMS
                 const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
@@ -2388,7 +2387,7 @@ function setupVerticalDraggable(elementId) {
                 reviewsArea.classList.add('hidden');
                 reviewsArea.classList.remove('flex');
             }
-            // --- END REVIEWS LOGIC ---
+           
 
             const modal = document.getElementById('productModal');
             const backdrop = document.getElementById('modalBackdrop');
