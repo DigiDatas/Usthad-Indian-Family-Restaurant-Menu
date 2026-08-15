@@ -433,6 +433,21 @@
                     <div id="modalReviewIcons" class="flex flex-wrap gap-2 pt-1">
                         </div>
                 </div>
+		<!-- 🌟 NEW: IN-APP REVIEW SUBMISSION FORM -->
+                <div id="modalSubmitReviewArea" class="mb-4 bg-gray-50 border border-gray-200 rounded-xl p-4 flex flex-col gap-2">
+                    <h4 class="font-bold text-gray-800 text-sm">Leave a Review</h4>
+                    <div class="flex gap-1 text-2xl text-gray-300" id="review-stars-container">
+                        <i class="fas fa-star cursor-pointer hover:text-yellow-400 transition hover:scale-110" onclick="setRating(1)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-yellow-400 transition hover:scale-110" onclick="setRating(2)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-yellow-400 transition hover:scale-110" onclick="setRating(3)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-yellow-400 transition hover:scale-110" onclick="setRating(4)"></i>
+                        <i class="fas fa-star cursor-pointer hover:text-yellow-400 transition hover:scale-110" onclick="setRating(5)"></i>
+                    </div>
+                    <input type="hidden" id="review-rating-value" value="0">
+                    <textarea id="review-comment-input" rows="2" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-red-500" placeholder="Tell us what you think..."></textarea>
+                    <button onclick="submitCustomerReview()" id="btn-submit-review" class="bg-gray-900 text-white font-bold text-xs py-2.5 rounded-lg hover:bg-gray-800 transition shadow-sm mt-1">Submit Review</button>
+                </div>
+                <!-- 🌟 END IN-APP REVIEW FORM -->
 
                 <div id="modalRelatedArea" class="hidden mt-4 mb-2 flex-col gap-2">
                     <h4 class="font-bold text-gray-800 text-sm mb-1">Frequently Bought Together</h4>
@@ -2105,6 +2120,10 @@ function setupVerticalDraggable(elementId) {
             const item = activeMenuData.find(i => String(i.id) === String(id));
             if (!item) return;
             currentOpenItemId = id;
+		// 🌟 NEW: Reset the review form every time the modal opens
+            if(typeof setRating === 'function') setRating(0);
+            const commentBox = document.getElementById('review-comment-input');
+            if(commentBox) commentBox.value = '';
 
             // FIX 1: Instantly scroll to the top of the modal (Fixes the Related Items click issue!)
             const modalScrollContainer = document.querySelector('#modalContent .overflow-y-auto');
@@ -3800,6 +3819,75 @@ function toggleQuickCart(id) {
                 lastSliderInteraction = Date.now(); // Pause auto-swipe
             }
         };
+
+// ==========================================
+        // NEW: IN-APP REVIEW SUBMISSION LOGIC
+        // ==========================================
+        function setRating(stars) {
+            document.getElementById('review-rating-value').value = stars;
+            const container = document.getElementById('review-stars-container');
+            const icons = container.querySelectorAll('i');
+            
+            icons.forEach((icon, index) => {
+                if (index < stars) {
+                    icon.classList.remove('text-gray-300');
+                    icon.classList.add('text-yellow-400');
+                } else {
+                    icon.classList.add('text-gray-300');
+                    icon.classList.remove('text-yellow-400');
+                }
+            });
+        }
+
+        async function submitCustomerReview() {
+            if (!currentOpenItemId) return;
+            
+            const rating = parseInt(document.getElementById('review-rating-value').value);
+            const comment = document.getElementById('review-comment-input').value.trim();
+            
+            if (rating === 0) {
+                alert("Please select a star rating first!");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-review');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
+
+            // 1. Identify User (Guests allowed, but we grab name if logged in)
+            let customerName = "Guest User";
+            if (currentUser && currentUser.user_metadata) {
+                customerName = currentUser.user_metadata.name || currentUser.user_metadata.full_name || (currentUser.email ? currentUser.email.split('@')[0] : 'Guest');
+            }
+
+            // 2. Identify Item
+            const item = activeMenuData.find(i => String(i.id) === String(currentOpenItemId));
+            const itemName = item ? item.name : "Unknown Item";
+
+            // 3. Build Payload
+            const payload = {
+                customer_name: customerName,
+                item_name: itemName,
+                rating: rating,
+                comment: comment,
+                status: 'Pending' // Goes straight to the Admin panel for approval!
+            };
+
+            // 4. Send to Supabase
+            const { error } = await supabaseClient.from('reviews').insert([payload]);
+
+            if (error) {
+                alert("Error submitting review: " + error.message);
+                btn.innerHTML = originalText;
+            } else {
+                alert("Thank you! Your review has been submitted and is awaiting admin approval.");
+                
+                // Reset form
+                setRating(0);
+                document.getElementById('review-comment-input').value = '';
+                btn.innerHTML = originalText;
+            }
+        }
 
         
         window.onload = init;
