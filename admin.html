@@ -2745,8 +2745,9 @@ let currentMediaTarget = 'product';
                 const profiles = profilesRes.data || [];
                 profiles.forEach(prof => {
                     const email = (prof.email || '').trim().toLowerCase();
-                    const userGender = prof.gender || (prof.raw_user_meta_data && prof.raw_user_meta_data.gender) || 'Unknown';
-                    const userWishlist = (prof.raw_user_meta_data && prof.raw_user_meta_data.wishlist) || []; 
+                    // 🌟 FIX: Pull directly from the newly created profiles table columns
+                    const userGender = prof.gender || 'Unknown';
+                    const userWishlist = prof.wishlist || [];
 
                     if (email && !userMap[email]) {
                         userMap[email] = {
