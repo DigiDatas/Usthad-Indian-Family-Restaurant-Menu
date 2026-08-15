@@ -838,12 +838,31 @@
             if (session) {
                 currentUser = session.user;
 
-                // REMOVED AUTO-REDIRECT: Admins can now preview the Customer App peacefully!
+                // 🌟 1. DOWNLOAD SAVED HEARTS FROM CLOUD TO THE APP
+                const cloudWishlist = currentUser.user_metadata?.wishlist || [];
+                if (cloudWishlist.length > 0) {
+                    cloudWishlist.forEach(id => likedItems.add(id));
+                    localStorage.setItem('likedItems', JSON.stringify([...likedItems]));
+                }
+
+                // 🌟 2. SEND PROFILE TO THE ADMIN PANEL DATABASE
+                const meta = currentUser.user_metadata || {};
+                await supabaseClient.from('profiles').upsert({
+                    id: currentUser.id,
+                    email: currentUser.email,
+                    full_name: meta.name || meta.full_name || currentUser.email.split('@')[0],
+                    phone: meta.phone || 'No Phone',
+                    gender: meta.gender || 'Unknown',
+                    wishlist: [...likedItems],
+                    last_sign_in: new Date().toISOString()
+                });
 
                 if(btnNavLogin) btnNavLogin.classList.replace('flex', 'hidden');
                 if(btnNavProfile) btnNavProfile.classList.replace('hidden', 'flex');
-                
                 if(authModal) authModal.classList.replace('flex', 'hidden'); 
+                
+                // Refresh the menu UI so the red hearts light up!
+                if (typeof executeFilter === 'function') executeFilter();
             } else {
                 currentUser = null;
                 if(btnNavLogin) btnNavLogin.classList.replace('hidden', 'flex');
@@ -2459,9 +2478,15 @@ function setupVerticalDraggable(elementId) {
             
             // Sync to Supabase if the user is logged in!
             if (currentUser) {
+                // Update internal auth metadata
                 await supabaseClient.auth.updateUser({
                     data: { wishlist: [...likedItems] }
                 });
+                
+                // 🌟 NEW: Update the public profiles table so the Admin Panel sees it instantly!
+                await supabaseClient.from('profiles').update({
+                    wishlist: [...likedItems]
+                }).eq('id', currentUser.id);
             }
         }
 
