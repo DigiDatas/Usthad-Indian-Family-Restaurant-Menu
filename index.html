@@ -838,22 +838,37 @@
             if (session) {
                 currentUser = session.user;
 
-                // 🌟 1. FETCH THE LATEST WISHLIST DIRECTLY FROM THE PROFILES TABLE
                 const { data: profileData } = await supabaseClient
                     .from('profiles')
                     .select('wishlist')
                     .eq('id', currentUser.id)
                     .maybeSingle();
 
-                // Use the database wishlist, fallback to metadata, or default to empty
                 const cloudWishlist = (profileData && profileData.wishlist) ? profileData.wishlist : (currentUser.user_metadata?.wishlist || []);
                 
                 if (cloudWishlist.length > 0) {
-                    cloudWishlist.forEach(id => likedItems.add(id));
+                    // Overwrite local memory with the Cloud truth
+                    likedItems = new Set(cloudWishlist);
                     localStorage.setItem('likedItems', JSON.stringify([...likedItems]));
                 }
 
-                // 🌟 2. UPDATE PROFILE IN THE DATABASE (so Admin sees them)
+                // 🌟 FIX: FORCE UI UPDATE! Find all heart buttons currently on screen and paint them red instantly.
+                document.querySelectorAll('.menu-card').forEach(card => {
+                    const btn = card.querySelector('button[onclick^="toggleLike"]');
+                    if (btn) {
+                        // Extract the item ID from the onclick attribute text
+                        const match = btn.getAttribute('onclick').match(/'([^']+)'/);
+                        if (match && match[1]) {
+                            const itemId = match[1];
+                            const icon = btn.querySelector('i');
+                            if (likedItems.has(itemId)) {
+                                icon.classList.replace('far', 'fas');
+                                icon.classList.add('text-red-500');
+                            }
+                        }
+                    }
+                });
+
                 const meta = currentUser.user_metadata || {};
                 await supabaseClient.from('profiles').upsert({
                     id: currentUser.id,
@@ -869,8 +884,6 @@
                 if(btnNavProfile) btnNavProfile.classList.replace('hidden', 'flex');
                 if(authModal) authModal.classList.replace('flex', 'hidden'); 
                 
-                // 🌟 3. REFRESH THE UI TO DRAW THE RED HEARTS INSTANTLY
-                if (typeof executeFilter === 'function') executeFilter();
             } else {
                 currentUser = null;
                 if(btnNavLogin) btnNavLogin.classList.replace('hidden', 'flex');
@@ -3978,8 +3991,8 @@ function toggleQuickCart(id) {
                 btn.innerHTML = originalText;
             }
         }
-       
-        window.onload = init;
+
+             window.onload = init;
         setupSearch(); 
 
         // --- Register PWA Service Worker ---
