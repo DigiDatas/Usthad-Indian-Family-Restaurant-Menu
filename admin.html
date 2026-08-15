@@ -44,6 +44,11 @@
                     <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-chart-pie text-lg"></i></div>
                     <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Dashboard</span>
                 </button>
+!-- 🌟 NEW: CASHIER POS BUTTON -->
+                <button onclick="switchTab('pos')" id="tab-btn-pos" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cash-register text-lg"></i></div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Cashier POS</span>
+                </button>
                 <button onclick="switchTab('menu')" id="tab-btn-menu" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
                     <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-utensils text-lg"></i></div>
                     <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Menu Manager</span>
@@ -525,6 +530,56 @@
             </div>
         </div>
     </div>
+<!-- ================= TAB 7: CASHIER POS (KANBAN) ================= -->
+        <section id="section-pos" class="tab-section hidden h-full flex flex-col">
+            <div class="flex justify-between items-end mb-4 shrink-0">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">Cashier POS</h2>
+                    <p class="text-sm text-gray-500">Live Kanban board for active orders, payments, and receipt printing.</p>
+                </div>
+                <button onclick="fetchDashboardData(this, false)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
+                    <i class="fas fa-sync-alt text-blue-500 transition-all duration-300"></i> Refresh
+                </button>
+            </div>
+
+            <!-- Kanban Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-x-auto pb-4">
+                
+                <!-- Column 1: New / Pending -->
+                <div class="bg-gray-200/50 rounded-2xl p-4 flex flex-col h-full border border-gray-200 min-w-[300px]">
+                    <h3 class="font-black text-gray-700 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
+                        <span><i class="fas fa-inbox text-orange-500 me-2"></i> New Orders</span>
+                        <span class="bg-white text-gray-600 px-2 py-0.5 rounded-lg text-xs shadow-sm" id="pos-count-pending">0</span>
+                    </h3>
+                    <div id="pos-col-pending" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3">
+                        <!-- POS Cards Injected Here -->
+                    </div>
+                </div>
+
+                <!-- Column 2: Cooking -->
+                <div class="bg-yellow-50/50 rounded-2xl p-4 flex flex-col h-full border border-yellow-100 min-w-[300px]">
+                    <h3 class="font-black text-yellow-800 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
+                        <span><i class="fas fa-fire text-yellow-500 me-2"></i> Cooking</span>
+                        <span class="bg-white text-yellow-700 px-2 py-0.5 rounded-lg text-xs shadow-sm border border-yellow-100" id="pos-count-cooking">0</span>
+                    </h3>
+                    <div id="pos-col-cooking" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3">
+                        <!-- POS Cards Injected Here -->
+                    </div>
+                </div>
+
+                <!-- Column 3: Ready / Completed -->
+                <div class="bg-green-50/50 rounded-2xl p-4 flex flex-col h-full border border-green-100 min-w-[300px]">
+                    <h3 class="font-black text-green-800 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
+                        <span><i class="fas fa-check-circle text-green-500 me-2"></i> Ready / Done</span>
+                        <span class="bg-white text-green-700 px-2 py-0.5 rounded-lg text-xs shadow-sm border border-green-100" id="pos-count-completed">0</span>
+                    </h3>
+                    <div id="pos-col-completed" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3">
+                        <!-- POS Cards Injected Here -->
+                    </div>
+                </div>
+
+            </div>
+        </section>
         <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
         <section id="section-settings" class="tab-section hidden">
             <div class="flex justify-between items-end mb-6">
@@ -926,7 +981,7 @@
 
         // FIXED TABS ENGINE (Preserves new h-14 height and gaps)
         function switchTab(tabName) {
-            ['dashboard', 'menu', 'users', 'offers', 'settings'].forEach(t => {
+            ['dashboard', 'menu', 'users', 'offers', 'settings', 'pos'].forEach(t => {
                 const section = document.getElementById(`section-${t}`);
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if(section) section.classList.add('hidden');
