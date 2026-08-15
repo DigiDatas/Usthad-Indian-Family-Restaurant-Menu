@@ -1158,8 +1158,8 @@ let relatedItemsData = []; // (You did this perfectly!)
                     rawBranding = {};
                 }
 
-                // 2.5 FETCH APPROVED REVIEWS
-                const { data: dbReviews } = await supabaseClient.from('reviews').select('*').eq('status', 'Approved').order('created_at', { ascending: false });
+                // 2. FETCH LIVE OFFERS & FLASHCARDS
+                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
                 window.liveReviews = dbReviews || [];
                 if (dbOffers && dbOffers.length > 0) {
                     rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
@@ -1168,6 +1168,9 @@ let relatedItemsData = []; // (You did this perfectly!)
                     const flashcardRow = dbOffers.find(o => o.flashcard);
                     if (flashcardRow) window.liveFlashcards = flashcardRow.flashcard.split(',').map(u => u.trim()).filter(Boolean);
                 }
+		// 2.5 FETCH APPROVED REVIEWS
+                const { data: dbReviews } = await supabaseClient.from('reviews').select('*').eq('status', 'Approved').order('created_at', { ascending: false });
+                window.liveReviews = dbReviews || [];
 
                 // 3. FETCH LIVE RELATED ITEMS
                 const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
