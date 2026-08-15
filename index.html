@@ -838,14 +838,22 @@
             if (session) {
                 currentUser = session.user;
 
-                // 🌟 1. DOWNLOAD SAVED HEARTS FROM CLOUD TO THE APP
-                const cloudWishlist = currentUser.user_metadata?.wishlist || [];
+                // 🌟 1. FETCH THE LATEST WISHLIST DIRECTLY FROM THE PROFILES TABLE
+                const { data: profileData } = await supabaseClient
+                    .from('profiles')
+                    .select('wishlist')
+                    .eq('id', currentUser.id)
+                    .maybeSingle();
+
+                // Use the database wishlist, fallback to metadata, or default to empty
+                const cloudWishlist = (profileData && profileData.wishlist) ? profileData.wishlist : (currentUser.user_metadata?.wishlist || []);
+                
                 if (cloudWishlist.length > 0) {
                     cloudWishlist.forEach(id => likedItems.add(id));
                     localStorage.setItem('likedItems', JSON.stringify([...likedItems]));
                 }
 
-                // 🌟 2. SEND PROFILE TO THE ADMIN PANEL DATABASE
+                // 🌟 2. UPDATE PROFILE IN THE DATABASE (so Admin sees them)
                 const meta = currentUser.user_metadata || {};
                 await supabaseClient.from('profiles').upsert({
                     id: currentUser.id,
@@ -861,7 +869,7 @@
                 if(btnNavProfile) btnNavProfile.classList.replace('hidden', 'flex');
                 if(authModal) authModal.classList.replace('flex', 'hidden'); 
                 
-                // Refresh the menu UI so the red hearts light up!
+                // 🌟 3. REFRESH THE UI TO DRAW THE RED HEARTS INSTANTLY
                 if (typeof executeFilter === 'function') executeFilter();
             } else {
                 currentUser = null;
@@ -3970,6 +3978,7 @@ function toggleQuickCart(id) {
                 btn.innerHTML = originalText;
             }
         }
+
         
         window.onload = init;
         setupSearch(); 
