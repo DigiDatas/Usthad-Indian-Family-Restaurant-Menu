@@ -2755,8 +2755,30 @@ let currentMediaTarget = 'product';
                 const profiles = profilesRes.data || [];
                 profiles.forEach(prof => {
                     const email = (prof.email || '').trim().toLowerCase();
-                    // Grab gender from the direct column OR the raw metadata where Supabase saves signup data
                     const userGender = prof.gender || (prof.raw_user_meta_data && prof.raw_user_meta_data.gender) || 'Unknown';
+                    const userWishlist = (prof.raw_user_meta_data && prof.raw_user_meta_data.wishlist) || []; // 🌟 GRAB WISHLIST
+
+                    if (email && !userMap[email]) {
+                        userMap[email] = {
+                            name: prof.full_name || prof.name || email.split('@')[0],
+                            phone: prof.phone || 'No Phone',
+                            email: prof.email,
+                            address: prof.address || 'No Address',
+                            count: 0,
+                            totalSpent: 0,
+                            created_at: prof.created_at || 'N/A',
+                            last_sign_in: prof.last_sign_in || prof.updated_at || 'N/A',
+                            gender: userGender,
+                            wishlist: userWishlist
+                        };
+                    } else if (email && userMap[email]) {
+                        userMap[email].gender = userGender;
+                        userMap[email].wishlist = userWishlist;
+                    }
+                });
+
+                // 🌟 STORE MAP GLOBALLY FOR THE MODAL TO USE
+                window.customerProfilesMap = userMap;
 
                     if (email && !userMap[email]) {
                         userMap[email] = {
@@ -2934,9 +2956,42 @@ let currentMediaTarget = 'product';
                 document.getElementById('ch-phone').innerHTML = `<i class="fas fa-phone-alt text-gray-400 me-1"></i> ${phone || 'N/A'}`;
                 document.getElementById('ch-total-spent').innerHTML = `LIFETIME: <span class="font-black">0.00</span>`;
             }
+// 🌟 NEW: RENDER THE CUSTOMER'S WISHLIST (FAVORITES)
+            const targetEmail = (email || '').trim().toLowerCase();
+            let wishlistHtml = '';
+            
+            if (targetEmail && window.customerProfilesMap && window.customerProfilesMap[targetEmail]) {
+                const wishlistIds = window.customerProfilesMap[targetEmail].wishlist || [];
+                
+                if (wishlistIds.length > 0 && typeof allMenuItems !== 'undefined') {
+                    // Match the saved IDs to the actual food items in the database
+                    const favItems = allMenuItems.filter(m => wishlistIds.includes(String(m.id)));
+                    
+                    if (favItems.length > 0) {
+                        let favCards = '';
+                        favItems.forEach(item => {
+                            const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
+                            favCards += `
+                                <div class="bg-red-50 border border-red-100 rounded-xl p-2 flex items-center gap-2 shadow-sm">
+                                    <img src="${img}" class="w-8 h-8 rounded-md object-cover shrink-0">
+                                    <span class="text-xs font-bold text-gray-800 truncate flex-1">${item.name}</span>
+                                    <i class="fas fa-heart text-red-500 shrink-0"></i>
+                                </div>
+                            `;
+                        });
+                        wishlistHtml = `
+                            <div class="mb-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200">
+                                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><i class="fas fa-star text-yellow-400"></i> Customer Favorites</h4>
+                                <div class="grid grid-cols-2 gap-2">
+                                    ${favCards}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
 
             container.innerHTML = '';
-
             if (customerOrders.length === 0) {
                 container.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-xs italic">No orders found for this customer profile.</div>`;
             }
