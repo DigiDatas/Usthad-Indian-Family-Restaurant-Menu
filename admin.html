@@ -733,127 +733,147 @@
 
 
 <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
-        <section id="section-settings" class="tab-section hidden">
-            <div class="flex justify-between items-end mb-6">
-                
-                <button onclick="saveSettings()" id="btn-save-settings" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
+        <section id="section-settings" class="tab-section hidden h-full flex flex-col gap-4 p-4 bg-gray-100 overflow-hidden">
+            
+            <!-- Action Bar -->
+            <div class="flex justify-end items-center shrink-0 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm">
+                <button onclick="saveSettings()" id="btn-save-settings" class="bg-green-500 text-white px-5 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition flex items-center gap-1.5">
                     <i class="fas fa-save"></i> Save Settings
                 </button>
             </div>
 
-            <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <!-- Hidden IDs -->
-                <input type="hidden" id="setting-id">
-                <input type="hidden" id="setting-id-ar">
+            <!-- Two Column Layout -->
+            <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden">
                 
-                <!-- Grid 1: Brand, Currency & App Languages -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (EN) *</label>
-                        <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                <!-- LEFT COLUMN: CORE SETTINGS -->
+                <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden min-w-0">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
+                        <h2 class="text-base font-black text-gray-800"><i class="fas fa-store text-red-500 me-2"></i>Core Configuration</h2>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (AR)</label>
-                        <input type="text" id="set-brand-ar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
-                    </div>
-                    
-                    <!-- NEW CURRENCY BUTTON SELECTOR -->
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Currency</label>
-                        <input type="hidden" id="set-currency" value="SR">
-                        <div class="flex flex-wrap gap-1.5 mt-1" id="currency-btn-group">
-                            <button type="button" onclick="selectCurrency('SR')" id="btn-curr-SR" class="px-2 py-1 border-2 border-red-500 bg-red-50 text-red-700 text-[10px] font-bold rounded-lg transition shadow-sm">SR (﷼)</button>
-                            <button type="button" onclick="selectCurrency('USD')" id="btn-curr-USD" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">USD ($)</button>
-                            <button type="button" onclick="selectCurrency('EUR')" id="btn-curr-EUR" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">EUR (€)</button>
-                            <button type="button" onclick="selectCurrency('GBP')" id="btn-curr-GBP" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">GBP (£)</button>
-                            <button type="button" onclick="selectCurrency('INR')" id="btn-curr-INR" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">INR (₹)</button>
-                            <button type="button" onclick="selectCurrency('AED')" id="btn-curr-AED" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">AED (د.إ)</button>
+                    <div class="flex-1 overflow-y-auto hide-scrollbar p-5 space-y-6">
+                        <!-- Hidden IDs -->
+                        <input type="hidden" id="setting-id">
+                        <input type="hidden" id="setting-id-ar">
+                        
+                        <!-- Brand & Languages -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (EN) *</label>
+                                <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (AR)</label>
+                                <input type="text" id="set-brand-ar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
+                            </div>
                         </div>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">App Languages</label>
-                        <div class="flex items-center gap-4 mt-2">
-                            <label class="flex items-center gap-1.5 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="set-lang-en" class="w-4 h-4 text-red-600 rounded"> EN</label>
-                            <label class="flex items-center gap-1.5 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="set-lang-ar" class="w-4 h-4 text-red-600 rounded"> AR</label>
+                        
+                        <!-- Currency & Language Checkboxes -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Currency</label>
+                                <input type="hidden" id="set-currency" value="SR">
+                                <div class="flex flex-wrap gap-1.5 mt-1" id="currency-btn-group">
+                                    <button type="button" onclick="selectCurrency('SR')" id="btn-curr-SR" class="px-2 py-1 border-2 border-red-500 bg-red-50 text-red-700 text-[10px] font-bold rounded-lg transition shadow-sm">SR (﷼)</button>
+                                    <button type="button" onclick="selectCurrency('USD')" id="btn-curr-USD" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">USD ($)</button>
+                                    <button type="button" onclick="selectCurrency('EUR')" id="btn-curr-EUR" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">EUR (€)</button>
+                                    <button type="button" onclick="selectCurrency('GBP')" id="btn-curr-GBP" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">GBP (£)</button>
+                                    <button type="button" onclick="selectCurrency('INR')" id="btn-curr-INR" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">INR (₹)</button>
+                                    <button type="button" onclick="selectCurrency('AED')" id="btn-curr-AED" class="px-2 py-1 border-2 border-gray-200 bg-white text-gray-600 text-[10px] font-bold rounded-lg hover:bg-gray-50 transition">AED (د.إ)</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">App Languages</label>
+                                <div class="flex items-center gap-4 mt-2">
+                                    <label class="flex items-center gap-1.5 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="set-lang-en" class="w-4 h-4 text-red-600 rounded"> EN</label>
+                                    <label class="flex items-center gap-1.5 text-sm font-bold text-gray-700 cursor-pointer"><input type="checkbox" id="set-lang-ar" class="w-4 h-4 text-red-600 rounded"> AR</label>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Grid 2: Contacts -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone text-blue-500"></i> Primary Contact</label>
-                        <input type="text" id="set-contact" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone-alt text-orange-500"></i> Secondary Contact</label>
-                        <input type="text" id="set-other-number" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp</label>
-                        <input type="text" id="set-wa" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
+                        <!-- Contacts -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone text-blue-500"></i> Primary Contact</label>
+                                <input type="text" id="set-contact" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-phone-alt text-orange-500"></i> Secondary</label>
+                                <input type="text" id="set-other-number" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fab fa-whatsapp text-green-500"></i> WhatsApp</label>
+                                <input type="text" id="set-wa" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                        </div>
 
-                <!-- Grid 3: Web & Email -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-envelope text-red-500"></i> Email</label>
-                        <input type="email" id="set-email" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-globe text-blue-600"></i> Website URL</label>
-                        <input type="text" id="set-website" placeholder="https://..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
-                    </div>
-                </div>
-
-                <!-- Address & Maps -->
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map-marker-alt text-red-500"></i> Address</label>
-                    <textarea id="set-address" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"></textarea>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map text-blue-500"></i> Google Maps URL</label>
-                    <input type="text" id="set-map" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
-                </div>
-
-                <!-- NEW: Social Media Manager -->
-                <div class="mb-6 p-5 bg-gray-50 border border-gray-200 rounded-2xl">
-                    <div class="flex justify-between items-end mb-4 border-b border-gray-200 pb-3">
+                        <!-- Address & Maps -->
                         <div>
-                            <h3 class="font-bold text-gray-800"><i class="fas fa-share-nodes text-purple-500 me-2"></i>Social Media Links</h3>
-                            <p class="text-[10px] text-gray-500">Toggle platforms ON/OFF and paste your profile URLs.</p>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map-marker-alt text-red-500"></i> Address</label>
+                            <textarea id="set-address" rows="2" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm"></textarea>
                         </div>
-                        <button type="button" onclick="addCustomSocial()" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-purple-200 transition shadow-sm">
-                            <i class="fas fa-plus"></i> Add Platform
-                        </button>
-                    </div>
-                    <div id="admin-social-container" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                        <!-- Javascript will inject social inputs here -->
+                        <div>
+                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-map text-blue-500"></i> Google Maps URL</label>
+                            <input type="text" id="set-map" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                        </div>
+                        
+                        <!-- Delivery & Game -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Charge Text</label>
+                                <input type="text" id="set-delivery" placeholder="e.g. 5 Riyal Around 3 Km" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                            <div class="flex items-center gap-2 pt-5">
+                                <input type="checkbox" id="set-game" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
+                                <label for="set-game" class="text-sm font-bold text-gray-700">Enable Arcade Game Feature</label>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- Logo & Delivery -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Logo Link</label>
-                        <input type="text" id="set-logo" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                <!-- RIGHT COLUMN: DIGITAL ASSETS & SOCIALS -->
+                <div class="w-full lg:w-[450px] xl:w-[500px] flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden shrink-0">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
+                        <h2 class="text-base font-black text-gray-800"><i class="fas fa-globe text-blue-600 me-2"></i>Digital Assets</h2>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery Charge text</label>
-                        <input type="text" id="set-delivery" placeholder="e.g. 5 Riyal Around 3 Km" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                    <div class="flex-1 overflow-y-auto hide-scrollbar p-5 space-y-6">
+                        
+                        <!-- Web & Email -->
+                        <div class="grid grid-cols-1 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-envelope text-red-500"></i> Email</label>
+                                <input type="email" id="set-email" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-link text-blue-600"></i> Website URL</label>
+                                <input type="text" id="set-website" placeholder="https://..." class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1"><i class="fas fa-image text-purple-500"></i> Logo Link</label>
+                                <input type="text" id="set-logo" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm">
+                            </div>
+                        </div>
+
+                        <!-- Social Media Manager -->
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl">
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm"><i class="fas fa-share-nodes text-purple-500 me-2"></i>Social Media</h3>
+                                </div>
+                                <button type="button" onclick="addCustomSocial()" class="bg-purple-100 text-purple-700 px-3 py-1.5 rounded-lg text-[10px] font-black hover:bg-purple-200 transition shadow-sm uppercase tracking-wider">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                            <!-- JS Inject -->
+                            <div id="admin-social-container" class="grid grid-cols-1 gap-3">
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <!-- Game Feature -->
-                <div class="flex items-center gap-2">
-                    <input type="checkbox" id="set-game" class="w-5 h-5 text-red-600 rounded focus:ring-red-500">
-                    <label for="set-game" class="text-sm font-bold text-gray-700">Enable Arcade Game Feature</label>
-                </div>
             </div>
         </section>
-
     </main>
 </div> <!-- 🚨 NEW: THIS CLOSES THE MAIN CONTENT WRAPPER 🚨 -->
 
