@@ -553,57 +553,126 @@
             </div>
         </div>
     </div>
-<!-- ================= TAB 7: CASHIER POS (KANBAN) ================= -->
+<!-- ================= TAB 7: CASHIER POS (3-MODE WORKSTATION) ================= -->
         <section id="section-pos" class="tab-section hidden h-full flex flex-col">
-            <div class="flex justify-between items-end mb-4 shrink-0">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Cashier POS</h2>
-                    <p class="text-sm text-gray-500">Live Kanban board for active orders, payments, and receipt printing.</p>
+            
+            <!-- POS Header & Mode Toggles -->
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 shrink-0 bg-white p-3 rounded-2xl shadow-sm border border-gray-200 gap-3">
+                <div class="flex gap-1.5 bg-gray-50 p-1.5 rounded-xl border border-gray-100" id="pos-mode-toggles">
+                    <button onclick="switchPosMode('kanban')" id="btn-mode-kanban" class="px-5 py-2 rounded-lg text-sm font-black bg-white shadow-sm text-blue-600 transition border border-gray-200"><i class="fas fa-columns me-1"></i> Kanban Board</button>
+                    <button onclick="switchPosMode('builder')" id="btn-mode-builder" class="px-5 py-2 rounded-lg text-sm font-black text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition"><i class="fas fa-concierge-bell me-1"></i> New Order</button>
+                    <button onclick="switchPosMode('tables')" id="btn-mode-tables" class="px-5 py-2 rounded-lg text-sm font-black text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition"><i class="fas fa-th-large me-1"></i> Table Map</button>
                 </div>
-                <button onclick="fetchDashboardData(this, false)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
+                <button onclick="fetchDashboardData(this, false)" class="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-200 transition flex items-center gap-2 font-bold text-sm">
                     <i class="fas fa-sync-alt text-blue-500 transition-all duration-300"></i> Refresh
                 </button>
             </div>
 
-            <!-- Kanban Grid -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-x-auto pb-4">
-                
+            <!-- ================= MODE 1: KANBAN BOARD (Existing) ================= -->
+            <div id="pos-view-kanban" class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-x-auto pb-4 transition-all">
                 <!-- Column 1: New / Pending -->
                 <div class="bg-gray-200/50 rounded-2xl p-4 flex flex-col h-full border border-gray-200 min-w-[300px]">
                     <h3 class="font-black text-gray-700 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
                         <span><i class="fas fa-inbox text-orange-500 me-2"></i> New Orders</span>
                         <span class="bg-white text-gray-600 px-2 py-0.5 rounded-lg text-xs shadow-sm" id="pos-count-pending">0</span>
                     </h3>
-                    <div id="pos-col-pending" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3">
-                        <!-- POS Cards Injected Here -->
-                    </div>
+                    <div id="pos-col-pending" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3"></div>
                 </div>
-
                 <!-- Column 2: Cooking -->
                 <div class="bg-yellow-50/50 rounded-2xl p-4 flex flex-col h-full border border-yellow-100 min-w-[300px]">
                     <h3 class="font-black text-yellow-800 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
                         <span><i class="fas fa-fire text-yellow-500 me-2"></i> Cooking</span>
                         <span class="bg-white text-yellow-700 px-2 py-0.5 rounded-lg text-xs shadow-sm border border-yellow-100" id="pos-count-cooking">0</span>
                     </h3>
-                    <div id="pos-col-cooking" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3">
-                        <!-- POS Cards Injected Here -->
-                    </div>
+                    <div id="pos-col-cooking" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3"></div>
                 </div>
-
                 <!-- Column 3: Ready / Completed -->
                 <div class="bg-green-50/50 rounded-2xl p-4 flex flex-col h-full border border-green-100 min-w-[300px]">
                     <h3 class="font-black text-green-800 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
                         <span><i class="fas fa-check-circle text-green-500 me-2"></i> Ready / Done</span>
                         <span class="bg-white text-green-700 px-2 py-0.5 rounded-lg text-xs shadow-sm border border-green-100" id="pos-count-completed">0</span>
                     </h3>
-                    <div id="pos-col-completed" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3">
-                        <!-- POS Cards Injected Here -->
+                    <div id="pos-col-completed" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3"></div>
+                </div>
+            </div>
+
+            <!-- ================= MODE 2: ORDER BUILDER ================= -->
+            <div id="pos-view-builder" class="hidden flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden pb-2">
+                <!-- LEFT: Menu Selection -->
+                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-w-0">
+                    <!-- Categories -->
+                    <div class="bg-gray-50 border-b border-gray-200 p-3 flex gap-2 overflow-x-auto hide-scrollbar shrink-0" id="pos-builder-cats">
+                        <!-- JS Injected Categories -->
+                    </div>
+                    <!-- Items Grid -->
+                    <div class="flex-1 p-4 overflow-y-auto hide-scrollbar bg-gray-50/50">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" id="pos-builder-grid">
+                            <!-- JS Injected Food Items -->
+                        </div>
                     </div>
                 </div>
 
+                <!-- RIGHT: Cashier Cart -->
+                <div class="w-full lg:w-80 xl:w-96 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0 overflow-hidden">
+                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center shrink-0">
+                        <h3 class="font-black text-lg">Current Order</h3>
+                        <button onclick="posClearCart()" class="text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                    
+                    <!-- Order Settings -->
+                    <div class="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
+                        <div class="flex gap-2 mb-3">
+                            <button onclick="posSetDining('Dine In')" id="pos-type-dinein" class="flex-1 py-2 bg-green-100 text-green-800 border-2 border-green-500 rounded-xl font-black text-xs uppercase tracking-wider">Dine In</button>
+                            <button onclick="posSetDining('Takeaway')" id="pos-type-takeaway" class="flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-xl font-bold text-xs uppercase tracking-wider">Takeaway</button>
+                        </div>
+                        <select id="pos-table-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-gray-700 focus:outline-none focus:border-green-500">
+                            <option value="">Select Table...</option>
+                            <!-- JS generates T01-T20 -->
+                        </select>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div id="pos-cart-container" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 hide-scrollbar">
+                        <div class="text-center text-gray-400 text-sm font-bold py-10 italic">Cart is empty</div>
+                    </div>
+
+                    <!-- Totals & Payment -->
+                    <div class="p-4 border-t border-gray-200 bg-gray-50 shrink-0">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="font-black text-gray-500 uppercase tracking-widest text-sm">Total Payable</span>
+                            <span class="font-black text-2xl text-green-600" id="pos-cart-total">0.00 SR</span>
+                        </div>
+                        
+                        <div class="flex gap-2 mb-3">
+                            <button onclick="posSetPayment('Cash')" id="pos-pay-cash" class="flex-1 py-2 bg-blue-100 text-blue-800 border-2 border-blue-500 rounded-lg font-black text-xs"><i class="fas fa-money-bill-wave me-1"></i> Cash</button>
+                            <button onclick="posSetPayment('Card')" id="pos-pay-card" class="flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-lg font-bold text-xs hover:bg-gray-100"><i class="fas fa-credit-card me-1"></i> Card</button>
+                        </div>
+
+                        <button onclick="posSubmitOrder()" id="btn-pos-submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white font-black py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-lg">
+                            <i class="fas fa-check-circle"></i> Place Order
+                        </button>
+                    </div>
+                </div>
             </div>
-        </section>
-<!-- ================= TAB 8: REVIEW MANAGER ================= -->
+
+            <!-- ================= MODE 3: TABLE MAP ================= -->
+            <div id="pos-view-tables" class="hidden flex-1 min-h-0 overflow-y-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-gray-100 pb-4">
+                    <div>
+                        <h3 class="font-black text-2xl text-gray-800">Restaurant Floor Plan</h3>
+                        <p class="text-xs text-gray-500 font-bold mt-1">Live overview of seating and active orders.</p>
+                    </div>
+                    <div class="flex gap-5 mt-4 sm:mt-0 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
+                        <span class="flex items-center gap-2 text-xs font-black text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
+                        <span class="flex items-center gap-2 text-xs font-black text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-red-100 border border-red-400"></div> Occupied</span>
+                    </div>
+                </div>
+                <div id="pos-table-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    <!-- JS Injected Tables -->
+                </div>
+            </div>
+
+        </section><!-- ================= TAB 8: REVIEW MANAGER ================= -->
         <section id="section-reviews" class="tab-section hidden h-full flex flex-col">
             <div class="flex justify-between items-end mb-6 shrink-0">
                 <div>
@@ -3931,6 +4000,277 @@ const dbLang = (mainRow.language || '').toLowerCase();
             if (error) {
                 alert("Error updating review: " + error.message);
                 fetchReviews(); // Revert on error
+            }
+        }
+// ==========================================
+        // NEW: CASHIER POS WORKSTATION LOGIC
+        // ==========================================
+        let posCart = [];
+        let posDiningType = 'Dine In';
+        let posPaymentMethod = 'Cash';
+        let activePosCategory = 'All';
+
+        // 1. Tab Switcher
+        function switchPosMode(mode) {
+            // Hide all
+            document.getElementById('pos-view-kanban').classList.add('hidden');
+            document.getElementById('pos-view-builder').classList.add('hidden');
+            document.getElementById('pos-view-tables').classList.add('hidden');
+            
+            // Reset buttons
+            ['kanban', 'builder', 'tables'].forEach(m => {
+                const btn = document.getElementById(`btn-mode-${m}`);
+                btn.className = "px-5 py-2 rounded-lg text-sm font-black text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition";
+            });
+
+            // Show active
+            document.getElementById(`pos-view-${mode}`).classList.remove('hidden');
+            if (mode === 'builder') document.getElementById('pos-view-builder').classList.add('flex');
+            
+            // Highlight active button
+            const activeBtn = document.getElementById(`btn-mode-${mode}`);
+            activeBtn.className = "px-5 py-2 rounded-lg text-sm font-black bg-white shadow-sm text-blue-600 transition border border-gray-200";
+
+            if (mode === 'builder') {
+                renderPosBuilderCategories();
+                renderPosBuilderGrid();
+                initPosTableSelect();
+            } else if (mode === 'tables') {
+                renderTableMap();
+            }
+        }
+
+        // 2. Order Builder: Menu Grid
+        function renderPosBuilderCategories() {
+            const container = document.getElementById('pos-builder-cats');
+            // Extract unique categories from current menu items
+            const categories = ['All', ...new Set(allMenuItems.map(i => i.main_cat || 'General'))];
+            
+            container.innerHTML = categories.map(cat => {
+                const isActive = activePosCategory === cat;
+                const cls = isActive ? 'bg-gray-800 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100';
+                return `<button onclick="activePosCategory='${cat}'; renderPosBuilderCategories(); renderPosBuilderGrid();" class="px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${cls}">${cat}</button>`;
+            }).join('');
+        }
+
+        function renderPosBuilderGrid() {
+            const grid = document.getElementById('pos-builder-grid');
+            grid.innerHTML = '';
+            
+            let items = allMenuItems;
+            if (activePosCategory !== 'All') {
+                items = items.filter(i => i.main_cat === activePosCategory);
+            }
+
+            items.forEach(item => {
+                const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
+                grid.innerHTML += `
+                    <div onclick="posAddToCart('${item.id}')" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:border-blue-400 hover:shadow-md cursor-pointer transition group">
+                        <div class="h-28 w-full overflow-hidden bg-gray-100">
+                            <img src="${img}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
+                        </div>
+                        <div class="p-3">
+                            <h4 class="font-bold text-gray-800 text-xs truncate mb-1">${item.name}</h4>
+                            <div class="flex justify-between items-center">
+                                <span class="font-black text-green-600 text-sm">${item.price} <span class="text-[9px] text-gray-400">SR</span></span>
+                                <div class="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><i class="fas fa-plus text-[10px]"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 3. Order Builder: Cart Management
+        function initPosTableSelect() {
+            const select = document.getElementById('pos-table-select');
+            if (select.options.length > 1) return; // already initialized
+            for(let i = 1; i <= 20; i++) {
+                const tNum = `T${String(i).padStart(2, '0')}`;
+                select.innerHTML += `<option value="${tNum}">${tNum}</option>`;
+            }
+        }
+
+        function posSetDining(type) {
+            posDiningType = type;
+            const btnDineIn = document.getElementById('pos-type-dinein');
+            const btnTakeaway = document.getElementById('pos-type-takeaway');
+            const select = document.getElementById('pos-table-select');
+
+            if (type === 'Dine In') {
+                btnDineIn.className = "flex-1 py-2 bg-green-100 text-green-800 border-2 border-green-500 rounded-xl font-black text-xs uppercase tracking-wider";
+                btnTakeaway.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-100";
+                select.classList.remove('hidden');
+            } else {
+                btnTakeaway.className = "flex-1 py-2 bg-green-100 text-green-800 border-2 border-green-500 rounded-xl font-black text-xs uppercase tracking-wider";
+                btnDineIn.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-100";
+                select.classList.add('hidden');
+                select.value = '';
+            }
+        }
+
+        function posSetPayment(method) {
+            posPaymentMethod = method;
+            const btnCash = document.getElementById('pos-pay-cash');
+            const btnCard = document.getElementById('pos-pay-card');
+
+            if (method === 'Cash') {
+                btnCash.className = "flex-1 py-2 bg-blue-100 text-blue-800 border-2 border-blue-500 rounded-lg font-black text-xs";
+                btnCard.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-lg font-bold text-xs hover:bg-gray-100";
+            } else {
+                btnCard.className = "flex-1 py-2 bg-blue-100 text-blue-800 border-2 border-blue-500 rounded-lg font-black text-xs";
+                btnCash.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-lg font-bold text-xs hover:bg-gray-100";
+            }
+        }
+
+        function posAddToCart(id) {
+            const item = allMenuItems.find(i => String(i.id) === String(id));
+            if (!item) return;
+            const existing = posCart.find(c => c.id === item.id);
+            if (existing) existing.qty += 1;
+            else posCart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
+            renderPosCart();
+        }
+
+        function posChangeQty(index, amt) {
+            posCart[index].qty += amt;
+            if (posCart[index].qty <= 0) posCart.splice(index, 1);
+            renderPosCart();
+        }
+
+        function posClearCart() {
+            if(!confirm("Clear current order?")) return;
+            posCart = [];
+            renderPosCart();
+        }
+
+        function renderPosCart() {
+            const container = document.getElementById('pos-cart-container');
+            const totalEl = document.getElementById('pos-cart-total');
+            container.innerHTML = '';
+            
+            if (posCart.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-400 text-sm font-bold py-10 italic">Cart is empty</div>';
+                totalEl.textContent = '0.00 SR';
+                return;
+            }
+
+            let total = 0;
+            posCart.forEach((c, idx) => {
+                const rowTotal = parseFloat(c.price) * c.qty;
+                total += rowTotal;
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-2">
+                        <div class="flex justify-between items-start">
+                            <span class="font-bold text-gray-800 text-xs">${c.name}</span>
+                            <span class="font-black text-green-600 text-xs">${rowTotal.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-2">
+                            <span class="text-[10px] text-gray-500 font-bold">${parseFloat(c.price).toFixed(2)} SR each</span>
+                            <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1 border border-gray-200">
+                                <button onclick="posChangeQty(${idx}, -1)" class="w-6 h-6 bg-white rounded flex items-center justify-center text-gray-600 hover:text-red-500 shadow-sm transition"><i class="fas fa-minus text-[10px]"></i></button>
+                                <span class="font-black text-xs w-4 text-center">${c.qty}</span>
+                                <button onclick="posChangeQty(${idx}, 1)" class="w-6 h-6 bg-white rounded flex items-center justify-center text-gray-600 hover:text-green-500 shadow-sm transition"><i class="fas fa-plus text-[10px]"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            totalEl.textContent = `${total.toFixed(2)} SR`;
+        }
+
+        async function posSubmitOrder() {
+            if (posCart.length === 0) return alert("Cart is empty!");
+            const tableNum = document.getElementById('pos-table-select').value;
+            if (posDiningType === 'Dine In' && !tableNum) return alert("Please select a Table Number!");
+
+            const btn = document.getElementById('btn-pos-submit');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
+
+            let subtotal = 0;
+            posCart.forEach(i => subtotal += parseFloat(i.price) * i.qty);
+
+            let uniqueOrderNo = 'ORD-' + String(Math.floor(1000 + Math.random() * 9000));
+            try {
+                const { data: lastOrder } = await supabaseClient.from('orders').select('order_number').not('order_number', 'is', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                if (lastOrder && lastOrder.order_number) {
+                    const lastNum = parseInt(lastOrder.order_number.replace('ORD-', ''));
+                    if (!isNaN(lastNum)) uniqueOrderNo = 'ORD-' + String(lastNum + 1).padStart(4, '0');
+                }
+            } catch (e) {}
+
+            const payload = {
+                order_number: uniqueOrderNo,
+                customer_name: 'Walk-in Customer',
+                order_type: posDiningType,
+                table_number: posDiningType === 'Dine In' ? tableNum : null,
+                items: posCart,
+                total_amount: subtotal,
+                status: 'Pending',
+                payment_status: 'Paid' // POS orders assumed paid instantly
+            };
+
+            const { data, error } = await supabaseClient.from('orders').insert([payload]).select();
+            
+            if (error) {
+                alert("Error placing order: " + error.message);
+                btn.innerHTML = `<i class="fas fa-check-circle"></i> Place Order`;
+            } else {
+                // Instantly print the receipt
+                if (data && data.length > 0) {
+                    allOrders.unshift(data[0]); // Update local memory immediately
+                    printOrderTicket(data[0].id);
+                }
+                
+                alert("Order successfully placed!");
+                posCart = [];
+                renderPosCart();
+                document.getElementById('pos-table-select').value = '';
+                btn.innerHTML = `<i class="fas fa-check-circle"></i> Place Order`;
+                
+                // Refresh dashboards silently
+                fetchDashboardData(null, true);
+            }
+        }
+
+        // 4. Table Map Viewer
+        function renderTableMap() {
+            const grid = document.getElementById('pos-table-grid');
+            grid.innerHTML = '';
+            
+            // Find all tables currently occupied
+            // Only orders that are 'Pending' or 'Cooking' and are 'Dine In'
+            const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && (o.status === 'Pending' || o.status === 'Cooking') && o.table_number);
+            
+            // Create map of occupied tables
+            const occupiedMap = {};
+            activeDineIn.forEach(o => { occupiedMap[o.table_number] = o; });
+
+            for (let i = 1; i <= 20; i++) {
+                const tNum = `T${String(i).padStart(2, '0')}`;
+                const order = occupiedMap[tNum];
+                
+                if (order) {
+                    // Occupied Table
+                    const waitStr = getWaitTimeStr(order.created_at);
+                    grid.innerHTML += `
+                        <div class="relative bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex flex-col items-center justify-center aspect-square shadow-sm cursor-pointer hover:shadow-md transition" onclick="toggleOrderDetails('${order.id}'); switchPosMode('kanban');">
+                            <div class="absolute -top-3 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm tracking-wider uppercase">Occupied</div>
+                            <h3 class="text-2xl font-black text-red-700">${tNum}</h3>
+                            <p class="text-xs font-bold text-red-500 mt-1">${order.order_number}</p>
+                            <p class="text-[10px] font-bold text-gray-500 mt-2 bg-white px-2 py-1 rounded-lg border border-red-100 shadow-inner"><i class="far fa-clock text-red-400"></i> ${waitStr}</p>
+                        </div>
+                    `;
+                } else {
+                    // Available Table
+                    grid.innerHTML += `
+                        <div class="relative bg-gray-50 border-2 border-gray-200 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center aspect-square hover:bg-green-50 hover:border-green-300 hover:border-solid cursor-pointer transition group" onclick="switchPosMode('builder'); posSetDining('Dine In'); document.getElementById('pos-table-select').value='${tNum}';">
+                            <div class="absolute -top-3 bg-gray-200 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded-full group-hover:bg-green-500 group-hover:text-white transition tracking-wider uppercase">Available</div>
+                            <h3 class="text-2xl font-black text-gray-400 group-hover:text-green-600 transition">${tNum}</h3>
+                            <p class="text-[10px] font-bold text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus-circle"></i> New Order</p>
+                        </div>
+                    `;
+                }
             }
         }
 
