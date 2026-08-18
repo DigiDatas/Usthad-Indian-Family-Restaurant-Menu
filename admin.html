@@ -2053,7 +2053,6 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
             
             // Highlight left menu purely via DOM to prevent lag/re-rendering
             document.querySelectorAll('.sub-cat-row').forEach(row => {
-                // 🌟 FIX: Make sure we are removing/adding the exact border-l colors!
                 row.classList.remove('bg-red-50', 'border-l-red-500', 'text-red-600');
                 row.classList.add('bg-white', 'border-l-transparent', 'text-gray-600');
                 
@@ -2069,18 +2068,14 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
                 }
             });
 
-            // 🌟 FIX: Bulletproof Scroll Logic using getBoundingClientRect() math
             const safeId = `grid-sec-${mk}-${sk}`.replace(/[^a-zA-Z0-9-]/g, '-');
             const targetEl = document.getElementById(safeId);
             const container = document.getElementById('menu-items-scroll-container');
             
             if(targetEl && container) {
-                // Calculates exactly how far down the element is inside the scrolling container
-                const scrollPos = targetEl.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
-                
-                // Forces the container to jump exactly to that pixel height
+                // 🌟 FIX: offsetTop math perfectly calculates distance up AND down relative to the container!
                 container.scrollTo({
-                    top: scrollPos,
+                    top: targetEl.offsetTop - 20, // -20 accounts for the padding at the top
                     behavior: 'smooth'
                 });
             }
@@ -2103,6 +2098,9 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
             const container = document.getElementById('menu-items-scroll-container');
             if(!container) return;
             
+            // 🌟 FIX: Force relative positioning on the container so offset math is 100% accurate
+            container.classList.add('relative');
+
             if(groupedMap.size === 0) {
                 container.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400 font-bold text-sm italic">No items found.</div>`;
                 return;
@@ -2113,12 +2111,14 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
                 subMap.forEach((subItems, sk) => {
                     const safeId = `grid-sec-${mk}-${sk}`.replace(/[^a-zA-Z0-9-]/g, '-');
                     
+                    // 🌟 FIX: Wrap the section in a NON-STICKY container so the browser can accurately find it when scrolling up!
+                    html += `<div id="${safeId}" class="scroll-section">`;
+                    
                     html += `
-                        <div id="${safeId}" class="pt-2 pb-2 mb-3 border-b border-gray-200 flex justify-between items-end sticky top-0 bg-gray-50/90 backdrop-blur z-10">
+                        <div class="pt-2 pb-2 mb-3 border-b border-gray-200 flex justify-between items-end sticky top-0 bg-gray-50/90 backdrop-blur z-10">
                             <h3 class="text-sm font-black text-gray-800 uppercase"><i class="fas fa-folder text-red-500 mr-1.5"></i> ${mk} <i class="fas fa-chevron-right text-[10px] mx-1 text-gray-400"></i> <span class="text-red-600">${sk}</span></h3>
                             <span class="text-[10px] font-bold text-gray-500 bg-gray-200 px-2 py-0.5 rounded">${subItems.length} Items</span>
                         </div>
-                        <!-- 🌟 FIX: Updated to 6 columns xl:grid-cols-6 -->
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 mb-8 section-grid min-h-[50px]" data-main="${mk}" data-sub="${sk}">
                     `;
                     
@@ -2150,7 +2150,7 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
                         `;
                     }).join('');
                     
-                    html += `</div>`; // Close grid
+                    html += `</div></div>`; // Close grid AND scroll wrapper
                 });
             });
             container.innerHTML = html;
