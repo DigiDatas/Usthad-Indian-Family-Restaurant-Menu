@@ -604,10 +604,16 @@
                             </div>
                         </div>
 
-                        <!-- VIEW: MENU -->
+                        <!-- 🌟 VIEW: MENU (NOW INCLUDES SEARCH BAR) -->
                         <div id="pos-view-menu" class="hidden absolute inset-0 flex flex-col">
-                            <!-- Categories -->
-                            <div class="p-3 border-b border-gray-100 flex gap-2 overflow-x-auto hide-scrollbar shrink-0 bg-white" id="pos-menu-cats"></div>
+                            <!-- Categories & Search -->
+                            <div class="p-3 border-b border-gray-100 flex flex-col sm:flex-row justify-between gap-3 shrink-0 bg-white">
+                                <div class="flex gap-2 overflow-x-auto hide-scrollbar flex-1" id="pos-menu-cats"></div>
+                                <div class="relative w-full sm:w-48 shrink-0">
+                                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+                                    <input type="text" id="pos-menu-search" oninput="renderPosMenu()" placeholder="Search items..." class="w-full pl-8 pr-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-bold focus:outline-none focus:border-teal-500 transition shadow-inner">
+                                </div>
+                            </div>
                             <!-- 6-Col Grid -->
                             <div class="flex-1 overflow-y-auto hide-scrollbar p-4">
                                 <div id="pos-menu-grid" class="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
@@ -660,6 +666,21 @@
                             <button onclick="posSetPayment('Unpaid')" id="pos-btn-Unpaid" class="py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase">Unpaid</button>
                         </div>
 
+                        <!-- 🌟 NEW: CASH CALCULATOR (Shows only when Cash is selected) -->
+                        <div id="pos-cash-calculator" class="mb-3 bg-white p-3 rounded-xl border border-gray-200 shadow-inner">
+                            <div class="flex justify-between items-center mb-2">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Cash Given</label>
+                                <div class="flex items-center">
+                                    <input type="number" id="pos-cash-given" placeholder="0.00" oninput="posCalculateChange()" class="w-20 text-right text-sm font-black text-gray-800 border-b border-gray-300 focus:border-teal-500 focus:outline-none bg-transparent">
+                                    <span class="text-[10px] text-gray-400 ml-1">SR</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <label class="text-[10px] font-bold text-gray-500 uppercase">Return / Change</label>
+                                <span id="pos-cash-change" class="text-sm font-black text-orange-500">0.00 SR</span>
+                            </div>
+                        </div>
+
                         <div class="flex gap-2">
                             <button onclick="posPrintActive()" class="w-12 shrink-0 py-3 border-2 border-gray-200 bg-white text-gray-500 rounded-xl hover:bg-gray-100 transition shadow-sm"><i class="fas fa-print"></i></button>
                             <button onclick="posSubmitOrder()" id="pos-btn-submit" class="flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md">Place Order</button>
@@ -670,7 +691,10 @@
 
                 </div>
             </div>
-        </section>        <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
+        </section>        
+
+
+<!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
         <section id="section-settings" class="tab-section hidden">
             <div class="flex justify-between items-end mb-6">
                 <div>
@@ -3816,8 +3840,9 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 const qtyCount = order.items ? order.items.reduce((s, i) => s + i.qty, 0) : 0;
                 const tableBadge = order.table_number ? `<span class="text-xs font-black text-gray-800">${order.table_number}</span>` : `<span class="text-xs font-black text-gray-800">TAKEAWAY</span>`;
 
+                // 🌟 FIX: Added shrink-0 and flex flex-col justify-between to force proper height even for empty/missing items
                 list.innerHTML += `
-                    <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group">
+                    <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group shrink-0 min-h-[85px] flex flex-col justify-between">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-bold text-gray-500 uppercase">${order.order_number}</span>
                             ${tableBadge}
@@ -3899,9 +3924,11 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosMenu();
         }
 
+        // 🌟 FIX: Updated with Search Filter Logic
         function renderPosMenu() {
             const catContainer = document.getElementById('pos-menu-cats');
             const grid = document.getElementById('pos-menu-grid');
+            const searchInput = document.getElementById('pos-menu-search');
             if(!grid || !catContainer) return;
             
             let items = allMenuItems.filter(i => (i.language || 'en').toLowerCase().includes(posLang));
@@ -3911,7 +3938,14 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 <button onclick="posActiveCategory='${c}'; renderPosMenu();" class="px-4 py-1.5 rounded-full text-[10px] font-bold transition whitespace-nowrap ${posActiveCategory === c ? 'bg-teal-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">${c}</button>
             `).join('');
 
+            // Apply Category
             if (posActiveCategory !== 'All') items = items.filter(i => i.main_cat === posActiveCategory);
+
+            // Apply Search Query
+            if (searchInput && searchInput.value.trim() !== '') {
+                const query = searchInput.value.trim().toLowerCase();
+                items = items.filter(i => i.name.toLowerCase().includes(query) || (i.item_code && i.item_code.toLowerCase().includes(query)));
+            }
 
             grid.innerHTML = items.map(item => {
                 const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
@@ -3950,6 +3984,10 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-cart-table-label').textContent = posActiveTable ? `Table ${posActiveTable}` : 'Takeaway';
             document.getElementById('pos-cart-id-label').textContent = order.order_number;
             
+            // Clear the cash input when opening an order
+            const givenInput = document.getElementById('pos-cash-given');
+            if (givenInput) givenInput.value = '';
+
             renderPosCart();
             renderPosOrderLine();
             setPosMiddleView('menu');
@@ -3963,6 +4001,10 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-cart-table-label').textContent = 'Takeaway Order';
             document.getElementById('pos-cart-id-label').textContent = 'New Order';
             document.getElementById('pos-guest-count').value = 1;
+            
+            const givenInput = document.getElementById('pos-cash-given');
+            if (givenInput) givenInput.value = '';
+
             renderPosCart();
             renderPosOrderLine();
         }
@@ -3974,6 +4016,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosCart();
         }
 
+        // 🌟 FIX: Show/Hide Cash Calculator automatically based on payment method
         function posSetPayment(method) {
             posPaymentMethod = method;
             ['Cash', 'Card', 'Unpaid'].forEach(m => {
@@ -3982,6 +4025,31 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     ? "py-2 border-2 border-teal-500 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-black uppercase" 
                     : "py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase";
             });
+
+            const calc = document.getElementById('pos-cash-calculator');
+            if (calc) {
+                if (method === 'Cash') {
+                    calc.classList.remove('hidden');
+                    posCalculateChange(); // Instantly process math
+                } else {
+                    calc.classList.add('hidden');
+                }
+            }
+        }
+
+        // 🌟 NEW: Live Change Calculator
+        function posCalculateChange() {
+            const subtotal = posCart.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
+            const givenInput = document.getElementById('pos-cash-given');
+            const changeDisplay = document.getElementById('pos-cash-change');
+            
+            if (!givenInput || !changeDisplay) return;
+
+            const given = parseFloat(givenInput.value) || 0;
+            let change = given - subtotal;
+            if (change < 0) change = 0; // Don't show negative change before they finish typing
+            
+            changeDisplay.textContent = `${change.toFixed(2)} SR`;
         }
 
         function renderPosCart() {
@@ -3995,6 +4063,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 container.innerHTML = `<div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>`;
                 document.getElementById('pos-summary-sub').textContent = '0.00 SR';
                 document.getElementById('pos-summary-total').textContent = '0.00 SR';
+                posCalculateChange(); // Reset calc
                 return;
             }
 
@@ -4003,7 +4072,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 const tot = parseFloat(c.price) * c.qty;
                 sub += tot;
                 return `
-                    <div class="flex justify-between items-start pb-2 border-b border-gray-100 last:border-0">
+                    <div class="flex justify-between items-start pb-2 border-b border-gray-100 last:border-0 shrink-0">
                         <div class="flex-1">
                             <h4 class="font-bold text-gray-800 text-xs mb-1 leading-tight pr-2">${c.name}</h4>
                             <div class="flex items-center gap-2 bg-gray-100 w-fit rounded p-0.5 border border-gray-200">
@@ -4023,6 +4092,8 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-summary-sub').textContent = `${sub.toFixed(2)} SR`;
             document.getElementById('pos-summary-total').textContent = `${sub.toFixed(2)} SR`;
             
+            posCalculateChange(); // Instantly update change if items are added/removed!
+
             const subBtn = document.getElementById('pos-btn-submit');
             if(subBtn) {
                 subBtn.innerHTML = posActiveOrderId ? 'Update Order' : 'Place Order';
@@ -4062,7 +4133,13 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 payload.order_number = uniqueOrderNo;
 
                 const { error } = await supabaseClient.from('orders').insert([payload]);
-                if (!error) alert("New Order placed successfully!");
+                if (!error) {
+                    alert("New Order placed successfully!");
+                    // Ensure the newest order data is synced before attempting to print
+                    await fetchDashboardData(null, true);
+                    const freshOrder = allOrders.find(o => o.order_number === uniqueOrderNo);
+                    if (freshOrder) printOrderTicket(freshOrder.id);
+                }
             }
 
             posClearCart();
