@@ -1639,21 +1639,19 @@
 
             function showSlide(index) {
                 const item = slaDelayedOrders[index];
+                // 🌟 FIX: Removed broken arbitrary animation class, replaced with standard Tailwind transitions
                 container.innerHTML = `
-                    <div class="flex flex-col justify-between h-full animate-[pulse_0.5s_ease-in-out] pb-1">
-                        
+                    <div class="flex flex-col justify-between h-full pb-1 transition-opacity duration-500">
                         <!-- Top Half: Status & Order Number -->
                         <div class="flex flex-col items-start gap-1.5 mt-1">
                             <span class="text-[10px] font-black bg-white px-2 py-1 rounded shadow-sm inline-block ${item.color}">${item.status}</span>
                             <span class="text-[22px] font-black leading-none">${item.order.order_number}</span>
                         </div>
-
                         <!-- Bottom Half: Delayed Time -->
                         <div class="flex flex-col items-start gap-0.5">
                             <span class="text-[10px] font-bold text-red-200 uppercase block leading-none tracking-widest">Delayed</span>
                             <span class="text-[26px] font-black text-yellow-300 leading-none drop-shadow-md">${item.delay}</span>
                         </div>
-
                     </div>
                 `;
             }
@@ -4036,34 +4034,32 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const parentDetails = clickedSummary.parentElement;
             const tNum = clickedSummary.querySelector('span').textContent;
             
-            // If the clicked table is part of a multi-table active order, 
-            // do not force-close the other tables sharing that exact order!
-            if (posActiveTables.includes(tNum) && posActiveTables.length > 1) {
-                return;
-            }
-
-            // Otherwise, close all other accordions
             const allDetails = document.querySelectorAll('#pos-table-accordion details');
             allDetails.forEach(d => {
-                if (d !== parentDetails) d.removeAttribute('open');
+                if (d !== parentDetails) {
+                    // 🌟 FIX: If multiple tables share the same active order, don't collapse them!
+                    const otherTNum = d.querySelector('summary span').textContent;
+                    if (posActiveTables.includes(tNum) && posActiveTables.includes(otherTNum)) return;
+                    
+                    d.removeAttribute('open');
+                }
             });
         }
 
         // 🌟 GLOBAL CLICK TO CLOSE ACCORDION (SMART VERSION)
         document.addEventListener('click', (e) => {
             const acc = document.getElementById('pos-table-accordion');
-            // If click is outside the accordion, collapse tables...
-            // EXCEPT the ones actively tied to the current order you are viewing!
-            if (acc && !acc.contains(e.target)) {
+            // If click is outside the accordion, table map, AND order list...
+            if (acc && !acc.contains(e.target) && !e.target.closest('#pos-view-tables') && !e.target.closest('#pos-order-list')) {
                 acc.querySelectorAll('details').forEach(d => {
                     const tNum = d.querySelector('summary span').textContent;
-                    if (!posActiveTables.includes(tNum)) {
-                        d.removeAttribute('open');
-                    }
+                    // Collapse it ONLY if it is not actively selected
+                    if (!posActiveTables.includes(tNum)) d.removeAttribute('open');
                 });
             }
         });
 
+        // 🌟 FIX: ONLY ONE RENDER ACCORDION FUNCTION EXISTS NOW!
         function renderPosTableAccordion(tableOrders) {
             const acc = document.getElementById('pos-table-accordion');
             if (!acc) return;
@@ -4099,7 +4095,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     ordersHtml = `<div class="p-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 italic text-center">No active orders</div>`;
                 }
 
-                // 🌟 FIX: Auto-expand the accordion if the table is currently active!
+                // 🌟 FIX: Auto-expand the accordion ONLY if the table is currently active!
                 const isOpen = isSelected ? 'open' : '';
 
                 html += `
