@@ -3675,8 +3675,100 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
 
 
+
 // ==========================================
-        // ADVANCED CASHIER POS LOGIC (3-PANE)
+        // NEW: REVIEW MANAGER LOGIC
+        // ==========================================
+        let allReviews = [];
+
+        async function fetchReviews(btnElement = null) {
+            if (btnElement) {
+                const icon = btnElement.querySelector('.fa-sync-alt');
+                if (icon) { icon.classList.add('fa-spin'); setTimeout(() => icon.classList.remove('fa-spin'), 1000); }
+            }
+
+            const container = document.getElementById('reviews-container');
+            const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false });
+            
+            if (error) {
+                container.innerHTML = `<div class="col-span-full p-10 text-center text-red-500 font-bold">Error loading reviews: ${error.message}</div>`;
+                return;
+            }
+
+            allReviews = data || [];
+            renderReviews();
+        }
+
+        function renderReviews() {
+            const container = document.getElementById('reviews-container');
+            container.innerHTML = '';
+
+            if (allReviews.length === 0) {
+                container.innerHTML = `<div class="col-span-full p-10 text-center text-gray-400 font-bold"><i class="fas fa-comment-slash text-3xl mb-3 block text-gray-300"></i> No reviews submitted yet.</div>`;
+                return;
+            }
+
+            allReviews.forEach(review => {
+                const dateStr = new Date(review.created_at).toLocaleDateString();
+                let starsHtml = '';
+                for (let i = 1; i <= 5; i++) {
+                    starsHtml += `<i class="fas fa-star ${i <= review.rating ? 'text-yellow-400' : 'text-gray-200'}"></i>`;
+                }
+
+                let statusBadge = '';
+                let actionButtons = '';
+                
+                if (review.status === 'Approved') {
+                    statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fas fa-check"></i> Approved</span>`;
+                    actionButtons = `<button onclick="updateReviewStatus('${review.id}', 'Rejected')" class="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition">Reject & Hide</button>`;
+                } else if (review.status === 'Rejected') {
+                    statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fas fa-times"></i> Rejected</span>`;
+                    actionButtons = `<button onclick="updateReviewStatus('${review.id}', 'Approved')" class="w-full py-2 bg-green-50 text-green-600 rounded-lg text-xs font-bold hover:bg-green-100 transition">Approve & Publish</button>`;
+                } else {
+                    statusBadge = `<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fas fa-clock"></i> Pending</span>`;
+                    actionButtons = `
+                        <button onclick="updateReviewStatus('${review.id}', 'Approved')" class="flex-1 py-2 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition shadow-sm">Approve</button>
+                        <button onclick="updateReviewStatus('${review.id}', 'Rejected')" class="flex-1 py-2 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition shadow-sm">Reject</button>
+                    `;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-black text-gray-900 text-sm">${review.customer_name || 'Anonymous'}</h4>
+                                <p class="text-[10px] font-bold text-blue-500 mt-0.5">Item: ${review.item_name || 'General'}</p>
+                            </div>
+                            <div class="flex flex-col items-end gap-1.5">
+                                ${statusBadge}
+                                <span class="text-[9px] text-gray-400 font-bold">${dateStr}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-0.5 text-xs my-1">${starsHtml}</div>
+                        <p class="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-gray-100 flex-1 relative">
+                            <i class="fas fa-quote-left text-gray-200 absolute top-2 left-2 opacity-50"></i>
+                            <span class="relative z-10 ml-4">${review.comment || 'No written comment provided.'}</span>
+                        </p>
+                        <div class="flex gap-2 mt-2">${actionButtons}</div>
+                    </div>
+                `;
+            });
+        }
+
+        async function updateReviewStatus(reviewId, newStatus) {
+            const review = allReviews.find(r => String(r.id) === String(reviewId));
+            if (review) review.status = newStatus;
+            renderReviews();
+
+            const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
+            if (error) {
+                alert("Error updating review: " + error.message);
+                fetchReviews();
+            }
+        }
+
+        // ==========================================
+        // UNIFIED 3-PANE CASHIER POS WORKSTATION
         // ==========================================
         let posCart = [];
         let posActiveTable = null;
@@ -3761,7 +3853,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
         }
 
-        // --- CSS/JS Table Map Generator ---
         function renderPosTables() {
             const grid = document.getElementById('pos-table-grid');
             if(!grid) return;
@@ -3771,20 +3862,18 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const occupiedMap = {};
             activeDineIn.forEach(o => { occupiedMap[o.table_number] = o; });
 
-            // Generate 12 tables (mix of 2, 4, and 6 seaters)
-            const tableLayouts = [6, 2, 2, 3, 0, 7, 10, 2, 4, 2, 2, 8]; 
+            const tableLayouts = [6, 2, 2, 3, 4, 7, 10, 2, 4, 2, 2, 8]; 
             
             for (let i = 0; i < 12; i++) {
                 const tNum = `T${String(i+1).padStart(2, '0')}`;
                 const order = occupiedMap[tNum];
-                const chairs = tableLayouts[i] || 4; // default to 4 if 0
+                const chairs = tableLayouts[i] || 4;
                 
                 const isOcc = !!order;
                 const tblColor = isOcc ? 'bg-orange-100 border-orange-300 group-hover:border-orange-500' : 'bg-teal-50 border-teal-200 group-hover:border-teal-500 hover:shadow-md';
                 const chairColor = isOcc ? 'bg-orange-300' : 'bg-gray-300 group-hover:bg-teal-400';
                 const textColor = isOcc ? 'text-orange-800' : 'text-gray-500';
                 
-                // Build Chairs Array (Top/Bottom Split)
                 let topChairs = '', botChairs = '';
                 for(let c=0; c < Math.ceil(chairs/2); c++) topChairs += `<div class="w-4 h-4 rounded-t-full transition-colors ${chairColor}"></div>`;
                 for(let c=0; c < Math.floor(chairs/2); c++) botChairs += `<div class="w-4 h-4 rounded-b-full transition-colors ${chairColor}"></div>`;
@@ -3803,7 +3892,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
         }
 
-        // --- Context Menu Grid ---
         function posSetLang(lang) {
             posLang = lang;
             document.getElementById('pos-lang-en').className = lang === 'en' ? "px-3 py-1 rounded-md text-[10px] font-bold bg-white shadow-sm text-gray-800" : "px-3 py-1 rounded-md text-[10px] font-bold text-gray-500 hover:text-gray-800";
@@ -3814,6 +3902,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
         function renderPosMenu() {
             const catContainer = document.getElementById('pos-menu-cats');
             const grid = document.getElementById('pos-menu-grid');
+            if(!grid || !catContainer) return;
             
             let items = allMenuItems.filter(i => (i.language || 'en').toLowerCase().includes(posLang));
             const cats = ['All', ...new Set(items.map(i => i.main_cat || 'General'))];
@@ -3837,14 +3926,12 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }).join('');
         }
 
-        // --- Interacting with Cart/Receipt ---
         function posSelectTable(tNum, orderId) {
             if (orderId) {
                 posLoadOrder(orderId);
             } else {
                 posClearCart();
                 posActiveTable = tNum;
-                posDiningType = 'Dine In';
                 document.getElementById('pos-cart-table-label').textContent = `Table ${tNum}`;
             }
             setPosMiddleView('menu');
@@ -3856,7 +3943,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             
             posActiveOrderId = order.id;
             posActiveTable = order.table_number || null;
-            posDiningType = order.order_type || 'Takeaway';
             posCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
             posSetPayment(order.payment_status || 'Unpaid');
             document.getElementById('pos-guest-count').value = order.guest_count || 1;
@@ -3865,14 +3951,14 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-cart-id-label').textContent = order.order_number;
             
             renderPosCart();
-            renderPosOrderLine(); // Highlight active
+            renderPosOrderLine();
+            setPosMiddleView('menu');
         }
 
         function posClearCart() {
             posCart = [];
             posActiveOrderId = null;
             posActiveTable = null;
-            posDiningType = 'Takeaway';
             posSetPayment('Unpaid');
             document.getElementById('pos-cart-table-label').textContent = 'Takeaway Order';
             document.getElementById('pos-cart-id-label').textContent = 'New Order';
@@ -3900,7 +3986,10 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
         function renderPosCart() {
             const container = document.getElementById('pos-cart-items');
-            document.getElementById('pos-cart-count').textContent = posCart.reduce((s, i) => s + i.qty, 0).toString().padStart(2, '0');
+            const countBadge = document.getElementById('pos-cart-count');
+            if(!container || !countBadge) return;
+            
+            countBadge.textContent = posCart.reduce((s, i) => s + i.qty, 0).toString().padStart(2, '0');
             
             if (posCart.length === 0) {
                 container.innerHTML = `<div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>`;
@@ -3934,16 +4023,17 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-summary-sub').textContent = `${sub.toFixed(2)} SR`;
             document.getElementById('pos-summary-total').textContent = `${sub.toFixed(2)} SR`;
             
-            // Switch Place Order to "Update Order" if editing existing
             const subBtn = document.getElementById('pos-btn-submit');
-            subBtn.innerHTML = posActiveOrderId ? 'Update Order' : 'Place Order';
-            subBtn.className = posActiveOrderId ? 'flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black transition shadow-md' : 'flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md';
+            if(subBtn) {
+                subBtn.innerHTML = posActiveOrderId ? 'Update Order' : 'Place Order';
+                subBtn.className = posActiveOrderId ? 'flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black transition shadow-md' : 'flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md';
+            }
         }
 
         async function posSubmitOrder() {
             if (posCart.length === 0) return alert("Cart is empty!");
             const btn = document.getElementById('pos-btn-submit');
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+            if(btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
 
             let subtotal = posCart.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
             const guests = parseInt(document.getElementById('pos-guest-count').value) || 1;
@@ -3958,11 +4048,9 @@ const dbLang = (mainRow.language || '').toLowerCase();
             };
 
             if (posActiveOrderId) {
-                // UPDATE EXISTING
                 const { error } = await supabaseClient.from('orders').update(payload).eq('id', posActiveOrderId);
                 if (!error) alert("Order updated successfully!");
             } else {
-                // CREATE NEW
                 payload.status = 'Pending';
                 payload.customer_name = 'Walk-in Customer';
                 
@@ -3978,7 +4066,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
 
             posClearCart();
-            fetchDashboardData(null, true); // Silent refresh
+            fetchDashboardData(null, true);
         }
 
         function posPrintActive() {
@@ -3992,387 +4080,9 @@ const dbLang = (mainRow.language || '').toLowerCase();
             await origVerify();
             setTimeout(() => {
                 renderPosOrderLine();
-                setPosMiddleView('tables'); // Default to Tables
+                setPosMiddleView('tables'); 
             }, 1000);
         };
-
-
-// ==========================================
-        // NEW: REVIEW MANAGER LOGIC
-        // ==========================================
-        let allReviews = [];
-
-        async function fetchReviews(btnElement = null) {
-            if (btnElement) {
-                const icon = btnElement.querySelector('.fa-sync-alt');
-                if (icon) { icon.classList.add('fa-spin'); setTimeout(() => icon.classList.remove('fa-spin'), 1000); }
-            }
-
-            const container = document.getElementById('reviews-container');
-            
-            // Fetch reviews from database (Assuming table is named 'reviews')
-            const { data, error } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false });
-            
-            if (error) {
-                container.innerHTML = `<div class="col-span-full p-10 text-center text-red-500 font-bold">Error loading reviews: ${error.message}</div>`;
-                return;
-            }
-
-            allReviews = data || [];
-            renderReviews();
-        }
-
-        function renderReviews() {
-            const container = document.getElementById('reviews-container');
-            container.innerHTML = '';
-
-            if (allReviews.length === 0) {
-                container.innerHTML = `<div class="col-span-full p-10 text-center text-gray-400 font-bold"><i class="fas fa-comment-slash text-3xl mb-3 block text-gray-300"></i> No reviews submitted yet.</div>`;
-                return;
-            }
-
-            allReviews.forEach(review => {
-                const dateStr = new Date(review.created_at).toLocaleDateString();
-                
-                // Star generator
-                let starsHtml = '';
-                for (let i = 1; i <= 5; i++) {
-                    starsHtml += `<i class="fas fa-star ${i <= review.rating ? 'text-yellow-400' : 'text-gray-200'}"></i>`;
-                }
-
-                // Status Badge & Action Buttons
-                let statusBadge = '';
-                let actionButtons = '';
-                
-                if (review.status === 'Approved') {
-                    statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fas fa-check"></i> Approved</span>`;
-                    actionButtons = `<button onclick="updateReviewStatus('${review.id}', 'Rejected')" class="w-full py-2 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition">Reject & Hide</button>`;
-                } else if (review.status === 'Rejected') {
-                    statusBadge = `<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fas fa-times"></i> Rejected</span>`;
-                    actionButtons = `<button onclick="updateReviewStatus('${review.id}', 'Approved')" class="w-full py-2 bg-green-50 text-green-600 rounded-lg text-xs font-bold hover:bg-green-100 transition">Approve & Publish</button>`;
-                } else {
-                    // Pending
-                    statusBadge = `<span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-black uppercase"><i class="fas fa-clock"></i> Pending</span>`;
-                    actionButtons = `
-                        <button onclick="updateReviewStatus('${review.id}', 'Approved')" class="flex-1 py-2 bg-green-500 text-white rounded-lg text-xs font-bold hover:bg-green-600 transition shadow-sm">Approve</button>
-                        <button onclick="updateReviewStatus('${review.id}', 'Rejected')" class="flex-1 py-2 bg-red-500 text-white rounded-lg text-xs font-bold hover:bg-red-600 transition shadow-sm">Reject</button>
-                    `;
-                }
-
-                container.innerHTML += `
-                    <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-black text-gray-900 text-sm">${review.customer_name || 'Anonymous'}</h4>
-                                <p class="text-[10px] font-bold text-blue-500 mt-0.5">Item: ${review.item_name || 'General'}</p>
-                            </div>
-                            <div class="flex flex-col items-end gap-1.5">
-                                ${statusBadge}
-                                <span class="text-[9px] text-gray-400 font-bold">${dateStr}</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex gap-0.5 text-xs my-1">
-                            ${starsHtml}
-                        </div>
-                        
-                        <p class="text-xs text-gray-600 italic bg-white p-3 rounded-xl border border-gray-100 flex-1 relative">
-                            <i class="fas fa-quote-left text-gray-200 absolute top-2 left-2 opacity-50"></i>
-                            <span class="relative z-10 ml-4">${review.comment || 'No written comment provided.'}</span>
-                        </p>
-                        
-                        <div class="flex gap-2 mt-2">
-                            ${actionButtons}
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        async function updateReviewStatus(reviewId, newStatus) {
-            // Optimistic UI
-            const review = allReviews.find(r => String(r.id) === String(reviewId));
-            if (review) review.status = newStatus;
-            renderReviews();
-
-            // Database Sync
-            const { error } = await supabaseClient.from('reviews').update({ status: newStatus }).eq('id', reviewId);
-            if (error) {
-                alert("Error updating review: " + error.message);
-                fetchReviews(); // Revert on error
-            }
-        }
-// ==========================================
-        // NEW: CASHIER POS WORKSTATION LOGIC
-        // ==========================================
-        let posCart = [];
-        let posDiningType = 'Dine In';
-        let posPaymentMethod = 'Cash';
-        let activePosCategory = 'All';
-
-        // 1. Tab Switcher
-        function switchPosMode(mode) {
-            // Hide all
-            document.getElementById('pos-view-kanban').classList.add('hidden');
-            document.getElementById('pos-view-builder').classList.add('hidden');
-            document.getElementById('pos-view-tables').classList.add('hidden');
-            
-            // Reset buttons
-            ['kanban', 'builder', 'tables'].forEach(m => {
-                const btn = document.getElementById(`btn-mode-${m}`);
-                btn.className = "px-5 py-2 rounded-lg text-sm font-black text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition";
-            });
-
-            // Show active
-            document.getElementById(`pos-view-${mode}`).classList.remove('hidden');
-            if (mode === 'builder') document.getElementById('pos-view-builder').classList.add('flex');
-            
-            // Highlight active button
-            const activeBtn = document.getElementById(`btn-mode-${mode}`);
-            activeBtn.className = "px-5 py-2 rounded-lg text-sm font-black bg-white shadow-sm text-blue-600 transition border border-gray-200";
-
-            if (mode === 'builder') {
-                renderPosBuilderCategories();
-                renderPosBuilderGrid();
-                initPosTableSelect();
-            } else if (mode === 'tables') {
-                renderTableMap();
-            }
-        }
-
-        // 2. Order Builder: Menu Grid
-        function renderPosBuilderCategories() {
-            const container = document.getElementById('pos-builder-cats');
-            // Extract unique categories from current menu items
-            const categories = ['All', ...new Set(allMenuItems.map(i => i.main_cat || 'General'))];
-            
-            container.innerHTML = categories.map(cat => {
-                const isActive = activePosCategory === cat;
-                const cls = isActive ? 'bg-gray-800 text-white shadow-sm' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-100';
-                return `<button onclick="activePosCategory='${cat}'; renderPosBuilderCategories(); renderPosBuilderGrid();" class="px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${cls}">${cat}</button>`;
-            }).join('');
-        }
-
-        function renderPosBuilderGrid() {
-            const grid = document.getElementById('pos-builder-grid');
-            grid.innerHTML = '';
-            
-            let items = allMenuItems;
-            if (activePosCategory !== 'All') {
-                items = items.filter(i => i.main_cat === activePosCategory);
-            }
-
-            items.forEach(item => {
-                const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
-                grid.innerHTML += `
-                    <div onclick="posAddToCart('${item.id}')" class="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm hover:border-blue-400 hover:shadow-md cursor-pointer transition group">
-                        <div class="h-28 w-full overflow-hidden bg-gray-100">
-                            <img src="${img}" class="w-full h-full object-cover group-hover:scale-110 transition duration-300">
-                        </div>
-                        <div class="p-3">
-                            <h4 class="font-bold text-gray-800 text-xs truncate mb-1">${item.name}</h4>
-                            <div class="flex justify-between items-center">
-                                <span class="font-black text-green-600 text-sm">${item.price} <span class="text-[9px] text-gray-400">SR</span></span>
-                                <div class="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><i class="fas fa-plus text-[10px]"></i></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        // 3. Order Builder: Cart Management
-        function initPosTableSelect() {
-            const select = document.getElementById('pos-table-select');
-            if (select.options.length > 1) return; // already initialized
-            for(let i = 1; i <= 20; i++) {
-                const tNum = `T${String(i).padStart(2, '0')}`;
-                select.innerHTML += `<option value="${tNum}">${tNum}</option>`;
-            }
-        }
-
-        function posSetDining(type) {
-            posDiningType = type;
-            const btnDineIn = document.getElementById('pos-type-dinein');
-            const btnTakeaway = document.getElementById('pos-type-takeaway');
-            const select = document.getElementById('pos-table-select');
-
-            if (type === 'Dine In') {
-                btnDineIn.className = "flex-1 py-2 bg-green-100 text-green-800 border-2 border-green-500 rounded-xl font-black text-xs uppercase tracking-wider";
-                btnTakeaway.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-100";
-                select.classList.remove('hidden');
-            } else {
-                btnTakeaway.className = "flex-1 py-2 bg-green-100 text-green-800 border-2 border-green-500 rounded-xl font-black text-xs uppercase tracking-wider";
-                btnDineIn.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-gray-100";
-                select.classList.add('hidden');
-                select.value = '';
-            }
-        }
-
-        function posSetPayment(method) {
-            posPaymentMethod = method;
-            const btnCash = document.getElementById('pos-pay-cash');
-            const btnCard = document.getElementById('pos-pay-card');
-
-            if (method === 'Cash') {
-                btnCash.className = "flex-1 py-2 bg-blue-100 text-blue-800 border-2 border-blue-500 rounded-lg font-black text-xs";
-                btnCard.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-lg font-bold text-xs hover:bg-gray-100";
-            } else {
-                btnCard.className = "flex-1 py-2 bg-blue-100 text-blue-800 border-2 border-blue-500 rounded-lg font-black text-xs";
-                btnCash.className = "flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-lg font-bold text-xs hover:bg-gray-100";
-            }
-        }
-
-        function posAddToCart(id) {
-            const item = allMenuItems.find(i => String(i.id) === String(id));
-            if (!item) return;
-            const existing = posCart.find(c => c.id === item.id);
-            if (existing) existing.qty += 1;
-            else posCart.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
-            renderPosCart();
-        }
-
-        function posChangeQty(index, amt) {
-            posCart[index].qty += amt;
-            if (posCart[index].qty <= 0) posCart.splice(index, 1);
-            renderPosCart();
-        }
-
-        function posClearCart() {
-            if(!confirm("Clear current order?")) return;
-            posCart = [];
-            renderPosCart();
-        }
-
-        function renderPosCart() {
-            const container = document.getElementById('pos-cart-container');
-            const totalEl = document.getElementById('pos-cart-total');
-            container.innerHTML = '';
-            
-            if (posCart.length === 0) {
-                container.innerHTML = '<div class="text-center text-gray-400 text-sm font-bold py-10 italic">Cart is empty</div>';
-                totalEl.textContent = '0.00 SR';
-                return;
-            }
-
-            let total = 0;
-            posCart.forEach((c, idx) => {
-                const rowTotal = parseFloat(c.price) * c.qty;
-                total += rowTotal;
-                container.innerHTML += `
-                    <div class="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-2">
-                        <div class="flex justify-between items-start">
-                            <span class="font-bold text-gray-800 text-xs">${c.name}</span>
-                            <span class="font-black text-green-600 text-xs">${rowTotal.toFixed(2)}</span>
-                        </div>
-                        <div class="flex justify-between items-center border-t border-gray-100 pt-2">
-                            <span class="text-[10px] text-gray-500 font-bold">${parseFloat(c.price).toFixed(2)} SR each</span>
-                            <div class="flex items-center gap-2 bg-gray-100 rounded-lg p-1 border border-gray-200">
-                                <button onclick="posChangeQty(${idx}, -1)" class="w-6 h-6 bg-white rounded flex items-center justify-center text-gray-600 hover:text-red-500 shadow-sm transition"><i class="fas fa-minus text-[10px]"></i></button>
-                                <span class="font-black text-xs w-4 text-center">${c.qty}</span>
-                                <button onclick="posChangeQty(${idx}, 1)" class="w-6 h-6 bg-white rounded flex items-center justify-center text-gray-600 hover:text-green-500 shadow-sm transition"><i class="fas fa-plus text-[10px]"></i></button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            totalEl.textContent = `${total.toFixed(2)} SR`;
-        }
-
-        async function posSubmitOrder() {
-            if (posCart.length === 0) return alert("Cart is empty!");
-            const tableNum = document.getElementById('pos-table-select').value;
-            if (posDiningType === 'Dine In' && !tableNum) return alert("Please select a Table Number!");
-
-            const btn = document.getElementById('btn-pos-submit');
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Submitting...`;
-
-            let subtotal = 0;
-            posCart.forEach(i => subtotal += parseFloat(i.price) * i.qty);
-
-            let uniqueOrderNo = 'ORD-' + String(Math.floor(1000 + Math.random() * 9000));
-            try {
-                const { data: lastOrder } = await supabaseClient.from('orders').select('order_number').not('order_number', 'is', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
-                if (lastOrder && lastOrder.order_number) {
-                    const lastNum = parseInt(lastOrder.order_number.replace('ORD-', ''));
-                    if (!isNaN(lastNum)) uniqueOrderNo = 'ORD-' + String(lastNum + 1).padStart(4, '0');
-                }
-            } catch (e) {}
-
-            const payload = {
-                order_number: uniqueOrderNo,
-                customer_name: 'Walk-in Customer',
-                order_type: posDiningType,
-                table_number: posDiningType === 'Dine In' ? tableNum : null,
-                items: posCart,
-                total_amount: subtotal,
-                status: 'Pending',
-                payment_status: 'Paid' // POS orders assumed paid instantly
-            };
-
-            const { data, error } = await supabaseClient.from('orders').insert([payload]).select();
-            
-            if (error) {
-                alert("Error placing order: " + error.message);
-                btn.innerHTML = `<i class="fas fa-check-circle"></i> Place Order`;
-            } else {
-                // Instantly print the receipt
-                if (data && data.length > 0) {
-                    allOrders.unshift(data[0]); // Update local memory immediately
-                    printOrderTicket(data[0].id);
-                }
-                
-                alert("Order successfully placed!");
-                posCart = [];
-                renderPosCart();
-                document.getElementById('pos-table-select').value = '';
-                btn.innerHTML = `<i class="fas fa-check-circle"></i> Place Order`;
-                
-                // Refresh dashboards silently
-                fetchDashboardData(null, true);
-            }
-        }
-
-        // 4. Table Map Viewer
-        function renderTableMap() {
-            const grid = document.getElementById('pos-table-grid');
-            grid.innerHTML = '';
-            
-            // Find all tables currently occupied
-            // Only orders that are 'Pending' or 'Cooking' and are 'Dine In'
-            const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && (o.status === 'Pending' || o.status === 'Cooking') && o.table_number);
-            
-            // Create map of occupied tables
-            const occupiedMap = {};
-            activeDineIn.forEach(o => { occupiedMap[o.table_number] = o; });
-
-            for (let i = 1; i <= 20; i++) {
-                const tNum = `T${String(i).padStart(2, '0')}`;
-                const order = occupiedMap[tNum];
-                
-                if (order) {
-                    // Occupied Table
-                    const waitStr = getWaitTimeStr(order.created_at);
-                    grid.innerHTML += `
-                        <div class="relative bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex flex-col items-center justify-center aspect-square shadow-sm cursor-pointer hover:shadow-md transition" onclick="toggleOrderDetails('${order.id}'); switchPosMode('kanban');">
-                            <div class="absolute -top-3 bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-sm tracking-wider uppercase">Occupied</div>
-                            <h3 class="text-2xl font-black text-red-700">${tNum}</h3>
-                            <p class="text-xs font-bold text-red-500 mt-1">${order.order_number}</p>
-                            <p class="text-[10px] font-bold text-gray-500 mt-2 bg-white px-2 py-1 rounded-lg border border-red-100 shadow-inner"><i class="far fa-clock text-red-400"></i> ${waitStr}</p>
-                        </div>
-                    `;
-                } else {
-                    // Available Table
-                    grid.innerHTML += `
-                        <div class="relative bg-gray-50 border-2 border-gray-200 border-dashed rounded-2xl p-4 flex flex-col items-center justify-center aspect-square hover:bg-green-50 hover:border-green-300 hover:border-solid cursor-pointer transition group" onclick="switchPosMode('builder'); posSetDining('Dine In'); document.getElementById('pos-table-select').value='${tNum}';">
-                            <div class="absolute -top-3 bg-gray-200 text-gray-500 text-[9px] font-black px-2 py-0.5 rounded-full group-hover:bg-green-500 group-hover:text-white transition tracking-wider uppercase">Available</div>
-                            <h3 class="text-2xl font-black text-gray-400 group-hover:text-green-600 transition">${tNum}</h3>
-                            <p class="text-[10px] font-bold text-gray-400 mt-2 opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus-circle"></i> New Order</p>
-                        </div>
-                    `;
-                }
-            }
-        }
 
         window.onload = verifyAdmin;
     </script>
