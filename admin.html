@@ -4434,6 +4434,13 @@ const dbLang = (mainRow.language || '').toLowerCase();
             if(!container || !countBadge) return;
             
             countBadge.textContent = posCart.reduce((s, i) => s + i.qty, 0).toString().padStart(2, '0');
+
+            // 🌟 FIX 1: Moved this to the TOP so the button ALWAYS resets, even if cart is empty!
+            const subBtn = document.getElementById('pos-btn-submit');
+            if(subBtn) {
+                subBtn.innerHTML = posActiveOrderId ? 'Update Order' : 'Place Order';
+                subBtn.className = posActiveOrderId ? 'flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black transition shadow-md' : 'flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md';
+            }
             
             if (posCart.length === 0) {
                 if (posActiveTables.length > 0) {
@@ -4483,12 +4490,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-summary-total').textContent = `${sub.toFixed(2)} SR`;
             
             posCalculateChange(); 
-
-            const subBtn = document.getElementById('pos-btn-submit');
-            if(subBtn) {
-                subBtn.innerHTML = posActiveOrderId ? 'Update Order' : 'Place Order';
-                subBtn.className = posActiveOrderId ? 'flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black transition shadow-md' : 'flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md';
-            }
         }
 
         async function posSubmitOrder() {
@@ -4512,7 +4513,14 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             if (posActiveOrderId) {
                 const { error } = await supabaseClient.from('orders').update(payload).eq('id', posActiveOrderId);
-                if (!error) alert("Order updated successfully!");
+                if (!error) {
+                    // 🌟 FIX 2: If the Cashier just Paid for the order, instantly trigger the Receipt Printer!
+                    if (posPaymentMethod === 'Cash' || posPaymentMethod === 'Card') {
+                        printOrderTicket(posActiveOrderId);
+                    }
+                } else {
+                    alert("Order update failed!");
+                }
             } else {
                 payload.status = 'Pending';
                 payload.customer_name = 'Walk-in Customer';
@@ -4526,7 +4534,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
                 const { error } = await supabaseClient.from('orders').insert([payload]);
                 if (!error) {
-                    alert("New Order placed successfully!");
                     await fetchDashboardData(null, true);
                     const freshOrder = allOrders.find(o => o.order_number === uniqueOrderNo);
                     if (freshOrder) printOrderTicket(freshOrder.id);
