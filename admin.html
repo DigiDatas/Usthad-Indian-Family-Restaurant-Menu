@@ -707,7 +707,30 @@
 
                 </div>
             </div>
-        </section>        
+        </section> 
+
+
+<!-- ================= TAB 8: REVIEW MANAGER ================= -->
+        <section id="section-reviews" class="tab-section hidden h-full flex flex-col">
+            <div class="flex justify-between items-end mb-6 shrink-0">
+                <div>
+                    <h2 class="text-2xl font-black text-gray-800">Review Manager</h2>
+                    <p class="text-sm text-gray-500">Approve or reject customer feedback before it appears on the live menu.</p>
+                </div>
+                <button onclick="fetchReviews(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
+                    <i class="fas fa-sync-alt text-yellow-500 transition-all duration-300"></i> Refresh
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col min-h-0">
+                <div class="overflow-y-auto hide-scrollbar flex-1 p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="reviews-container">
+                        <!-- Review Cards will be injected here via JS -->
+                        <div class="col-span-full p-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin me-2"></i> Loading Reviews...</div>
+                    </div>
+                </div>
+            </div>
+        </section>       
 
 
 <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
@@ -1266,7 +1289,11 @@
             updateDetailedAnalytics();
             renderOrdersTable();
             renderGroupedChart();
-	renderPOSKanban(); // 🌟 NEW: Updates the Cashier Kanban Board
+            
+            // 🌟 FIX: Safely update the new POS interface instead of the old Kanban!
+            if (typeof renderPosOrderLine === 'function') renderPosOrderLine();
+            if (typeof renderPosTables === 'function') renderPosTables();
+            
             startLiveTimers();
             checkSLABreaches();
         }
@@ -1611,7 +1638,7 @@
             dashboardFilteredOrders.forEach(order => {
                 let isLate = false;
                 let delayText = '';
-                let delayMins = 0; // 🌟 NEW: Track raw minutes for sorting
+                let delayMins = 0; 
                 const row = document.getElementById(`row-sum-${order.id}`);
                 
                 if (order.status === 'Pending') {
@@ -1652,7 +1679,7 @@
             const container = document.getElementById('sla-carousel-content');
             if (!container) return;
 
-            // Ensure smooth fade transitions are applied to the container itself
+            // Ensure smooth fade transitions are applied
             container.style.transition = 'opacity 0.3s ease-in-out';
 
             if (slaDelayedOrders.length === 0) {
@@ -1664,8 +1691,7 @@
             function showSlide(index) {
                 const item = slaDelayedOrders[index];
                 
-                // 🌟 FIX: Fade out, swap content, fade in smoothly
-                container.style.opacity = '0';
+                container.style.opacity = '0'; // Fade out
                 
                 setTimeout(() => {
                     container.innerHTML = `
@@ -1680,8 +1706,8 @@
                             </div>
                         </div>
                     `;
-                    container.style.opacity = '1';
-                }, 300); // Wait for fade out to finish before swapping text
+                    container.style.opacity = '1'; // Fade back in
+                }, 300);
             }
 
             if(currentSlaIndex >= slaDelayedOrders.length) currentSlaIndex = 0;
@@ -1693,7 +1719,7 @@
                     currentSlaIndex++;
                     if (currentSlaIndex >= slaDelayedOrders.length) currentSlaIndex = 0;
                     showSlide(currentSlaIndex);
-                }, 4000); // Cycle every 4 seconds
+                }, 4000); 
             }
         }
 
@@ -3767,6 +3793,8 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
         function renderReviews() {
             const container = document.getElementById('reviews-container');
+            if (!container) return; // 🌟 FIX: Stops crashing if HTML is missing!
+
             container.innerHTML = '';
 
             if (allReviews.length === 0) {
