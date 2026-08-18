@@ -4034,20 +4034,33 @@ const dbLang = (mainRow.language || '').toLowerCase();
         // 🌟 EXCLUSIVE ACCORDION LOGIC
         function posAccToggle(clickedSummary) {
             const parentDetails = clickedSummary.parentElement;
-            const allDetails = document.querySelectorAll('#pos-table-accordion details');
+            const tNum = clickedSummary.querySelector('span').textContent;
             
-            // Loop through all other accordions and close them
+            // If the clicked table is part of a multi-table active order, 
+            // do not force-close the other tables sharing that exact order!
+            if (posActiveTables.includes(tNum) && posActiveTables.length > 1) {
+                return;
+            }
+
+            // Otherwise, close all other accordions
+            const allDetails = document.querySelectorAll('#pos-table-accordion details');
             allDetails.forEach(d => {
                 if (d !== parentDetails) d.removeAttribute('open');
             });
         }
 
-        // 🌟 GLOBAL CLICK TO CLOSE ACCORDION
+        // 🌟 GLOBAL CLICK TO CLOSE ACCORDION (SMART VERSION)
         document.addEventListener('click', (e) => {
             const acc = document.getElementById('pos-table-accordion');
-            // If the click happened OUTSIDE the accordion sidebar, close all accordions
+            // If click is outside the accordion, collapse tables...
+            // EXCEPT the ones actively tied to the current order you are viewing!
             if (acc && !acc.contains(e.target)) {
-                acc.querySelectorAll('details').forEach(d => d.removeAttribute('open'));
+                acc.querySelectorAll('details').forEach(d => {
+                    const tNum = d.querySelector('summary span').textContent;
+                    if (!posActiveTables.includes(tNum)) {
+                        d.removeAttribute('open');
+                    }
+                });
             }
         });
 
@@ -4061,6 +4074,8 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 const tNum = tbl.id;
                 const orders = tableOrders[tNum] || [];
                 const isOcc = orders.length > 0;
+                
+                // Check if this specific table is part of the currently active order/selection
                 const isSelected = posActiveTables.includes(tNum);
                 
                 let headerBg = isOcc ? 'bg-orange-50 text-orange-800 border-orange-200' : (isSelected ? 'bg-teal-50 text-teal-800 border-teal-200' : 'bg-white text-gray-700 border-gray-100');
@@ -4084,10 +4099,11 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     ordersHtml = `<div class="p-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 italic text-center">No active orders</div>`;
                 }
 
-                // 🌟 FIX: Removed the 'open' attribute so they are collapsed by default!
-                // Added the posAccToggle onclick event
+                // 🌟 FIX: Auto-expand the accordion if the table is currently active!
+                const isOpen = isSelected ? 'open' : '';
+
                 html += `
-                    <details class="group border-b border-gray-200 last:border-0">
+                    <details class="group border-b border-gray-200 last:border-0" ${isOpen}>
                         <summary onclick="posAccToggle(this)" class="flex justify-between items-center p-3 cursor-pointer transition ${headerBg} hover:brightness-95 select-none" style="list-style: none;">
                             <span class="font-black text-xs">${tNum}</span>
                             <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${isOcc ? 'bg-orange-200 text-orange-800' : 'bg-gray-200 text-gray-500'}">${isOcc ? orders.length + ' Orders' : 'Free'}</span>
