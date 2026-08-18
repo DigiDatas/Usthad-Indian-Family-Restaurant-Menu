@@ -553,147 +553,124 @@
             </div>
         </div>
     </div>
-<!-- ================= TAB 7: CASHIER POS (3-MODE WORKSTATION) ================= -->
-        <section id="section-pos" class="tab-section hidden h-full flex flex-col">
-            
-            <!-- POS Header & Mode Toggles -->
-            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 shrink-0 bg-white p-3 rounded-2xl shadow-sm border border-gray-200 gap-3">
-                <div class="flex gap-1.5 bg-gray-50 p-1.5 rounded-xl border border-gray-100" id="pos-mode-toggles">
-                    <button onclick="switchPosMode('kanban')" id="btn-mode-kanban" class="px-5 py-2 rounded-lg text-sm font-black bg-white shadow-sm text-blue-600 transition border border-gray-200"><i class="fas fa-columns me-1"></i> Kanban Board</button>
-                    <button onclick="switchPosMode('builder')" id="btn-mode-builder" class="px-5 py-2 rounded-lg text-sm font-black text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition"><i class="fas fa-concierge-bell me-1"></i> New Order</button>
-                    <button onclick="switchPosMode('tables')" id="btn-mode-tables" class="px-5 py-2 rounded-lg text-sm font-black text-gray-500 hover:text-gray-900 hover:bg-gray-200 transition"><i class="fas fa-th-large me-1"></i> Table Map</button>
-                </div>
-                <button onclick="fetchDashboardData(this, false)" class="bg-gray-100 border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-200 transition flex items-center gap-2 font-bold text-sm">
-                    <i class="fas fa-sync-alt text-blue-500 transition-all duration-300"></i> Refresh
-                </button>
-            </div>
-
-            <!-- ================= MODE 1: KANBAN BOARD (Existing) ================= -->
-            <div id="pos-view-kanban" class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0 overflow-x-auto pb-4 transition-all">
-                <!-- Column 1: New / Pending -->
-                <div class="bg-gray-200/50 rounded-2xl p-4 flex flex-col h-full border border-gray-200 min-w-[300px]">
-                    <h3 class="font-black text-gray-700 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
-                        <span><i class="fas fa-inbox text-orange-500 me-2"></i> New Orders</span>
-                        <span class="bg-white text-gray-600 px-2 py-0.5 rounded-lg text-xs shadow-sm" id="pos-count-pending">0</span>
-                    </h3>
-                    <div id="pos-col-pending" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3"></div>
-                </div>
-                <!-- Column 2: Cooking -->
-                <div class="bg-yellow-50/50 rounded-2xl p-4 flex flex-col h-full border border-yellow-100 min-w-[300px]">
-                    <h3 class="font-black text-yellow-800 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
-                        <span><i class="fas fa-fire text-yellow-500 me-2"></i> Cooking</span>
-                        <span class="bg-white text-yellow-700 px-2 py-0.5 rounded-lg text-xs shadow-sm border border-yellow-100" id="pos-count-cooking">0</span>
-                    </h3>
-                    <div id="pos-col-cooking" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3"></div>
-                </div>
-                <!-- Column 3: Ready / Completed -->
-                <div class="bg-green-50/50 rounded-2xl p-4 flex flex-col h-full border border-green-100 min-w-[300px]">
-                    <h3 class="font-black text-green-800 uppercase tracking-wider mb-3 flex items-center justify-between shrink-0">
-                        <span><i class="fas fa-check-circle text-green-500 me-2"></i> Ready / Done</span>
-                        <span class="bg-white text-green-700 px-2 py-0.5 rounded-lg text-xs shadow-sm border border-green-100" id="pos-count-completed">0</span>
-                    </h3>
-                    <div id="pos-col-completed" class="flex-1 overflow-y-auto hide-scrollbar flex flex-col gap-3"></div>
-                </div>
-            </div>
-
-            <!-- ================= MODE 2: ORDER BUILDER ================= -->
-            <div id="pos-view-builder" class="hidden flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden pb-2">
-                <!-- LEFT: Menu Selection -->
-                <div class="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col min-w-0">
-                    <!-- Categories -->
-                    <div class="bg-gray-50 border-b border-gray-200 p-3 flex gap-2 overflow-x-auto hide-scrollbar shrink-0" id="pos-builder-cats">
-                        <!-- JS Injected Categories -->
-                    </div>
-                    <!-- Items Grid -->
-                    <div class="flex-1 p-4 overflow-y-auto hide-scrollbar bg-gray-50/50">
-                        <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4" id="pos-builder-grid">
-                            <!-- JS Injected Food Items -->
+<!-- ================= TAB 7: CASHIER POS (UNIFIED 3-PANE WORKSTATION) ================= -->
+        <section id="section-pos" class="tab-section hidden h-full flex flex-col p-2 bg-gray-100">
+            <div class="flex gap-4 h-full min-h-0">
+                
+                <!-- ================= LEFT PANE: ORDER LINE ================= -->
+                <div class="w-[280px] xl:w-[320px] flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 shrink-0 overflow-hidden">
+                    <div class="p-4 border-b border-gray-100">
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-lg font-black text-gray-800">Order Line</h2>
+                            <button onclick="fetchDashboardData(this, false)" class="text-gray-400 hover:text-blue-500 transition"><i class="fas fa-sync-alt"></i></button>
+                        </div>
+                        <!-- Order Filters -->
+                        <div class="flex flex-wrap gap-1.5" id="pos-order-filters">
+                            <button onclick="posSetFilter('All')" id="pos-flt-All" class="px-3 py-1 bg-teal-600 text-white border border-teal-600 rounded-full text-[10px] font-bold shadow-sm">All</button>
+                            <button onclick="posSetFilter('Dine In')" id="pos-flt-Dine In" class="px-3 py-1 bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-full text-[10px] font-bold">Dine In</button>
+                            <button onclick="posSetFilter('Takeaway')" id="pos-flt-Takeaway" class="px-3 py-1 bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-full text-[10px] font-bold">Takeaway</button>
                         </div>
                     </div>
+                    <!-- Order Cards List -->
+                    <div id="pos-order-list" class="flex-1 overflow-y-auto p-3 flex flex-col gap-3 bg-gray-50/50 hide-scrollbar">
+                        <!-- JS Injected Order Cards -->
+                    </div>
                 </div>
 
-                <!-- RIGHT: Cashier Cart -->
-                <div class="w-full lg:w-80 xl:w-96 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0 overflow-hidden">
-                    <div class="bg-gray-900 text-white p-4 flex justify-between items-center shrink-0">
-                        <h3 class="font-black text-lg">Current Order</h3>
-                        <button onclick="posClearCart()" class="text-gray-400 hover:text-red-400 transition"><i class="fas fa-trash-alt"></i></button>
+                <!-- ================= MIDDLE PANE: DYNAMIC (TABLES / MENU) ================= -->
+                <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <!-- Middle Header Toggle -->
+                    <div class="p-3 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                        <div class="flex bg-gray-200 p-1 rounded-lg">
+                            <button id="pos-mid-btn-menu" onclick="setPosMiddleView('menu')" class="px-5 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-800 transition">Foodies Menu</button>
+                            <button id="pos-mid-btn-tables" onclick="setPosMiddleView('tables')" class="px-5 py-1.5 rounded-md text-xs font-bold bg-white shadow-sm text-teal-700 transition">Manage Tables</button>
+                        </div>
+                        <div class="flex bg-gray-200 p-1 rounded-lg">
+                            <button id="pos-lang-en" onclick="posSetLang('en')" class="px-3 py-1 rounded-md text-[10px] font-bold bg-white shadow-sm text-gray-800">EN</button>
+                            <button id="pos-lang-ar" onclick="posSetLang('ar')" class="px-3 py-1 rounded-md text-[10px] font-bold text-gray-500 hover:text-gray-800">AR</button>
+                        </div>
                     </div>
+
+                    <div class="flex-1 overflow-y-auto hide-scrollbar relative bg-gray-50/30">
+                        
+                        <!-- VIEW: TABLES -->
+                        <div id="pos-view-tables" class="absolute inset-0 p-6 flex flex-col overflow-y-auto hide-scrollbar">
+                            <div class="flex gap-4 mb-6 shrink-0">
+                                <span class="flex items-center gap-2 text-xs font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-teal-100 border-2 border-teal-500"></div> Available</span>
+                                <span class="flex items-center gap-2 text-xs font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-orange-100 border-2 border-orange-500"></div> On Dine</span>
+                            </div>
+                            <div id="pos-table-grid" class="flex flex-wrap justify-center gap-10 lg:gap-16">
+                                <!-- CSS Tables Injected Here -->
+                            </div>
+                        </div>
+
+                        <!-- VIEW: MENU -->
+                        <div id="pos-view-menu" class="hidden absolute inset-0 flex flex-col">
+                            <!-- Categories -->
+                            <div class="p-3 border-b border-gray-100 flex gap-2 overflow-x-auto hide-scrollbar shrink-0 bg-white" id="pos-menu-cats"></div>
+                            <!-- 6-Col Grid -->
+                            <div class="flex-1 overflow-y-auto hide-scrollbar p-4">
+                                <div id="pos-menu-grid" class="grid grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3">
+                                    <!-- Menu Items Injected Here -->
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ================= RIGHT PANE: CART & RECEIPT ================= -->
+                <div class="w-[280px] xl:w-[320px] flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 shrink-0 overflow-hidden relative">
                     
-                    <!-- Order Settings -->
-                    <div class="p-4 border-b border-gray-100 bg-gray-50 shrink-0">
-                        <div class="flex gap-2 mb-3">
-                            <button onclick="posSetDining('Dine In')" id="pos-type-dinein" class="flex-1 py-2 bg-green-100 text-green-800 border-2 border-green-500 rounded-xl font-black text-xs uppercase tracking-wider">Dine In</button>
-                            <button onclick="posSetDining('Takeaway')" id="pos-type-takeaway" class="flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-xl font-bold text-xs uppercase tracking-wider">Takeaway</button>
+                    <div class="p-4 border-b border-gray-100 bg-teal-50/30 shrink-0 flex justify-between items-start">
+                        <div>
+                            <h3 class="font-black text-gray-800 text-base" id="pos-cart-table-label">Table / Order</h3>
+                            <p class="text-[10px] font-bold text-gray-500 mt-1 uppercase" id="pos-cart-id-label">New Order</p>
                         </div>
-                        <select id="pos-table-select" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-bold text-gray-700 focus:outline-none focus:border-green-500">
-                            <option value="">Select Table...</option>
-                            <!-- JS generates T01-T20 -->
-                        </select>
+                        <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm">
+                            <i class="fas fa-users text-gray-400 text-[10px]"></i>
+                            <input type="number" id="pos-guest-count" value="1" min="1" class="w-8 text-center text-xs font-black text-gray-700 focus:outline-none bg-transparent">
+                        </div>
                     </div>
 
                     <!-- Cart Items -->
-                    <div id="pos-cart-container" class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 hide-scrollbar">
-                        <div class="text-center text-gray-400 text-sm font-bold py-10 italic">Cart is empty</div>
+                    <div class="flex justify-between items-center px-4 py-2 border-b border-gray-50 bg-gray-50/50 shrink-0 text-[10px] font-black text-gray-400 uppercase">
+                        <span>Ordered Items</span>
+                        <span id="pos-cart-count">0</span>
+                    </div>
+                    <div id="pos-cart-items" class="flex-1 overflow-y-auto hide-scrollbar p-4 flex flex-col gap-3">
+                        <div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>
                     </div>
 
-                    <!-- Totals & Payment -->
-                    <div class="p-4 border-t border-gray-200 bg-gray-50 shrink-0">
-                        <div class="flex justify-between items-center mb-4">
-                            <span class="font-black text-gray-500 uppercase tracking-widest text-sm">Total Payable</span>
-                            <span class="font-black text-2xl text-green-600" id="pos-cart-total">0.00 SR</span>
+                    <!-- Payment Summary -->
+                    <div class="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
+                        <div class="flex justify-between text-xs font-bold text-gray-500 mb-2">
+                            <span>Subtotal</span><span id="pos-summary-sub">0.00</span>
+                        </div>
+                        <div class="flex justify-between text-xs font-bold text-gray-500 mb-3">
+                            <span>Tax (Included)</span><span id="pos-summary-tax">0.00</span>
+                        </div>
+                        <div class="flex justify-between text-lg font-black text-gray-900 mb-4 border-t border-gray-200 pt-2">
+                            <span>Total Payable</span><span id="pos-summary-total">0.00</span>
                         </div>
                         
-                        <div class="flex gap-2 mb-3">
-                            <button onclick="posSetPayment('Cash')" id="pos-pay-cash" class="flex-1 py-2 bg-blue-100 text-blue-800 border-2 border-blue-500 rounded-lg font-black text-xs"><i class="fas fa-money-bill-wave me-1"></i> Cash</button>
-                            <button onclick="posSetPayment('Card')" id="pos-pay-card" class="flex-1 py-2 bg-white text-gray-500 border-2 border-gray-200 rounded-lg font-bold text-xs hover:bg-gray-100"><i class="fas fa-credit-card me-1"></i> Card</button>
+                        <div class="grid grid-cols-3 gap-2 mb-3" id="pos-pay-methods">
+                            <button onclick="posSetPayment('Cash')" id="pos-btn-Cash" class="py-2 border-2 border-teal-500 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-black uppercase"><i class="fas fa-money-bill-wave me-1"></i> Cash</button>
+                            <button onclick="posSetPayment('Card')" id="pos-btn-Card" class="py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase"><i class="fas fa-credit-card me-1"></i> Card</button>
+                            <button onclick="posSetPayment('Unpaid')" id="pos-btn-Unpaid" class="py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase">Unpaid</button>
                         </div>
 
-                        <button onclick="posSubmitOrder()" id="btn-pos-submit" class="w-full bg-gray-900 hover:bg-gray-800 text-white font-black py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-lg">
-                            <i class="fas fa-check-circle"></i> Place Order
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="posPrintActive()" class="w-12 shrink-0 py-3 border-2 border-gray-200 bg-white text-gray-500 rounded-xl hover:bg-gray-100 transition shadow-sm"><i class="fas fa-print"></i></button>
+                            <button onclick="posSubmitOrder()" id="pos-btn-submit" class="flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md">Place Order</button>
+                        </div>
+                        
+                        <button onclick="posClearCart()" class="w-full mt-2 py-2 text-[10px] font-bold text-red-400 hover:text-red-600 uppercase tracking-widest transition">Clear / Cancel</button>
                     </div>
-                </div>
-            </div>
 
-            <!-- ================= MODE 3: TABLE MAP ================= -->
-            <div id="pos-view-tables" class="hidden flex-1 min-h-0 overflow-y-auto bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-                <div class="flex flex-col sm:flex-row justify-between items-center mb-8 border-b border-gray-100 pb-4">
-                    <div>
-                        <h3 class="font-black text-2xl text-gray-800">Restaurant Floor Plan</h3>
-                        <p class="text-xs text-gray-500 font-bold mt-1">Live overview of seating and active orders.</p>
-                    </div>
-                    <div class="flex gap-5 mt-4 sm:mt-0 bg-gray-50 px-4 py-2 rounded-xl border border-gray-200">
-                        <span class="flex items-center gap-2 text-xs font-black text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
-                        <span class="flex items-center gap-2 text-xs font-black text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-red-100 border border-red-400"></div> Occupied</span>
-                    </div>
-                </div>
-                <div id="pos-table-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                    <!-- JS Injected Tables -->
                 </div>
             </div>
-
-        </section><!-- ================= TAB 8: REVIEW MANAGER ================= -->
-        <section id="section-reviews" class="tab-section hidden h-full flex flex-col">
-            <div class="flex justify-between items-end mb-6 shrink-0">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Review Manager</h2>
-                    <p class="text-sm text-gray-500">Approve or reject customer feedback before it appears on the live menu.</p>
-                </div>
-                <button onclick="fetchReviews(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
-                    <i class="fas fa-sync-alt text-yellow-500 transition-all duration-300"></i> Refresh
-                </button>
-            </div>
-
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex-1 flex flex-col min-h-0">
-                <div class="overflow-y-auto hide-scrollbar flex-1 p-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="reviews-container">
-                        <!-- Review Cards will be injected here via JS -->
-                        <div class="col-span-full p-10 text-center text-gray-400"><i class="fas fa-spinner fa-spin me-2"></i> Loading Reviews...</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
+        </section>        <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
         <section id="section-settings" class="tab-section hidden">
             <div class="flex justify-between items-end mb-6">
                 <div>
@@ -3695,208 +3672,331 @@ const dbLang = (mainRow.language || '').toLowerCase();
             btn.innerHTML = `<i class="fas fa-save"></i> Save Flashcards`;
             alert("Flashcards globally updated!");
         }
+
+
+
 // ==========================================
-        // NEW: CASHIER POS (KANBAN & PRINTING) LOGIC
+        // ADVANCED CASHIER POS LOGIC (3-PANE)
         // ==========================================
-        function renderPOSKanban() {
-            const colPending = document.getElementById('pos-col-pending');
-            const colCooking = document.getElementById('pos-col-cooking');
-            const colCompleted = document.getElementById('pos-col-completed');
+        let posCart = [];
+        let posActiveTable = null;
+        let posActiveOrderId = null;
+        let posPaymentMethod = 'Cash';
+        let posFilter = 'All';
+        let posLang = 'en';
+        let posActiveCategory = 'All';
+
+        function posSetFilter(filter) {
+            posFilter = filter;
+            ['All', 'Dine In', 'Takeaway'].forEach(f => {
+                const btn = document.getElementById(`pos-flt-${f}`);
+                if (btn) btn.className = f === filter 
+                    ? "px-3 py-1 bg-teal-600 text-white border border-teal-600 rounded-full text-[10px] font-bold shadow-sm" 
+                    : "px-3 py-1 bg-white text-gray-600 border border-gray-200 hover:bg-gray-50 rounded-full text-[10px] font-bold";
+            });
+            renderPosOrderLine();
+        }
+
+        function renderPosOrderLine() {
+            const list = document.getElementById('pos-order-list');
+            if(!list) return;
+            list.innerHTML = '';
             
-            if (!colPending || !colCooking || !colCompleted) return;
+            let orders = dashboardFilteredOrders.filter(o => o.status !== 'Cancelled');
+            if (posFilter === 'Dine In') orders = orders.filter(o => o.order_type === 'Dine In');
+            if (posFilter === 'Takeaway') orders = orders.filter(o => o.order_type === 'Takeaway');
+            
+            if (orders.length === 0) {
+                list.innerHTML = `<div class="text-center text-gray-400 text-xs py-10 font-bold italic">No active orders.</div>`;
+                return;
+            }
 
-            colPending.innerHTML = '';
-            colCooking.innerHTML = '';
-            colCompleted.innerHTML = '';
+            orders.forEach(order => {
+                const timeStr = getWaitTimeStr(order.created_at);
+                const isSelected = order.id === posActiveOrderId;
+                const bgClass = isSelected ? 'bg-teal-50 border-teal-300 shadow-md' : 'bg-white border-gray-200 hover:border-teal-300 shadow-sm';
+                
+                let statusBadge = '';
+                if(order.status === 'Pending') statusBadge = `<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[9px] font-black uppercase">Pending</span>`;
+                else if(order.status === 'Cooking') statusBadge = `<span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-[9px] font-black uppercase">In Kitchen</span>`;
+                else if(order.status === 'Completed') statusBadge = `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[9px] font-black uppercase">Ready</span>`;
 
-            let countPen = 0, countCook = 0, countComp = 0;
+                const qtyCount = order.items ? order.items.reduce((s, i) => s + i.qty, 0) : 0;
+                const tableBadge = order.table_number ? `<span class="text-xs font-black text-gray-800">${order.table_number}</span>` : `<span class="text-xs font-black text-gray-800">TAKEAWAY</span>`;
 
-            // Only show today's active orders in the POS by default (unless filtered otherwise)
-            // Reverse array so newest orders appear at the top of the columns
-            const posOrders = [...dashboardFilteredOrders].reverse();
-
-            posOrders.forEach(order => {
-                // Skip cancelled orders in the POS
-                if (order.status === 'Cancelled') return;
-
-                const waitStr = getWaitTimeStr(order.created_at);
-                const payStatus = order.payment_status || 'Unpaid';
-                const isPaid = payStatus === 'Paid';
-                const payColor = isPaid ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200';
-                const payIcon = isPaid ? 'fa-check-circle' : 'fa-times-circle';
-
-                let itemsHtml = '';
-                if (order.items && Array.isArray(order.items)) {
-                    order.items.forEach(i => {
-                        itemsHtml += `<div class="flex justify-between text-[11px] py-1 border-b border-gray-50 last:border-0"><span class="font-bold text-gray-700">${i.qty}x ${i.name}</span><span class="text-gray-500 font-bold">${(i.price * i.qty).toFixed(2)}</span></div>`;
-                    });
-                }
-
-                const tableBadge = order.table_number ? `<span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-black tracking-widest">${order.table_number}</span>` : '';
-
-                const cardHtml = `
-                    <div class="bg-white p-3.5 rounded-xl shadow-sm border border-gray-200 flex flex-col gap-2 relative overflow-hidden group hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start">
+                list.innerHTML += `
+                    <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-[10px] font-bold text-gray-500 uppercase">${order.order_number}</span>
+                            ${tableBadge}
+                        </div>
+                        <div class="flex justify-between items-end">
                             <div>
-                                <h4 class="font-black text-gray-900 text-sm leading-tight">${order.order_number}</h4>
-                                <p class="text-[10px] text-gray-400 font-bold mt-0.5">${order.customer_name || 'Guest'}</p>
+                                <p class="text-xs font-bold text-gray-800 mb-1">Items: <span class="font-black text-teal-600">${qtyCount}x</span></p>
+                                <p class="text-[9px] font-bold text-gray-400"><i class="far fa-clock"></i> ${timeStr}</p>
                             </div>
-                            <div class="text-right flex flex-col items-end gap-1">
-                                <span class="bg-gray-100 text-gray-700 px-2 py-0.5 rounded text-[10px] font-black uppercase">${order.order_type}</span>
-                                ${tableBadge}
-                            </div>
+                            <div>${statusBadge}</div>
                         </div>
-                        
-                        <div class="bg-gray-50 rounded-lg p-2 border border-gray-100 mt-1 mb-1">
-                            ${itemsHtml}
-                        </div>
-
-                        <div class="flex justify-between items-center border-t border-gray-100 pt-2">
-                            <span class="font-black text-green-600 text-sm">${parseFloat(order.total_amount).toFixed(2)} SR</span>
-                            <span class="text-[10px] font-bold text-blue-500 live-ticker flex items-center gap-1" data-time="${order.created_at}"><i class="far fa-clock"></i> ${waitStr}</span>
-                        </div>
-
-                        <!-- Cashier Actions -->
-                        <div class="grid grid-cols-2 gap-2 mt-1">
-                            <button onclick="togglePaymentStatus('${order.id}', '${payStatus}')" class="${payColor} border px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 hover:opacity-80 transition">
-                                <i class="fas ${payIcon}"></i> ${payStatus}
-                            </button>
-                            <button onclick="printOrderTicket('${order.id}')" class="bg-gray-800 text-white px-2 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1 hover:bg-gray-700 transition">
-                                <i class="fas fa-print"></i> Print
-                            </button>
-                        </div>
-                        
-                        <!-- Status Advance Button -->
-                        ${order.status === 'Pending' ? `<button onclick="updateStatus('${order.id}', 'Cooking', event)" class="w-full mt-1 bg-yellow-100 text-yellow-800 border border-yellow-200 px-2 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-yellow-200 transition"><i class="fas fa-fire me-1"></i> Send to Kitchen</button>` : ''}
-                        ${order.status === 'Cooking' ? `<button onclick="updateStatus('${order.id}', 'Completed', event)" class="w-full mt-1 bg-green-100 text-green-800 border border-green-200 px-2 py-1.5 rounded-lg text-[10px] font-black uppercase hover:bg-green-200 transition"><i class="fas fa-check-double me-1"></i> Mark Ready</button>` : ''}
                     </div>
                 `;
-
-                if (order.status === 'Pending') {
-                    colPending.innerHTML += cardHtml;
-                    countPen++;
-                } else if (order.status === 'Cooking') {
-                    colCooking.innerHTML += cardHtml;
-                    countCook++;
-                } else if (order.status === 'Completed') {
-                    colCompleted.innerHTML += cardHtml;
-                    countComp++;
-                }
             });
-
-            document.getElementById('pos-count-pending').textContent = countPen;
-            document.getElementById('pos-count-cooking').textContent = countCook;
-            document.getElementById('pos-count-completed').textContent = countComp;
         }
 
-        async function togglePaymentStatus(orderId, currentStatus) {
-            const newStatus = currentStatus === 'Paid' ? 'Unpaid' : 'Paid';
+        function setPosMiddleView(view) {
+            const vTables = document.getElementById('pos-view-tables');
+            const vMenu = document.getElementById('pos-view-menu');
+            const btnTables = document.getElementById('pos-mid-btn-tables');
+            const btnMenu = document.getElementById('pos-mid-btn-menu');
+
+            if(view === 'tables') {
+                vMenu.classList.add('hidden'); vTables.classList.remove('hidden');
+                btnTables.className = "px-5 py-1.5 rounded-md text-xs font-bold bg-white shadow-sm text-teal-700 transition";
+                btnMenu.className = "px-5 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-800 transition";
+                renderPosTables();
+            } else {
+                vTables.classList.add('hidden'); vMenu.classList.remove('hidden');
+                btnMenu.className = "px-5 py-1.5 rounded-md text-xs font-bold bg-white shadow-sm text-teal-700 transition";
+                btnTables.className = "px-5 py-1.5 rounded-md text-xs font-bold text-gray-500 hover:text-gray-800 transition";
+                renderPosMenu();
+            }
+        }
+
+        // --- CSS/JS Table Map Generator ---
+        function renderPosTables() {
+            const grid = document.getElementById('pos-table-grid');
+            if(!grid) return;
+            grid.innerHTML = '';
             
-            // 1. Optimistic UI Update
-            const localOrder = allOrders.find(o => String(o.id) === String(orderId));
-            if (localOrder) localOrder.payment_status = newStatus;
-            renderPOSKanban(); 
+            const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && o.status !== 'Completed' && o.status !== 'Cancelled');
+            const occupiedMap = {};
+            activeDineIn.forEach(o => { occupiedMap[o.table_number] = o; });
 
-            // 2. Database Sync
-            const { error } = await supabaseClient.from('orders').update({ payment_status: newStatus }).eq('id', orderId);
-            if (error) {
-                alert("Failed to update payment status: " + error.message);
-                if (localOrder) localOrder.payment_status = currentStatus; // Revert on failure
-                renderPOSKanban();
-            }
-        }
+            // Generate 12 tables (mix of 2, 4, and 6 seaters)
+            const tableLayouts = [6, 2, 2, 3, 0, 7, 10, 2, 4, 2, 2, 8]; 
+            
+            for (let i = 0; i < 12; i++) {
+                const tNum = `T${String(i+1).padStart(2, '0')}`;
+                const order = occupiedMap[tNum];
+                const chairs = tableLayouts[i] || 4; // default to 4 if 0
+                
+                const isOcc = !!order;
+                const tblColor = isOcc ? 'bg-orange-100 border-orange-300 group-hover:border-orange-500' : 'bg-teal-50 border-teal-200 group-hover:border-teal-500 hover:shadow-md';
+                const chairColor = isOcc ? 'bg-orange-300' : 'bg-gray-300 group-hover:bg-teal-400';
+                const textColor = isOcc ? 'text-orange-800' : 'text-gray-500';
+                
+                // Build Chairs Array (Top/Bottom Split)
+                let topChairs = '', botChairs = '';
+                for(let c=0; c < Math.ceil(chairs/2); c++) topChairs += `<div class="w-4 h-4 rounded-t-full transition-colors ${chairColor}"></div>`;
+                for(let c=0; c < Math.floor(chairs/2); c++) botChairs += `<div class="w-4 h-4 rounded-b-full transition-colors ${chairColor}"></div>`;
 
-        function printOrderTicket(orderId) {
-            const order = allOrders.find(o => String(o.id) === String(orderId));
-            if (!order) return;
-
-            const brandName = document.getElementById('set-brand').value || 'Restaurant Name';
-            const dateStr = new Date(order.created_at).toLocaleString();
-
-            let itemsHtml = '';
-            if (order.items && Array.isArray(order.items)) {
-                order.items.forEach(i => {
-                    const itemTotal = (i.price * i.qty).toFixed(2);
-                    itemsHtml += `
-                        <tr style="border-bottom: 1px dashed #ccc;">
-                            <td style="padding: 4px 0; text-align: left;">${i.qty}x ${i.name}</td>
-                            <td style="padding: 4px 0; text-align: right;">${itemTotal}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            // Create Thermal Print Layout (80mm width standard)
-            const printContent = `
-                <html>
-                <head>
-                    <title>Print Ticket - ${order.order_number}</title>
-                    <style>
-                        body { font-family: 'Courier New', Courier, monospace; width: 80mm; margin: 0 auto; padding: 10px; color: #000; font-size: 12px; }
-                        h1 { font-size: 18px; text-align: center; margin: 0 0 5px 0; text-transform: uppercase; }
-                        .text-center { text-align: center; }
-                        .text-right { text-align: right; }
-                        .font-bold { font-weight: bold; }
-                        .divider { border-top: 1px dashed #000; margin: 10px 0; }
-                        table { w-full: 100%; width: 100%; border-collapse: collapse; }
-                        .grand-total { font-size: 16px; font-weight: bold; margin-top: 10px; }
-                    </style>
-                </head>
-                <body>
-                    <h1>${brandName}</h1>
-                    <div class="text-center">Order Ticket</div>
-                    <div class="divider"></div>
-                    
-                    <div><b>Order #:</b> ${order.order_number}</div>
-                    <div><b>Date:</b> ${dateStr}</div>
-                    <div><b>Customer:</b> ${order.customer_name || 'Guest'}</div>
-                    <div><b>Phone:</b> ${order.customer_phone || 'N/A'}</div>
-                    <div><b>Type:</b> ${order.order_type} ${order.table_number ? `(Table: ${order.table_number})` : ''}</div>
-                    ${order.payment_status === 'Paid' ? `<div><b>Status:</b> PAID</div>` : `<div><b>Status:</b> UNPAID</div>`}
-                    
-                    <div class="divider"></div>
-                    
-                    <table>
-                        <thead>
-                            <tr style="border-bottom: 1px solid #000;">
-                                <th style="text-align: left; padding-bottom: 4px;">Item</th>
-                                <th style="text-align: right; padding-bottom: 4px;">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${itemsHtml}
-                        </tbody>
-                    </table>
-                    
-                    <div class="divider"></div>
-                    
-                    <table style="margin-top: 10px;">
-                        <tr>
-                            <td class="font-bold text-left grand-total">TOTAL:</td>
-                            <td class="font-bold text-right grand-total">${parseFloat(order.total_amount).toFixed(2)} ${adminCurrency}</td>
-                        </tr>
-                    </table>
-                    
-                    <div class="text-center" style="margin-top: 20px;">
-                        Thank you for your order!
+                grid.innerHTML += `
+                    <div onclick="posSelectTable('${tNum}', '${isOcc ? order.id : ''}')" class="flex flex-col items-center cursor-pointer group transition transform hover:scale-105">
+                        <div class="flex gap-2 mb-1">${topChairs}</div>
+                        <div class="w-28 h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-colors relative ${tblColor}">
+                            ${isOcc ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black px-1.5 rounded-full z-10 animate-pulse"><i class="fas fa-fire"></i></span>` : ''}
+                            <span class="font-black text-sm ${textColor}">${tNum}</span>
+                            <span class="text-[9px] font-bold ${isOcc ? 'text-orange-600' : 'text-gray-400'} mt-0.5"><i class="fas fa-user me-1"></i> ${isOcc ? (order.guest_count || 2) : chairs}</span>
+                        </div>
+                        <div class="flex gap-2 mt-1">${botChairs}</div>
                     </div>
-                    <div style="margin-top: 30px;">.</div>
-                </body>
-                </html>
-            `;
-
-            // Open an invisible iframe/window to trigger print safely
-            const printWindow = window.open('', '_blank', 'width=400,height=600');
-            printWindow.document.write(printContent);
-            printWindow.document.close();
-            
-            // Wait slightly for fonts to load, then print and close
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-                printWindow.close();
-            }, 250);
+                `;
+            }
         }
+
+        // --- Context Menu Grid ---
+        function posSetLang(lang) {
+            posLang = lang;
+            document.getElementById('pos-lang-en').className = lang === 'en' ? "px-3 py-1 rounded-md text-[10px] font-bold bg-white shadow-sm text-gray-800" : "px-3 py-1 rounded-md text-[10px] font-bold text-gray-500 hover:text-gray-800";
+            document.getElementById('pos-lang-ar').className = lang === 'ar' ? "px-3 py-1 rounded-md text-[10px] font-bold bg-white shadow-sm text-gray-800" : "px-3 py-1 rounded-md text-[10px] font-bold text-gray-500 hover:text-gray-800";
+            renderPosMenu();
+        }
+
+        function renderPosMenu() {
+            const catContainer = document.getElementById('pos-menu-cats');
+            const grid = document.getElementById('pos-menu-grid');
+            
+            let items = allMenuItems.filter(i => (i.language || 'en').toLowerCase().includes(posLang));
+            const cats = ['All', ...new Set(items.map(i => i.main_cat || 'General'))];
+            
+            catContainer.innerHTML = cats.map(c => `
+                <button onclick="posActiveCategory='${c}'; renderPosMenu();" class="px-4 py-1.5 rounded-full text-[10px] font-bold transition whitespace-nowrap ${posActiveCategory === c ? 'bg-teal-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">${c}</button>
+            `).join('');
+
+            if (posActiveCategory !== 'All') items = items.filter(i => i.main_cat === posActiveCategory);
+
+            grid.innerHTML = items.map(item => {
+                const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
+                return `
+                    <div onclick="posAddToCart('${item.id}', '${item.name}', ${item.price})" class="bg-white border border-gray-100 rounded-xl p-2 flex flex-col items-center text-center shadow-sm hover:border-teal-400 hover:shadow-md cursor-pointer transition group relative">
+                        <img src="${img}" class="w-12 h-12 rounded-full object-cover mb-2 group-hover:scale-110 transition">
+                        <h4 class="text-[10px] font-bold text-gray-800 leading-tight line-clamp-2 w-full">${item.name}</h4>
+                        <span class="text-[10px] font-black text-teal-600 mt-1">${item.price} SR</span>
+                        <div class="absolute top-1 right-1 w-5 h-5 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus text-[8px]"></i></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- Interacting with Cart/Receipt ---
+        function posSelectTable(tNum, orderId) {
+            if (orderId) {
+                posLoadOrder(orderId);
+            } else {
+                posClearCart();
+                posActiveTable = tNum;
+                posDiningType = 'Dine In';
+                document.getElementById('pos-cart-table-label').textContent = `Table ${tNum}`;
+            }
+            setPosMiddleView('menu');
+        }
+
+        function posLoadOrder(id) {
+            const order = allOrders.find(o => String(o.id) === String(id));
+            if(!order) return;
+            
+            posActiveOrderId = order.id;
+            posActiveTable = order.table_number || null;
+            posDiningType = order.order_type || 'Takeaway';
+            posCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
+            posSetPayment(order.payment_status || 'Unpaid');
+            document.getElementById('pos-guest-count').value = order.guest_count || 1;
+            
+            document.getElementById('pos-cart-table-label').textContent = posActiveTable ? `Table ${posActiveTable}` : 'Takeaway';
+            document.getElementById('pos-cart-id-label').textContent = order.order_number;
+            
+            renderPosCart();
+            renderPosOrderLine(); // Highlight active
+        }
+
+        function posClearCart() {
+            posCart = [];
+            posActiveOrderId = null;
+            posActiveTable = null;
+            posDiningType = 'Takeaway';
+            posSetPayment('Unpaid');
+            document.getElementById('pos-cart-table-label').textContent = 'Takeaway Order';
+            document.getElementById('pos-cart-id-label').textContent = 'New Order';
+            document.getElementById('pos-guest-count').value = 1;
+            renderPosCart();
+            renderPosOrderLine();
+        }
+
+        function posAddToCart(id, name, price) {
+            const exist = posCart.find(i => String(i.id) === String(id));
+            if(exist) exist.qty++;
+            else posCart.push({ id, name, price, qty: 1 });
+            renderPosCart();
+        }
+
+        function posSetPayment(method) {
+            posPaymentMethod = method;
+            ['Cash', 'Card', 'Unpaid'].forEach(m => {
+                const btn = document.getElementById(`pos-btn-${m}`);
+                if(btn) btn.className = m === method 
+                    ? "py-2 border-2 border-teal-500 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-black uppercase" 
+                    : "py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase";
+            });
+        }
+
+        function renderPosCart() {
+            const container = document.getElementById('pos-cart-items');
+            document.getElementById('pos-cart-count').textContent = posCart.reduce((s, i) => s + i.qty, 0).toString().padStart(2, '0');
+            
+            if (posCart.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>`;
+                document.getElementById('pos-summary-sub').textContent = '0.00 SR';
+                document.getElementById('pos-summary-total').textContent = '0.00 SR';
+                return;
+            }
+
+            let sub = 0;
+            container.innerHTML = posCart.map((c, idx) => {
+                const tot = parseFloat(c.price) * c.qty;
+                sub += tot;
+                return `
+                    <div class="flex justify-between items-start pb-2 border-b border-gray-100 last:border-0">
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 text-xs mb-1 leading-tight pr-2">${c.name}</h4>
+                            <div class="flex items-center gap-2 bg-gray-100 w-fit rounded p-0.5 border border-gray-200">
+                                <button onclick="posCart[${idx}].qty--; if(posCart[${idx}].qty<=0)posCart.splice(${idx},1); renderPosCart();" class="w-5 h-5 bg-white text-gray-500 rounded shadow-sm text-[8px]"><i class="fas fa-minus"></i></button>
+                                <span class="text-[10px] font-black w-4 text-center">${c.qty}</span>
+                                <button onclick="posCart[${idx}].qty++; renderPosCart();" class="w-5 h-5 bg-white text-gray-500 rounded shadow-sm text-[8px]"><i class="fas fa-plus"></i></button>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0 flex flex-col items-end gap-2">
+                            <span class="font-black text-gray-800 text-xs">${tot.toFixed(2)}</span>
+                            <button onclick="posCart.splice(${idx},1); renderPosCart();" class="text-red-300 hover:text-red-500"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            document.getElementById('pos-summary-sub').textContent = `${sub.toFixed(2)} SR`;
+            document.getElementById('pos-summary-total').textContent = `${sub.toFixed(2)} SR`;
+            
+            // Switch Place Order to "Update Order" if editing existing
+            const subBtn = document.getElementById('pos-btn-submit');
+            subBtn.innerHTML = posActiveOrderId ? 'Update Order' : 'Place Order';
+            subBtn.className = posActiveOrderId ? 'flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black transition shadow-md' : 'flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-black transition shadow-md';
+        }
+
+        async function posSubmitOrder() {
+            if (posCart.length === 0) return alert("Cart is empty!");
+            const btn = document.getElementById('pos-btn-submit');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+            let subtotal = posCart.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
+            const guests = parseInt(document.getElementById('pos-guest-count').value) || 1;
+
+            const payload = {
+                order_type: posActiveTable ? 'Dine In' : 'Takeaway',
+                table_number: posActiveTable,
+                guest_count: guests,
+                items: posCart,
+                total_amount: subtotal,
+                payment_status: posPaymentMethod
+            };
+
+            if (posActiveOrderId) {
+                // UPDATE EXISTING
+                const { error } = await supabaseClient.from('orders').update(payload).eq('id', posActiveOrderId);
+                if (!error) alert("Order updated successfully!");
+            } else {
+                // CREATE NEW
+                payload.status = 'Pending';
+                payload.customer_name = 'Walk-in Customer';
+                
+                let uniqueOrderNo = 'ORD-' + String(Math.floor(1000 + Math.random() * 9000));
+                try {
+                    const { data: lastOrder } = await supabaseClient.from('orders').select('order_number').not('order_number', 'is', null).order('created_at', { ascending: false }).limit(1).maybeSingle();
+                    if (lastOrder) uniqueOrderNo = 'ORD-' + String(parseInt(lastOrder.order_number.replace('ORD-', '')) + 1).padStart(4, '0');
+                } catch(e){}
+                payload.order_number = uniqueOrderNo;
+
+                const { error } = await supabaseClient.from('orders').insert([payload]);
+                if (!error) alert("New Order placed successfully!");
+            }
+
+            posClearCart();
+            fetchDashboardData(null, true); // Silent refresh
+        }
+
+        function posPrintActive() {
+            if(posActiveOrderId) printOrderTicket(posActiveOrderId);
+            else alert("Please save the order first before printing.");
+        }
+
+        // Init Hook
+        const origVerify = window.verifyAdmin;
+        window.verifyAdmin = async function() {
+            await origVerify();
+            setTimeout(() => {
+                renderPosOrderLine();
+                setPosMiddleView('tables'); // Default to Tables
+            }, 1000);
+        };
+
+
 // ==========================================
         // NEW: REVIEW MANAGER LOGIC
         // ==========================================
