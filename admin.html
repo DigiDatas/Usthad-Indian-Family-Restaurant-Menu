@@ -3969,7 +3969,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 }
 
                 list.innerHTML += `
-                    <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group shrink-0 flex flex-col">
+                    <div id="pos-order-card-${order.id}" onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group shrink-0 flex flex-col">
                         <div class="flex justify-between items-start mb-2 gap-2">
                             <span class="text-[10px] font-bold text-gray-500 uppercase">${order.order_number}</span>
                             <div class="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -4380,6 +4380,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosTables();
         }
 
+        // 🌟 FIX: Loading an order now auto-scrolls to the card and remembers payment history!
         function posLoadOrder(id) {
             const order = allOrders.find(o => String(o.id) === String(id));
             if(!order) return;
@@ -4395,7 +4396,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     else posActiveChairs.push(c);
                 });
             } else if (posActiveTables.length > 0) {
-                // 🌟 FIX: If order came from App with no chairs selected, perfectly generate the right amount
                 let targetCount = order.guest_count || 1;
                 let assigned = 0;
                 posActiveTables.forEach(tNum => {
@@ -4410,21 +4410,36 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
             
             posCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
-            posSetPayment(order.payment_status || 'Unpaid');
             
             // Sync guest input exactly
             document.getElementById('pos-guest-count').value = order.guest_count || posActiveChairs.length || 1;
-            
             document.getElementById('pos-cart-table-label').textContent = posActiveTables.length > 0 ? `Tables: ${posActiveTables.join(', ')}` : 'Takeaway';
             document.getElementById('pos-cart-id-label').textContent = order.order_number;
             
+            // 🌟 FIX: Restore Previous Cash Payment Data
             const givenInput = document.getElementById('pos-cash-given');
-            if (givenInput) givenInput.value = '';
+            if (givenInput) {
+                if (order.payment_status === 'Cash' && order.cash_given > 0) {
+                    givenInput.value = order.cash_given;
+                } else {
+                    givenInput.value = '';
+                }
+            }
+
+            posSetPayment(order.payment_status || 'Unpaid');
 
             renderPosCart();
             renderPosOrderLine();
             renderPosTables(); 
             renderPosMenu(); 
+
+            // 🌟 FIX: Auto-Scroll to the selected order card in the left menu!
+            setTimeout(() => {
+                const card = document.getElementById(`pos-order-card-${id}`);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
         }
 
 function updatePosRightPanelLabels() {
@@ -4551,6 +4566,7 @@ function updatePosRightPanelLabels() {
             }
         }
 
+        // 🌟 FIX: Smart Cash Validation and Red Warning Text
         function posCalculateChange() {
             const subtotal = posCart.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
             const givenInput = document.getElementById('pos-cash-given');
@@ -4558,13 +4574,30 @@ function updatePosRightPanelLabels() {
             
             if (!givenInput || !changeDisplay) return;
 
-            const given = parseFloat(givenInput.value) || 0;
-            let change = given - subtotal;
-            if (change < 0) change = 0; 
+            const givenText = givenInput.value.trim();
+            const given = parseFloat(givenText);
             
-            changeDisplay.textContent = `${change.toFixed(2)} SR`;
-        }
+            if (givenText === '' || isNaN(given)) {
+                 changeDisplay.textContent = `0.00 SR`;
+                 changeDisplay.classList.replace('text-red-600', 'text-orange-500');
+                 givenInput.classList.remove('text-red-600', 'bg-red-50');
+                 return;
+            }
 
+            let change = given - subtotal;
+            
+            if (given < subtotal) {
+                // Short on cash!
+                changeDisplay.textContent = `Short ${Math.abs(change).toFixed(2)} SR`;
+                changeDisplay.classList.replace('text-orange-500', 'text-red-600');
+                givenInput.classList.add('text-red-600', 'bg-red-50');
+            } else {
+                // Enough cash!
+                changeDisplay.textContent = `${change.toFixed(2)} SR`;
+                changeDisplay.classList.replace('text-red-600', 'text-orange-500');
+                givenInput.classList.remove('text-red-600', 'bg-red-50');
+            }
+        }
         function renderPosCart() {
             const container = document.getElementById('pos-cart-items');
             const countBadge = document.getElementById('pos-cart-count');
@@ -4632,11 +4665,26 @@ function updatePosRightPanelLabels() {
         async function posSubmitOrder() {
             if (posCart.length === 0) return alert("Cart is empty!");
             const btn = document.getElementById('pos-btn-submit');
-            if(btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
 
             let subtotal = posCart.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
             const guests = parseInt(document.getElementById('pos-guest-count').value) || 1;
+            
+            const givenInput = document.getElementById('pos-cash-given');
+            const given = parseFloat(givenInput?.value) || 0;
 
+            // 🌟 FIX: Block submission, alert, and flash red if Cash is too low!
+            if (posPaymentMethod === 'Cash' && given < subtotal) {
+                if (givenInput) {
+                    givenInput.classList.add('border-red-500', 'animate-pulse');
+                    setTimeout(() => givenInput.classList.remove('border-red-500', 'animate-pulse'), 1000);
+                }
+                alert(`Insufficient Cash! The bill is ${subtotal.toFixed(2)} SR, but only ${given.toFixed(2)} SR was entered.`);
+                return;
+            }
+
+            if(btn) btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
+
+            // 🌟 FIX: Save Cash Given and Change Returned to Database!
             const payload = {
                 order_type: posActiveTables.length > 0 ? 'Dine In' : 'Takeaway',
                 table_number: posActiveTables.length > 0 ? posActiveTables.join(', ') : null,
@@ -4645,7 +4693,9 @@ function updatePosRightPanelLabels() {
                 guest_count: guests,
                 items: posCart,
                 total_amount: subtotal,
-                payment_status: posPaymentMethod
+                payment_status: posPaymentMethod,
+                cash_given: posPaymentMethod === 'Cash' ? given : 0,
+                change_returned: posPaymentMethod === 'Cash' ? Math.max(0, given - subtotal) : 0
             };
 
             if (posActiveOrderId) {
@@ -4655,7 +4705,6 @@ function updatePosRightPanelLabels() {
                         printOrderTicket(posActiveOrderId);
                     }
                     
-                    // 🌟 FIX: Update database locally, don't clear cart so the cashier sees the successful update
                     await fetchDashboardData(null, true);
                     
                     if(btn) {
@@ -4663,7 +4712,6 @@ function updatePosRightPanelLabels() {
                         btn.classList.replace('bg-blue-600', 'bg-green-500');
                         btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
                         
-                        // Revert the button visual after 2 seconds
                         setTimeout(() => {
                             btn.innerHTML = 'Update Order';
                             btn.classList.replace('bg-green-500', 'bg-blue-600');
@@ -4691,7 +4739,6 @@ function updatePosRightPanelLabels() {
                     const freshOrder = allOrders.find(o => o.order_number === uniqueOrderNo);
                     if (freshOrder) printOrderTicket(freshOrder.id);
                     
-                    // Clear the cart ONLY for brand new orders so they can take the next customer
                     posClearCart();
                 } else {
                     alert("Order placement failed: " + error.message);
