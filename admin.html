@@ -595,15 +595,24 @@
                         
                         <!-- 🌟 VIEW: TABLES (UPDATED LAYOUT) -->
                         <div id="pos-view-tables" class="absolute inset-0 flex overflow-hidden bg-gray-50/50">
+                            
                             <!-- Map Area -->
-                            <div class="flex-1 flex flex-col overflow-y-auto hide-scrollbar p-4 sm:p-6">
-                                <!-- Sections & Tables Grid (Unified Card) -->
-                                <div class="bg-white border border-gray-200 rounded-2xl p-4 sm:p-8 shadow-sm flex flex-col w-full pb-10 min-h-full" id="pos-table-grid">
+                            <div class="flex-1 flex flex-col overflow-y-auto hide-scrollbar p-4 sm:p-6 relative">
+                                
+                                <!-- 🌟 Sticky Legend at Top Right -->
+                                <div class="sticky top-0 right-0 self-end z-20 flex gap-3 sm:gap-4 bg-white/90 backdrop-blur p-2.5 rounded-xl border border-gray-200 shadow-sm mb-4">
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-teal-500 shadow-sm"></div> Selected (New)</span>
+                                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></div> Occupied (View)</span>
+                                </div>
+                                
+                                <!-- Sections & Tables Grid (Container box removed!) -->
+                                <div class="flex flex-col w-full pb-10" id="pos-table-grid">
                                     <!-- JS Injected Sections -->
                                 </div>
                             </div>
 
-                            <!-- 🌟 Narrow Table Accordion Column (MOVED TO RIGHT) -->
+                            <!-- Narrow Table Accordion Column (Right Side) -->
                             <div class="w-40 sm:w-48 shrink-0 bg-white border-l border-gray-200 flex flex-col overflow-y-auto hide-scrollbar" id="pos-table-accordion">
                                 <!-- JS Injected Accordion -->
                             </div>
@@ -3923,16 +3932,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const areas = ['Main Dining', 'Family Section', 'Terrace', 'Outdoor'];
             let allHtml = '';
 
-            // 🌟 NEW: Inline Legend applied only to the first row!
-            const legendHtml = `
-                <div class="flex gap-4">
-                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
-                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-teal-500 shadow-sm"></div> Selected</span>
-                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></div> Occupied</span>
-                </div>
-            `;
-
-            areas.forEach((areaName, index) => {
+            areas.forEach((areaName) => {
                 const areaTables = restaurantTables.filter(t => t.area === areaName);
                 if(areaTables.length === 0) return;
 
@@ -4016,14 +4016,9 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     `;
                 });
 
-                // 🌟 FIX: Inject header with Legend if it's the first section
-                const headerContent = index === 0 
-                    ? `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 w-full"><span class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</span> ${legendHtml}</div>`
-                    : `<span class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</span>`;
-
                 allHtml += `
                     <div class="w-full mb-8">
-                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-100 pb-2 mb-6 uppercase tracking-wider flex items-center justify-between">${headerContent}</h3>
+                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-200 pb-2 mb-6 uppercase tracking-wider flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</h3>
                         <div class="flex flex-wrap justify-center gap-8 lg:gap-14">
                             ${tablesHtml}
                         </div>
@@ -4034,6 +4029,74 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             // Trigger the Side Accordion update too
             renderPosTableAccordion(tableOrders);
+        }
+
+        // 🌟 EXCLUSIVE ACCORDION LOGIC
+        function posAccToggle(clickedSummary) {
+            const parentDetails = clickedSummary.parentElement;
+            const allDetails = document.querySelectorAll('#pos-table-accordion details');
+            
+            // Loop through all other accordions and close them
+            allDetails.forEach(d => {
+                if (d !== parentDetails) d.removeAttribute('open');
+            });
+        }
+
+        // 🌟 GLOBAL CLICK TO CLOSE ACCORDION
+        document.addEventListener('click', (e) => {
+            const acc = document.getElementById('pos-table-accordion');
+            // If the click happened OUTSIDE the accordion sidebar, close all accordions
+            if (acc && !acc.contains(e.target)) {
+                acc.querySelectorAll('details').forEach(d => d.removeAttribute('open'));
+            }
+        });
+
+        function renderPosTableAccordion(tableOrders) {
+            const acc = document.getElementById('pos-table-accordion');
+            if (!acc) return;
+            
+            let html = '<div class="p-3 bg-gray-100 border-b border-gray-200 text-xs font-black text-gray-600 uppercase tracking-wider sticky top-0 z-10 shadow-sm">Tables List</div>';
+            
+            restaurantTables.forEach(tbl => {
+                const tNum = tbl.id;
+                const orders = tableOrders[tNum] || [];
+                const isOcc = orders.length > 0;
+                const isSelected = posActiveTables.includes(tNum);
+                
+                let headerBg = isOcc ? 'bg-orange-50 text-orange-800 border-orange-200' : (isSelected ? 'bg-teal-50 text-teal-800 border-teal-200' : 'bg-white text-gray-700 border-gray-100');
+                
+                let ordersHtml = '';
+                if (isOcc) {
+                    ordersHtml = `<div class="flex flex-col gap-1 p-2 bg-gray-50 border-t border-gray-100">`;
+                    orders.forEach(o => {
+                        const isOrdSel = o.id === posActiveOrderId;
+                        ordersHtml += `
+                            <div onclick="posLoadOrder('${o.id}')" class="text-[10px] p-2 rounded cursor-pointer transition ${isOrdSel ? 'bg-teal-100 text-teal-800 font-bold border border-teal-200 shadow-inner' : 'bg-white text-gray-600 border border-gray-100 hover:bg-gray-200'}">
+                                <div class="flex justify-between items-center">
+                                    <span>${o.order_number}</span>
+                                    <span class="font-black text-green-600">${parseFloat(o.total_amount).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    ordersHtml += `</div>`;
+                } else {
+                    ordersHtml = `<div class="p-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 italic text-center">No active orders</div>`;
+                }
+
+                // 🌟 FIX: Removed the 'open' attribute so they are collapsed by default!
+                // Added the posAccToggle onclick event
+                html += `
+                    <details class="group border-b border-gray-200 last:border-0">
+                        <summary onclick="posAccToggle(this)" class="flex justify-between items-center p-3 cursor-pointer transition ${headerBg} hover:brightness-95 select-none" style="list-style: none;">
+                            <span class="font-black text-xs">${tNum}</span>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${isOcc ? 'bg-orange-200 text-orange-800' : 'bg-gray-200 text-gray-500'}">${isOcc ? orders.length + ' Orders' : 'Free'}</span>
+                        </summary>
+                        ${ordersHtml}
+                    </details>
+                `;
+            });
+            acc.innerHTML = html;
         }
 
         function renderPosTableAccordion(tableOrders) {
