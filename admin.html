@@ -2009,26 +2009,35 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
 
             grouped.forEach((subMap, mk) => {
                 let subHtml = '';
+                let mainCatTotalItems = 0; // 🌟 FIX: Track total items in Main Category
+                
                 subMap.forEach((subItems, sk) => {
+                    mainCatTotalItems += subItems.length; // Add to total
+                    
                     const isSubActive = mk === menuActiveMainCat && sk === menuActiveSubCat;
-                    const subBg = isSubActive ? 'bg-red-50 border-red-500 text-red-600' : 'bg-white border-transparent text-gray-600 hover:bg-gray-50';
+                    
+                    // 🌟 FIX: specifically target border-l-red-500 so the bottom border stays gray!
+                    const subBg = isSubActive ? 'bg-red-50 border-l-red-500 text-red-600' : 'bg-white border-l-transparent text-gray-600 hover:bg-gray-50';
                     const badgeBg = isSubActive ? 'bg-red-200 text-red-800' : 'bg-gray-200 text-gray-500';
                     
-                    // 🌟 FIX: Removed rounded corners, reduced vertical gaps to 0, added left border highlighting
                     subHtml += `
-                        <div class="sub-cat-row px-4 py-2 cursor-pointer border-l-[3px] ${subBg} border-b border-gray-100 transition-all duration-300 text-[11px] font-bold flex justify-between items-center group" data-main="${mk}" data-sub="${sk}" onclick="scrollToCategory('${mk}', '${sk}')">
+                        <div class="sub-cat-row px-4 py-2 cursor-pointer border-l-[3px] border-b border-gray-100 ${subBg} transition-all duration-300 text-[11px] font-bold flex justify-between items-center group" data-main="${mk}" data-sub="${sk}" onclick="scrollToCategory('${mk}', '${sk}')">
                             <span class="flex items-center gap-2 truncate pr-2"><i class="fas fa-grip-vertical text-gray-300 hover:text-red-400 cursor-grab sub-drag-handle"></i> <span class="truncate">${sk}</span></span>
                             <span class="count-badge text-[9px] ${badgeBg} px-1.5 py-0.5 rounded font-black">${subItems.length}</span>
                         </div>
                     `;
                 });
 
-                // 🌟 FIX: Main category edge-to-edge, rectangle
                 catContainer.innerHTML += `
                     <div class="main-cat-row bg-white border-b border-gray-200" data-main="${mk}">
                         <div class="p-3 bg-gray-100 text-xs font-black text-gray-800 uppercase tracking-wider flex justify-between items-center cursor-pointer hover:bg-gray-200 transition" onclick="toggleMenuMainCat(this)">
                             <span class="flex items-center gap-2 truncate pr-2 pl-1"><i class="fas fa-grip-vertical text-gray-400 hover:text-red-500 cursor-grab main-drag-handle"></i> <span class="truncate">${mk}</span></span>
-                            <i class="fas fa-chevron-up text-gray-400 text-[10px] transition-transform"></i>
+                            
+                            <!-- 🌟 FIX: Added the total item count badge to the Main Category -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-[9px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded font-black">${mainCatTotalItems}</span>
+                                <i class="fas fa-chevron-up text-gray-400 text-[10px] transition-transform"></i>
+                            </div>
                         </div>
                         <div class="sub-cat-container flex flex-col">
                             ${subHtml}
@@ -2042,28 +2051,38 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
             menuActiveMainCat = mk;
             menuActiveSubCat = sk;
             
-            // 🌟 Highlight left menu purely via DOM to prevent lag/re-rendering
+            // Highlight left menu purely via DOM to prevent lag/re-rendering
             document.querySelectorAll('.sub-cat-row').forEach(row => {
-                row.classList.remove('bg-red-50', 'border-red-500', 'text-red-600');
-                row.classList.add('bg-white', 'border-transparent', 'text-gray-600');
+                // 🌟 FIX: Make sure we are removing/adding the exact border-l colors!
+                row.classList.remove('bg-red-50', 'border-l-red-500', 'text-red-600');
+                row.classList.add('bg-white', 'border-l-transparent', 'text-gray-600');
                 
                 const badge = row.querySelector('.count-badge');
                 badge.classList.remove('bg-red-200', 'text-red-800');
                 badge.classList.add('bg-gray-200', 'text-gray-500');
                 
                 if(row.dataset.main === mk && row.dataset.sub === sk) {
-                    row.classList.remove('bg-white', 'border-transparent', 'text-gray-600');
-                    row.classList.add('bg-red-50', 'border-red-500', 'text-red-600');
+                    row.classList.remove('bg-white', 'border-l-transparent', 'text-gray-600');
+                    row.classList.add('bg-red-50', 'border-l-red-500', 'text-red-600');
                     badge.classList.remove('bg-gray-200', 'text-gray-500');
                     badge.classList.add('bg-red-200', 'text-red-800');
                 }
             });
 
-            // 🌟 Scroll the right side dynamically!
+            // 🌟 FIX: Bulletproof Scroll Logic using getBoundingClientRect() math
             const safeId = `grid-sec-${mk}-${sk}`.replace(/[^a-zA-Z0-9-]/g, '-');
             const targetEl = document.getElementById(safeId);
-            if(targetEl) {
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            const container = document.getElementById('menu-items-scroll-container');
+            
+            if(targetEl && container) {
+                // Calculates exactly how far down the element is inside the scrolling container
+                const scrollPos = targetEl.getBoundingClientRect().top - container.getBoundingClientRect().top + container.scrollTop;
+                
+                // Forces the container to jump exactly to that pixel height
+                container.scrollTo({
+                    top: scrollPos,
+                    behavior: 'smooth'
+                });
             }
         }
 
