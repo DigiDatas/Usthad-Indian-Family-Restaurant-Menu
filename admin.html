@@ -595,11 +595,18 @@
                         
                         <!-- VIEW: TABLES -->
                         <div id="pos-view-tables" class="absolute inset-0 p-6 flex flex-col overflow-y-auto hide-scrollbar">
-                            <div class="flex gap-4 mb-6 shrink-0">
-                                <span class="flex items-center gap-2 text-xs font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-teal-100 border-2 border-teal-500"></div> Available</span>
-                                <span class="flex items-center gap-2 text-xs font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-orange-100 border-2 border-orange-500"></div> On Dine</span>
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 shrink-0 border-b border-gray-100 pb-4">
+                                <div class="flex gap-4">
+                                    <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-gray-300 border border-gray-400"></div> Available</span>
+                                    <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-teal-500 shadow-sm"></div> Selected</span>
+                                    <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></div> Occupied</span>
+                                </div>
+                                <!-- Area Tabs Injected Here -->
+                                <div class="flex gap-1 bg-gray-100 p-1 rounded-xl border border-gray-200 overflow-x-auto w-full sm:w-auto hide-scrollbar" id="pos-area-tabs">
+                                </div>
                             </div>
-                            <div id="pos-table-grid" class="flex flex-wrap justify-center gap-10 lg:gap-16">
+                            <!-- Tables Grid -->
+                            <div id="pos-table-grid" class="flex flex-wrap justify-center gap-8 lg:gap-14 pt-2 pb-10">
                                 <!-- CSS Tables Injected Here -->
                             </div>
                         </div>
@@ -635,7 +642,7 @@
                         </div>
                         <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-lg border border-gray-200 shadow-sm">
                             <i class="fas fa-users text-gray-400 text-[10px]"></i>
-                            <input type="number" id="pos-guest-count" value="1" min="1" class="w-8 text-center text-xs font-black text-gray-700 focus:outline-none bg-transparent">
+                            <input type="number" id="pos-guest-count" value="1" min="1" onchange="updatePosGuestCount()" class="w-8 text-center text-xs font-black text-gray-700 focus:outline-none bg-transparent">
                         </div>
                     </div>
 
@@ -3795,12 +3802,32 @@ const dbLang = (mainRow.language || '').toLowerCase();
         // UNIFIED 3-PANE CASHIER POS WORKSTATION
         // ==========================================
         let posCart = [];
-        let posActiveTable = null;
         let posActiveOrderId = null;
         let posPaymentMethod = 'Cash';
         let posFilter = 'All';
         let posLang = 'en';
         let posActiveCategory = 'All';
+
+        // --- NEW: Interactive Table & Chair State ---
+        let posActiveTable = null;
+        let posActiveArea = 'Main Dining';
+        let posActiveChairs = []; 
+
+        // Define your physical restaurant layout here!
+        const restaurantTables = [
+            { id: 'T01', seats: 6, area: 'Main Dining' },
+            { id: 'T02', seats: 2, area: 'Main Dining' },
+            { id: 'T03', seats: 2, area: 'Main Dining' },
+            { id: 'T04', seats: 3, area: 'Main Dining' },
+            { id: 'T05', seats: 4, area: 'Main Dining' },
+            { id: 'T06', seats: 7, area: 'Main Dining' },
+            { id: 'T07', seats: 10, area: 'Main Dining' },
+            { id: 'T08', seats: 2, area: 'Main Dining' },
+            { id: 'T09', seats: 4, area: 'Family Section' },
+            { id: 'T10', seats: 6, area: 'Family Section' },
+            { id: 'T11', seats: 4, area: 'Terrace' },
+            { id: 'T12', seats: 8, area: 'Outdoor' }
+        ];
 
         function posSetFilter(filter) {
             posFilter = filter;
@@ -3840,7 +3867,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 const qtyCount = order.items ? order.items.reduce((s, i) => s + i.qty, 0) : 0;
                 const tableBadge = order.table_number ? `<span class="text-xs font-black text-gray-800">${order.table_number}</span>` : `<span class="text-xs font-black text-gray-800">TAKEAWAY</span>`;
 
-                // 🌟 FIX: Added shrink-0 and flex flex-col justify-between to force proper height even for empty/missing items
                 list.innerHTML += `
                     <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group shrink-0 min-h-[85px] flex flex-col justify-between">
                         <div class="flex justify-between items-start mb-2">
@@ -3878,7 +3904,18 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
         }
 
+        // --- NEW: Area & Interactive Chair Map Logic ---
+        function renderPosAreas() {
+            const areas = [...new Set(restaurantTables.map(t => t.area))];
+            const container = document.getElementById('pos-area-tabs');
+            if(!container) return;
+            container.innerHTML = areas.map(a => `
+                <button onclick="posActiveArea='${a}'; renderPosTables();" class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition whitespace-nowrap ${posActiveArea === a ? 'bg-teal-600 text-white shadow-sm' : 'bg-transparent text-gray-500 hover:bg-gray-200'}">${a}</button>
+            `).join('');
+        }
+
         function renderPosTables() {
+            renderPosAreas();
             const grid = document.getElementById('pos-table-grid');
             if(!grid) return;
             grid.innerHTML = '';
@@ -3887,33 +3924,136 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const occupiedMap = {};
             activeDineIn.forEach(o => { occupiedMap[o.table_number] = o; });
 
-            const tableLayouts = [6, 2, 2, 3, 4, 7, 10, 2, 4, 2, 2, 8]; 
+            // Filter tables based on selected Area Tab
+            const areaTables = restaurantTables.filter(t => t.area === posActiveArea);
             
-            for (let i = 0; i < 12; i++) {
-                const tNum = `T${String(i+1).padStart(2, '0')}`;
-                const order = occupiedMap[tNum];
-                const chairs = tableLayouts[i] || 4;
-                
+            areaTables.forEach(tbl => {
+                const order = occupiedMap[tbl.id];
                 const isOcc = !!order;
-                const tblColor = isOcc ? 'bg-orange-100 border-orange-300 group-hover:border-orange-500' : 'bg-teal-50 border-teal-200 group-hover:border-teal-500 hover:shadow-md';
-                const chairColor = isOcc ? 'bg-orange-300' : 'bg-gray-300 group-hover:bg-teal-400';
-                const textColor = isOcc ? 'text-orange-800' : 'text-gray-500';
+                const isSelectedTable = (posActiveTable === tbl.id && !isOcc);
+
+                // Table Styling
+                let tblColor = 'bg-gray-50 border-gray-200 border-dashed hover:bg-teal-50 hover:border-teal-300 hover:border-solid';
+                let textColor = 'text-gray-400 group-hover:text-teal-600';
                 
+                if (isOcc) {
+                    tblColor = 'bg-orange-100 border-orange-300 border-solid';
+                    textColor = 'text-orange-800';
+                } else if (isSelectedTable) {
+                    tblColor = 'bg-teal-50 border-teal-500 border-solid shadow-md';
+                    textColor = 'text-teal-800';
+                }
+
+                // Chair Calculation
                 let topChairs = '', botChairs = '';
-                for(let c=0; c < Math.ceil(chairs/2); c++) topChairs += `<div class="w-4 h-4 rounded-t-full transition-colors ${chairColor}"></div>`;
-                for(let c=0; c < Math.floor(chairs/2); c++) botChairs += `<div class="w-4 h-4 rounded-b-full transition-colors ${chairColor}"></div>`;
+                const totalSeats = tbl.seats;
+                
+                // Determine which chairs are highlighted
+                let activeSeatIndices = [];
+                if (isOcc) {
+                    activeSeatIndices = Array.isArray(order.selected_chairs) && order.selected_chairs.length > 0 
+                        ? order.selected_chairs 
+                        : Array.from({length: order.guest_count || 1}, (_, i) => i + 1);
+                } else if (isSelectedTable) {
+                    activeSeatIndices = posActiveChairs;
+                }
+                
+                for(let c = 1; c <= totalSeats; c++) {
+                    let chairColor = 'bg-gray-200'; // Default Empty
+                    let hoverEffect = 'hover:scale-125';
+                    
+                    if (isOcc && activeSeatIndices.includes(c)) {
+                        chairColor = 'bg-orange-500 shadow-sm';
+                    } else if (isSelectedTable && activeSeatIndices.includes(c)) {
+                        chairColor = 'bg-teal-500 shadow-md transform scale-110';
+                    } else if (!isOcc) {
+                        chairColor = 'bg-gray-300 group-hover:bg-teal-200';
+                    }
+
+                    const rounding = c <= Math.ceil(totalSeats/2) ? 'rounded-t-full' : 'rounded-b-full';
+                    const chairHtml = `<div onclick="event.stopPropagation(); posToggleChair('${tbl.id}', ${c});" class="w-4 h-4 transition-all duration-300 cursor-pointer ${hoverEffect} ${chairColor} ${rounding}"></div>`;
+
+                    if (c <= Math.ceil(totalSeats/2)) topChairs += chairHtml;
+                    else botChairs += chairHtml;
+                }
 
                 grid.innerHTML += `
-                    <div onclick="posSelectTable('${tNum}', '${isOcc ? order.id : ''}')" class="flex flex-col items-center cursor-pointer group transition transform hover:scale-105">
-                        <div class="flex gap-2 mb-1">${topChairs}</div>
-                        <div class="w-28 h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-colors relative ${tblColor}">
+                    <div class="flex flex-col items-center group transition">
+                        <div class="flex gap-1.5 mb-1">${topChairs}</div>
+                        <div onclick="posSelectTable('${tbl.id}', '${isOcc ? order.id : ''}')" class="w-28 h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 relative cursor-pointer ${tblColor}">
                             ${isOcc ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black px-1.5 rounded-full z-10 animate-pulse"><i class="fas fa-fire"></i></span>` : ''}
-                            <span class="font-black text-sm ${textColor}">${tNum}</span>
-                            <span class="text-[9px] font-bold ${isOcc ? 'text-orange-600' : 'text-gray-400'} mt-0.5"><i class="fas fa-user me-1"></i> ${isOcc ? (order.guest_count || 2) : chairs}</span>
+                            <span class="font-black text-sm ${textColor}">${tbl.id}</span>
+                            <span class="text-[9px] font-bold ${isOcc ? 'text-orange-600' : (isSelectedTable ? 'text-teal-600' : 'text-gray-400')} mt-0.5"><i class="fas fa-user me-1"></i> ${isOcc ? (order.guest_count || activeSeatIndices.length) : (isSelectedTable ? posActiveChairs.length : tbl.seats)}</span>
                         </div>
-                        <div class="flex gap-2 mt-1">${botChairs}</div>
+                        <div class="flex gap-1.5 mt-1">${botChairs}</div>
                     </div>
                 `;
+            });
+        }
+
+        function posToggleChair(tNum, chairIndex) {
+            const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && o.status !== 'Completed' && o.status !== 'Cancelled');
+            const order = activeDineIn.find(o => o.table_number === tNum);
+            
+            // If table is occupied, clicking any chair opens the order
+            if (order) {
+                posLoadOrder(order.id);
+                return;
+            }
+
+            // If clicking a completely different table, wipe selection and start fresh on new table
+            if (posActiveTable !== tNum) {
+                posActiveTable = tNum;
+                posActiveChairs = [chairIndex];
+                
+                const tableDef = restaurantTables.find(t => t.id === tNum);
+                if (tableDef) posActiveArea = tableDef.area;
+            } else {
+                // Toggle specific chair on currently active table
+                if (posActiveChairs.includes(chairIndex)) {
+                    posActiveChairs = posActiveChairs.filter(c => c !== chairIndex);
+                } else {
+                    posActiveChairs.push(chairIndex);
+                }
+            }
+            
+            document.getElementById('pos-cart-table-label').textContent = `Table ${tNum}`;
+            document.getElementById('pos-guest-count').value = Math.max(1, posActiveChairs.length);
+            posDiningType = 'Dine In';
+            renderPosTables();
+        }
+
+        function posSelectTable(tNum, orderId) {
+            if (orderId) {
+                posLoadOrder(orderId);
+            } else {
+                posClearCart();
+                posActiveTable = tNum;
+                posDiningType = 'Dine In';
+                
+                // Auto-select chairs based on input field
+                const tableDef = restaurantTables.find(t => t.id === tNum);
+                const guestInput = parseInt(document.getElementById('pos-guest-count').value) || 1;
+                if (tableDef) {
+                    posActiveArea = tableDef.area;
+                    posActiveChairs = Array.from({length: Math.min(guestInput, tableDef.seats)}, (_, i) => i + 1);
+                }
+
+                document.getElementById('pos-cart-table-label').textContent = `Table ${tNum}`;
+                renderPosTables(); 
+            }
+            setPosMiddleView('menu');
+        }
+
+        // Auto-updates chairs if cashier types a number in the box manually
+        function updatePosGuestCount() {
+            const count = parseInt(document.getElementById('pos-guest-count').value) || 1;
+            if (posActiveTable && posDiningType === 'Dine In' && !posActiveOrderId) {
+                const tableDef = restaurantTables.find(t => t.id === posActiveTable);
+                if (tableDef) {
+                    posActiveChairs = Array.from({length: Math.min(count, tableDef.seats)}, (_, i) => i + 1);
+                    renderPosTables();
+                }
             }
         }
 
@@ -3924,7 +4064,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosMenu();
         }
 
-        // 🌟 FIX: Updated with Search Filter Logic
         function renderPosMenu() {
             const catContainer = document.getElementById('pos-menu-cats');
             const grid = document.getElementById('pos-menu-grid');
@@ -3960,23 +4099,15 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }).join('');
         }
 
-        function posSelectTable(tNum, orderId) {
-            if (orderId) {
-                posLoadOrder(orderId);
-            } else {
-                posClearCart();
-                posActiveTable = tNum;
-                document.getElementById('pos-cart-table-label').textContent = `Table ${tNum}`;
-            }
-            setPosMiddleView('menu');
-        }
-
         function posLoadOrder(id) {
             const order = allOrders.find(o => String(o.id) === String(id));
             if(!order) return;
             
             posActiveOrderId = order.id;
             posActiveTable = order.table_number || null;
+            posActiveArea = order.dining_area || 'Main Dining';
+            posActiveChairs = order.selected_chairs || [];
+            
             posCart = order.items ? JSON.parse(JSON.stringify(order.items)) : [];
             posSetPayment(order.payment_status || 'Unpaid');
             document.getElementById('pos-guest-count').value = order.guest_count || 1;
@@ -3984,7 +4115,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-cart-table-label').textContent = posActiveTable ? `Table ${posActiveTable}` : 'Takeaway';
             document.getElementById('pos-cart-id-label').textContent = order.order_number;
             
-            // Clear the cash input when opening an order
             const givenInput = document.getElementById('pos-cash-given');
             if (givenInput) givenInput.value = '';
 
@@ -3997,6 +4127,9 @@ const dbLang = (mainRow.language || '').toLowerCase();
             posCart = [];
             posActiveOrderId = null;
             posActiveTable = null;
+            posActiveArea = 'Main Dining';
+            posActiveChairs = [];
+            
             posSetPayment('Unpaid');
             document.getElementById('pos-cart-table-label').textContent = 'Takeaway Order';
             document.getElementById('pos-cart-id-label').textContent = 'New Order';
@@ -4016,7 +4149,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosCart();
         }
 
-        // 🌟 FIX: Show/Hide Cash Calculator automatically based on payment method
         function posSetPayment(method) {
             posPaymentMethod = method;
             ['Cash', 'Card', 'Unpaid'].forEach(m => {
@@ -4030,14 +4162,13 @@ const dbLang = (mainRow.language || '').toLowerCase();
             if (calc) {
                 if (method === 'Cash') {
                     calc.classList.remove('hidden');
-                    posCalculateChange(); // Instantly process math
+                    posCalculateChange(); 
                 } else {
                     calc.classList.add('hidden');
                 }
             }
         }
 
-        // 🌟 NEW: Live Change Calculator
         function posCalculateChange() {
             const subtotal = posCart.reduce((s, i) => s + (parseFloat(i.price) * i.qty), 0);
             const givenInput = document.getElementById('pos-cash-given');
@@ -4047,7 +4178,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             const given = parseFloat(givenInput.value) || 0;
             let change = given - subtotal;
-            if (change < 0) change = 0; // Don't show negative change before they finish typing
+            if (change < 0) change = 0; 
             
             changeDisplay.textContent = `${change.toFixed(2)} SR`;
         }
@@ -4063,7 +4194,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 container.innerHTML = `<div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>`;
                 document.getElementById('pos-summary-sub').textContent = '0.00 SR';
                 document.getElementById('pos-summary-total').textContent = '0.00 SR';
-                posCalculateChange(); // Reset calc
+                posCalculateChange();
                 return;
             }
 
@@ -4092,7 +4223,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             document.getElementById('pos-summary-sub').textContent = `${sub.toFixed(2)} SR`;
             document.getElementById('pos-summary-total').textContent = `${sub.toFixed(2)} SR`;
             
-            posCalculateChange(); // Instantly update change if items are added/removed!
+            posCalculateChange(); 
 
             const subBtn = document.getElementById('pos-btn-submit');
             if(subBtn) {
@@ -4112,6 +4243,8 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const payload = {
                 order_type: posActiveTable ? 'Dine In' : 'Takeaway',
                 table_number: posActiveTable,
+                dining_area: posActiveTable ? posActiveArea : null,
+                selected_chairs: posActiveTable ? posActiveChairs : null,
                 guest_count: guests,
                 items: posCart,
                 total_amount: subtotal,
@@ -4135,7 +4268,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 const { error } = await supabaseClient.from('orders').insert([payload]);
                 if (!error) {
                     alert("New Order placed successfully!");
-                    // Ensure the newest order data is synced before attempting to print
                     await fetchDashboardData(null, true);
                     const freshOrder = allOrders.find(o => o.order_number === uniqueOrderNo);
                     if (freshOrder) printOrderTicket(freshOrder.id);
