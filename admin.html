@@ -4033,7 +4033,17 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const areas = ['Main Dining', 'Family Section', 'Terrace', 'Outdoor'];
             let allHtml = '';
 
-            areas.forEach((areaName) => {
+            // 🌟 FIX: Added the Blue "Active Order" to the Legend
+            const legendHtml = `
+                <div class="flex gap-4 flex-wrap justify-end">
+                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-teal-500 shadow-sm"></div> Selected</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-gray-500"><div class="w-3 h-3 rounded-full bg-orange-500 shadow-sm"></div> Occupied</span>
+                    <span class="flex items-center gap-1.5 text-[10px] font-bold text-blue-600"><div class="w-3 h-3 rounded-full bg-blue-500 shadow-sm animate-pulse"></div> Active Order</span>
+                </div>
+            `;
+
+            areas.forEach((areaName, index) => {
                 const areaTables = restaurantTables.filter(t => t.area === areaName);
                 if(areaTables.length === 0) return;
 
@@ -4066,22 +4076,22 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     });
 
                     let topChairs = '', botChairs = '';
-                    const isSelectedTable = posActiveTables.includes(tNum) && !posActiveOrderId;
-
+                    const isSelectedTable = posActiveTables.includes(tNum);
+                    
+                    // 🌟 FIX: Highlight Tables that belong to the active order in BLUE
                     let tblColor = 'bg-gray-50 border-gray-200 border-dashed hover:bg-teal-50 hover:border-teal-300 hover:border-solid';
                     let textColor = 'text-gray-400 group-hover:text-teal-600';
                     let centerIcon = `<i class="fas fa-plus-circle"></i> New Order`;
 
-                    if (ordersAtTable.length > 0) {
+                    if (isSelectedTable) {
+                        tblColor = posActiveOrderId ? 'bg-blue-50 border-blue-500 border-solid shadow-md' : 'bg-teal-50 border-teal-500 border-solid shadow-md';
+                        textColor = posActiveOrderId ? 'text-blue-800' : 'text-teal-800';
+                        centerIcon = `<i class="fas fa-check"></i> Selected`;
+                    } else if (ordersAtTable.length > 0) {
                         tblColor = 'bg-orange-50 border-orange-200 border-solid';
                         textColor = 'text-orange-800';
                         centerIcon = `<i class="fas fa-users"></i> ${Object.keys(occupiedChairs).length}/${totalSeats}`;
                     } 
-                    if (isSelectedTable) {
-                        tblColor = 'bg-teal-50 border-teal-500 border-solid shadow-md';
-                        textColor = 'text-teal-800';
-                        centerIcon = `<i class="fas fa-check"></i> Selected`;
-                    }
 
                     for(let c = 1; c <= totalSeats; c++) {
                         const occOrderId = occupiedChairs[c];
@@ -4089,12 +4099,29 @@ const dbLang = (mainRow.language || '').toLowerCase();
                         let chairColor = 'bg-gray-200';
                         let hoverEffect = 'hover:scale-125 hover:shadow-md';
                         
-                        if (occOrderId) chairColor = 'bg-orange-500 shadow-sm';
-                        else if (isSelectedTable && posActiveChairs.includes(chairId)) chairColor = 'bg-teal-500 shadow-md transform scale-110';
-                        else chairColor = 'bg-gray-300 hover:bg-teal-300';
+                        // 🌟 FIX: Determine EXACT chair coloring state
+                        if (posActiveChairs.includes(chairId)) {
+                            // If actively selected right now, show blue (for editing) or teal (for new)
+                            chairColor = posActiveOrderId ? 'bg-blue-500 shadow-md transform scale-110 animate-pulse' : 'bg-teal-500 shadow-md transform scale-110';
+                        } else if (occOrderId) {
+                            if (occOrderId === posActiveOrderId) {
+                                // It WAS saved to this order, but is no longer in posActiveChairs (user deselected it). Show as empty!
+                                chairColor = 'bg-gray-300 hover:bg-teal-300';
+                            } else {
+                                // Occupied by a different customer order
+                                chairColor = 'bg-orange-500 shadow-sm';
+                            }
+                        } else {
+                            // Empty chair
+                            chairColor = 'bg-gray-300 hover:bg-teal-300';
+                        }
 
                         const rounding = c <= Math.ceil(totalSeats/2) ? 'rounded-t-full' : 'rounded-b-full';
-                        const clickAction = occOrderId ? `posLoadOrder('${occOrderId}')` : `posToggleChair('${tNum}', ${c})`;
+                        
+                        // 🌟 FIX: Allow clicking active order chairs to toggle them off!
+                        const clickAction = (occOrderId && occOrderId !== posActiveOrderId) 
+                            ? `posLoadOrder('${occOrderId}')` 
+                            : `posToggleChair('${tNum}', ${c})`;
 
                         const chairHtml = `<div onclick="event.stopPropagation(); ${clickAction};" class="w-4 h-4 transition-all duration-300 cursor-pointer ${hoverEffect} ${chairColor} ${rounding}"></div>`;
 
@@ -4102,7 +4129,10 @@ const dbLang = (mainRow.language || '').toLowerCase();
                         else botChairs += chairHtml;
                     }
 
-                    const centerClick = ordersAtTable.length > 0 ? `posLoadOrder('${ordersAtTable[0].id}')` : `posSelectTableCenter('${tNum}')`;
+                    // 🌟 FIX: Center click behavior
+                    const centerClick = (ordersAtTable.length > 0 && !isSelectedTable) 
+                        ? `posLoadOrder('${ordersAtTable[0].id}')` 
+                        : `posSelectTableCenter('${tNum}')`;
 
                     tablesHtml += `
                         <div class="flex flex-col items-center group transition">
@@ -4117,9 +4147,13 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     `;
                 });
 
+                const headerContent = index === 0 
+                    ? `<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 w-full"><span class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</span> ${legendHtml}</div>`
+                    : `<span class="flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</span>`;
+
                 allHtml += `
                     <div class="w-full mb-8">
-                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-200 pb-2 mb-6 uppercase tracking-wider flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</h3>
+                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-100 pb-2 mb-6 uppercase tracking-wider flex items-center justify-between">${headerContent}</h3>
                         <div class="flex flex-wrap justify-center gap-8 lg:gap-14">
                             ${tablesHtml}
                         </div>
@@ -4128,7 +4162,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             });
             grid.innerHTML = allHtml;
 
-            // Trigger the Side Accordion update too
             renderPosTableAccordion(tableOrders);
         }
 
@@ -4261,8 +4294,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
         }
 
         function posToggleChair(tNum, chairIndex) {
-            if (posActiveOrderId) posClearCart(); // Wipe cart if switching from viewing to ordering
-
+            // 🌟 FIX: Removed posClearCart() so you can edit loaded orders!
             const chairId = `${tNum}-${chairIndex}`;
             if (posActiveChairs.includes(chairId)) posActiveChairs = posActiveChairs.filter(c => c !== chairId);
             else posActiveChairs.push(chairId);
@@ -4275,15 +4307,16 @@ const dbLang = (mainRow.language || '').toLowerCase();
         }
 
         function posSelectTableCenter(tNum) {
-            if (posActiveOrderId) posClearCart();
-            
+            // 🌟 FIX: Removed posClearCart() so you can convert Takeaway to Dine-In easily!
             const tableDef = restaurantTables.find(t => t.id === tNum);
             if (!tableDef) return;
 
             if (posActiveTables.includes(tNum)) {
+                // If it's already selected, un-select all chairs for this table
                 posActiveChairs = posActiveChairs.filter(c => !c.startsWith(tNum + '-'));
             } else {
-                const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && o.status !== 'Completed' && o.status !== 'Cancelled');
+                // Select all available chairs on this table
+                const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && o.status !== 'Completed' && o.status !== 'Cancelled' && String(o.id) !== String(posActiveOrderId));
                 const occupied = [];
                 activeDineIn.forEach(o => {
                     if (o.table_number && o.table_number.includes(tNum)) {
@@ -4304,6 +4337,44 @@ const dbLang = (mainRow.language || '').toLowerCase();
             posActiveTables = Array.from(tablesSet);
 
             updatePosRightPanelLabels();
+            renderPosTables();
+        }
+
+        // 🌟 NEW: Auto-assign chairs when changing the Guest number manually!
+        function updatePosGuestCount() {
+            const count = parseInt(document.getElementById('pos-guest-count').value) || 1;
+            
+            // If no table is selected yet, just keep the number updated
+            if (posActiveTables.length === 0) return;
+
+            const primaryTable = posActiveTables[0];
+            const tableDef = restaurantTables.find(t => t.id === primaryTable);
+            if (!tableDef) return;
+
+            // Find all occupied chairs on this table by OTHER orders
+            const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && o.status !== 'Completed' && o.status !== 'Cancelled' && String(o.id) !== String(posActiveOrderId));
+            const occupied = [];
+            activeDineIn.forEach(o => {
+                if (o.table_number && o.table_number.includes(primaryTable)) {
+                    const chairs = o.selected_chairs || [];
+                    chairs.forEach(c => {
+                        if (typeof c === 'string' && c.startsWith(primaryTable + '-')) occupied.push(parseInt(c.split('-')[1]));
+                        else if (typeof c === 'number' && o.table_number.split(',')[0].trim() === primaryTable) occupied.push(c);
+                    });
+                }
+            });
+
+            // Wipe out current chairs for the primary table and rebuild exactly matching the count
+            posActiveChairs = posActiveChairs.filter(c => !c.startsWith(primaryTable + '-'));
+
+            let assigned = 0;
+            for (let c = 1; c <= tableDef.seats && assigned < count; c++) {
+                if (!occupied.includes(c)) {
+                    posActiveChairs.push(`${primaryTable}-${c}`);
+                    assigned++;
+                }
+            }
+            
             renderPosTables();
         }
 
