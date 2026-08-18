@@ -1506,6 +1506,12 @@
                     cookActionHtml = `<button onclick="updateStatus('${order.id}', 'Cooking', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm opacity-50 cursor-not-allowed">Cooking Active</button>`;
                 }
 
+                // 🌟 FIX: Add Payment Status Badge Logic
+                const isPaid = order.payment_status === 'Cash' || order.payment_status === 'Card';
+                const payHtml = isPaid 
+                    ? `<span class="text-green-600 font-black"><i class="fas fa-check-circle"></i> Paid (${order.payment_status})</span>` 
+                    : `<span class="text-red-500 font-black">Unpaid</span>`;
+
                 tbody.innerHTML += `
                     <tr onclick="toggleOrderDetails('${order.id}')" class="hover:bg-gray-50 transition cursor-pointer group border-b border-gray-100" id="row-sum-${order.id}">
                         <td class="p-4 align-middle">
@@ -1530,10 +1536,14 @@
                             <div class="bg-white rounded-xl shadow border border-gray-200 p-4 flex flex-col md:flex-row gap-5">
                                 <div class="flex-1">
                                     <h4 class="font-black text-gray-900 text-sm mb-2"><i class="fas fa-receipt text-gray-400 me-2"></i> Order Details</h4>
+                                    
+                                    <!-- 🌟 FIX: Added Payment display right below Table/Phone -->
                                     <div class="grid grid-cols-2 gap-2 text-xs mb-3">
                                         <div><span class="text-gray-400 font-bold">Phone:</span> <a href="tel:${order.customer_phone}" class="text-blue-600 font-bold">${order.customer_phone || 'N/A'}</a></div>
                                         ${order.table_number ? `<div><span class="text-gray-400 font-bold">Table:</span> <span class="text-red-500 font-black">${order.table_number}</span></div>` : ''}
+                                        <div><span class="text-gray-400 font-bold">Payment:</span> ${payHtml}</div>
                                     </div>
+
                                     <div class="bg-white border border-gray-100 rounded-lg p-3 mb-3 max-h-40 overflow-y-auto">${fullItemsHtml}</div>
                                     <div class="flex justify-between items-center text-base font-black text-gray-800 border-t border-gray-200 pt-3 mt-2">
                                         <span>Total:</span> <span class="text-green-600 flex items-center gap-1">${getCurrencyHtml()} ${parseFloat(order.total_amount).toFixed(2)}</span>
@@ -1541,11 +1551,8 @@
                                 </div>
                                 <div class="w-full md:w-48 flex flex-col gap-2 justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-5">
                                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mb-1">Update Status</p>
-                                    
                                     <button onclick="updateStatus('${order.id}', 'Pending', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition shadow-sm">Pending</button>
-                                    
                                     ${cookActionHtml}
-
                                     <button onclick="updateStatus('${order.id}', 'Completed', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
                                     <button onclick="updateStatus('${order.id}', 'Cancelled', event)" class="w-full py-2.5 text-[10px] font-black uppercase rounded-lg bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition shadow-sm">Cancel</button>
                                 </div>
@@ -3928,8 +3935,44 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 const qtyCount = order.items ? order.items.reduce((s, i) => s + i.qty, 0) : 0;
                 const tableBadge = order.table_number ? `<span class="text-xs font-black text-gray-800" title="${order.table_number}">${order.table_number.length > 8 ? order.table_number.substring(0,8)+'...' : order.table_number}</span>` : `<span class="text-xs font-black text-gray-800">TAKEAWAY</span>`;
 
+                // 🌟 FIX: Payment Status Badge
+                const isPaid = order.payment_status === 'Cash' || order.payment_status === 'Card';
+                const payBadge = isPaid 
+                    ? `<span class="text-teal-600 font-black text-[9px] border border-teal-200 bg-teal-50 px-1.5 py-0.5 rounded flex items-center gap-1"><i class="fas fa-check-circle"></i> Paid</span>` 
+                    : `<span class="text-red-600 font-black text-[9px] border border-red-200 bg-red-50 px-1.5 py-0.5 rounded">Unpaid</span>`;
+
+                // 🌟 FIX: Expanded Action Tools
+                let expandedHtml = '';
+                if (isSelected) {
+                    let cookActionHtml = '';
+                    if (order.status === 'Pending') {
+                        cookActionHtml = `
+                            <div class="flex gap-1 items-stretch col-span-2">
+                                <input type="number" id="pos-cook-time-${order.id}" value="15" class="w-12 text-center text-[10px] font-black rounded border border-yellow-300 bg-white focus:outline-none focus:border-yellow-500 shadow-inner" onclick="event.stopPropagation()">
+                                <button onclick="updateStatus('${order.id}', 'Cooking', event, document.getElementById('pos-cook-time-${order.id}').value)" class="flex-1 py-1.5 text-[10px] font-black uppercase rounded bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm">Cook</button>
+                            </div>`;
+                    } else {
+                        cookActionHtml = `<button onclick="updateStatus('${order.id}', 'Cooking', event)" class="col-span-2 py-1.5 text-[10px] font-black uppercase rounded bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100 transition shadow-sm opacity-50 cursor-not-allowed">Cooking Active</button>`;
+                    }
+
+                    expandedHtml = `
+                        <div class="mt-3 pt-3 border-t border-teal-200/50 flex flex-col gap-2">
+                            <div class="flex justify-between items-center bg-white p-1.5 rounded border border-gray-100 shadow-sm">
+                                <span class="text-[9px] font-black text-gray-500 uppercase ml-1">Payment Status:</span>
+                                ${payBadge}
+                            </div>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button onclick="updateStatus('${order.id}', 'Pending', event)" class="col-span-2 py-1.5 text-[10px] font-black uppercase rounded bg-orange-50 text-orange-700 border border-orange-200 hover:bg-orange-100 transition shadow-sm">Pending</button>
+                                ${cookActionHtml}
+                                <button onclick="updateStatus('${order.id}', 'Completed', event)" class="col-span-1 py-1.5 text-[10px] font-black uppercase rounded bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition shadow-sm">Complete</button>
+                                <button onclick="updateStatus('${order.id}', 'Cancelled', event)" class="col-span-1 py-1.5 text-[10px] font-black uppercase rounded bg-red-50 text-red-700 border border-red-200 hover:bg-red-100 transition shadow-sm">Cancel</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 list.innerHTML += `
-                    <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group shrink-0 min-h-[85px] flex flex-col justify-between">
+                    <div onclick="posLoadOrder('${order.id}')" class="p-3 rounded-xl border ${bgClass} cursor-pointer transition relative overflow-hidden group shrink-0 flex flex-col">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[10px] font-bold text-gray-500 uppercase">${order.order_number}</span>
                             ${tableBadge}
@@ -3939,8 +3982,12 @@ const dbLang = (mainRow.language || '').toLowerCase();
                                 <p class="text-xs font-bold text-gray-800 mb-1">Items: <span class="font-black text-teal-600">${qtyCount}x</span></p>
                                 <p class="text-[9px] font-bold text-gray-400"><i class="far fa-clock"></i> ${timeStr}</p>
                             </div>
-                            <div>${statusBadge}</div>
+                            <div class="flex flex-col items-end gap-1.5">
+                                ${statusBadge}
+                                ${!isSelected ? payBadge : ''}
+                            </div>
                         </div>
+                        ${expandedHtml}
                     </div>
                 `;
             });
@@ -4384,14 +4431,22 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosMenu(); // Update the green badges dynamically
         }
 
-        // 🌟 FIX: Auto-Focus the Cash Input 
+        // 🌟 FIX: Highlight Unpaid in RED, Cash/Card in GREEN
         function posSetPayment(method) {
             posPaymentMethod = method;
             ['Cash', 'Card', 'Unpaid'].forEach(m => {
                 const btn = document.getElementById(`pos-btn-${m}`);
-                if(btn) btn.className = m === method 
-                    ? "py-2 border-2 border-teal-500 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-black uppercase" 
-                    : "py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase";
+                if(btn) {
+                    if (m === method) {
+                        if (m === 'Unpaid') {
+                            btn.className = "py-2 border-2 border-red-500 bg-red-50 text-red-700 rounded-lg text-[10px] font-black uppercase transition shadow-sm";
+                        } else {
+                            btn.className = "py-2 border-2 border-teal-500 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-black uppercase transition shadow-sm";
+                        }
+                    } else {
+                        btn.className = "py-2 border-2 border-gray-200 bg-white text-gray-500 hover:bg-gray-50 rounded-lg text-[10px] font-bold uppercase transition";
+                    }
+                }
             });
 
             const calc = document.getElementById('pos-cash-calculator');
@@ -4399,14 +4454,9 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 if (method === 'Cash') {
                     calc.classList.remove('hidden');
                     posCalculateChange(); 
-                    
-                    // Delay slightly to allow the div to un-hide before focusing
                     setTimeout(() => {
                         const input = document.getElementById('pos-cash-given');
-                        if (input) {
-                            input.focus();
-                            input.select();
-                        }
+                        if (input) { input.focus(); input.select(); }
                     }, 50);
                 } else {
                     calc.classList.add('hidden');
@@ -4514,12 +4564,28 @@ const dbLang = (mainRow.language || '').toLowerCase();
             if (posActiveOrderId) {
                 const { error } = await supabaseClient.from('orders').update(payload).eq('id', posActiveOrderId);
                 if (!error) {
-                    // 🌟 FIX 2: If the Cashier just Paid for the order, instantly trigger the Receipt Printer!
                     if (posPaymentMethod === 'Cash' || posPaymentMethod === 'Card') {
                         printOrderTicket(posActiveOrderId);
                     }
+                    
+                    // 🌟 FIX: Update database locally, don't clear cart so the cashier sees the successful update
+                    await fetchDashboardData(null, true);
+                    
+                    if(btn) {
+                        btn.innerHTML = '<i class="fas fa-check"></i> Updated!';
+                        btn.classList.replace('bg-blue-600', 'bg-green-500');
+                        btn.classList.replace('hover:bg-blue-700', 'hover:bg-green-600');
+                        
+                        // Revert the button visual after 2 seconds
+                        setTimeout(() => {
+                            btn.innerHTML = 'Update Order';
+                            btn.classList.replace('bg-green-500', 'bg-blue-600');
+                            btn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
+                        }, 2000);
+                    }
                 } else {
-                    alert("Order update failed!");
+                    alert("Order update failed: " + error.message);
+                    if(btn) btn.innerHTML = 'Update Order';
                 }
             } else {
                 payload.status = 'Pending';
@@ -4537,11 +4603,14 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     await fetchDashboardData(null, true);
                     const freshOrder = allOrders.find(o => o.order_number === uniqueOrderNo);
                     if (freshOrder) printOrderTicket(freshOrder.id);
+                    
+                    // Clear the cart ONLY for brand new orders so they can take the next customer
+                    posClearCart();
+                } else {
+                    alert("Order placement failed: " + error.message);
+                    if(btn) btn.innerHTML = 'Place Order';
                 }
             }
-
-            posClearCart();
-            fetchDashboardData(null, true);
         }
 
 // 🌟 FIX: The missing Print Receipt Engine (Thermal Printer Format)
