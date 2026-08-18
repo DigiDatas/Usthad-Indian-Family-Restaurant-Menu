@@ -4228,7 +4228,22 @@ const dbLang = (mainRow.language || '').toLowerCase();
             countBadge.textContent = posCart.reduce((s, i) => s + i.qty, 0).toString().padStart(2, '0');
             
             if (posCart.length === 0) {
-                container.innerHTML = `<div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>`;
+                // 🌟 NEW: Smart UX - Show an "Open Menu" button if tables are selected but cart is empty!
+                if (posActiveTables.length > 0) {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center py-10 h-full">
+                            <div class="w-12 h-12 bg-teal-50 rounded-full flex items-center justify-center text-teal-400 mb-3">
+                                <i class="fas fa-utensils text-xl"></i>
+                            </div>
+                            <p class="text-gray-500 text-xs font-bold mb-4 text-center leading-relaxed">Tables Selected.<br>Ready to take the order?</p>
+                            <button onclick="setPosMiddleView('menu')" class="bg-teal-600 text-white border border-teal-700 px-5 py-2.5 rounded-xl text-xs font-black tracking-wider uppercase hover:bg-teal-700 hover:scale-105 transition-all shadow-md flex items-center gap-2">
+                                Open Menu <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>`;
+                } else {
+                    container.innerHTML = `<div class="text-center text-gray-400 text-xs font-bold py-10 italic">Cart is empty. Select a table or items.</div>`;
+                }
+                
                 document.getElementById('pos-summary-sub').textContent = '0.00 SR';
                 document.getElementById('pos-summary-total').textContent = '0.00 SR';
                 posCalculateChange();
