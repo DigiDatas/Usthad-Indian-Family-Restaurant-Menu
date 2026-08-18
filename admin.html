@@ -1549,6 +1549,13 @@
 
         async function updateStatus(orderId, newStatus, event, minsStr = null) {
             if(event) event.stopPropagation(); 
+            
+            // 🌟 FIX: Show loading state on the clicked button
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            btn.classList.add('opacity-50', 'pointer-events-none');
+            
             let payload = { status: newStatus };
 
             if (newStatus === 'Cooking' && minsStr) {
@@ -1558,27 +1565,39 @@
                 }
             }
 
-            const localOrder = allOrders.find(o => String(o.id) === String(orderId));
-            if(localOrder) {
-                localOrder.status = newStatus;
-                if(payload.target_completion_time) localOrder.target_completion_time = payload.target_completion_time;
-            }
-
-            const detRow = document.getElementById(`row-det-${orderId}`);
-            const wasExpanded = detRow && !detRow.classList.contains('hidden');
-
-            processDashboardFilters(); 
-
-            
-
+            // 🌟 FIX: Wait for the database to confirm the save FIRST
             const { data, error } = await supabaseClient.from('orders').update(payload).eq('id', orderId).select();
+            
             if (error) {
                 alert("Server Sync Failed: " + error.message);
-                fetchDashboardData(); 
+                btn.innerHTML = originalHtml;
+                btn.classList.remove('opacity-50', 'pointer-events-none');
+                return;
+            } 
+            
+            // 🌟 FIX: Update local memory with the exact confirmed database row
+            if (data && data.length > 0) {
+                const confirmedOrder = data[0];
+                const localIndex = allOrders.findIndex(o => String(o.id) === String(orderId));
+                if(localIndex > -1) {
+                    allOrders[localIndex] = confirmedOrder;
+                }
             }
+
+            // Re-render the UI
+            processDashboardFilters(); 
+
+            // 🌟 FIX: Force the row to stay open so you don't lose your place!
+            const detRow = document.getElementById(`row-det-${orderId}`);
+            if (detRow) {
+                detRow.classList.remove('hidden');
+            }
+            
+            // Instantly sync the Cashier POS kanban if it's open
+            if(typeof renderPOSKanban === 'function') renderPOSKanban();
         }
 
-        // --- SLA BREACH CAROUSEL ENGINE ---
+       // --- SLA BREACH CAROUSEL ENGINE ---
         let slaDelayedOrders = [];
         let slaCarouselInterval = null;
         let currentSlaIndex = 0;
@@ -1587,21 +1606,21 @@
             const now = Date.now();
             slaDelayedOrders = []; 
             
-            // 🌟 FIX: Helper to format minutes into hours and minutes
             const formatDelay = (mins) => mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`;
 
             dashboardFilteredOrders.forEach(order => {
                 let isLate = false;
                 let delayText = '';
+                let delayMins = 0; // 🌟 NEW: Track raw minutes for sorting
                 const row = document.getElementById(`row-sum-${order.id}`);
                 
                 if (order.status === 'Pending') {
                     const pendingMins = Math.floor((now - new Date(order.created_at).getTime()) / 60000);
                     if (pendingMins >= 2) {
                         isLate = true;
-                        // Applies the new formatting
-                        delayText = `${formatDelay(pendingMins - 2)} OVER`;
-                        slaDelayedOrders.push({ order: order, delay: delayText, status: 'PENDING', color: 'text-orange-500' });
+                        delayMins = pendingMins - 2;
+                        delayText = `${formatDelay(delayMins)} OVER`;
+                        slaDelayedOrders.push({ order: order, delay: delayText, delayMins: delayMins, status: 'PENDING', color: 'text-orange-500' });
                         if (!order.alerted_pending) { addNotification(`Order ${order.order_number} pending > 2 mins!`, 'sla_pending'); order.alerted_pending = true; }
                     }
                 }
@@ -1610,10 +1629,9 @@
                     const targetTime = new Date(order.target_completion_time).getTime();
                     if (now > targetTime) {
                         isLate = true;
-                        const overMins = Math.floor((now - targetTime) / 60000);
-                        // Applies the new formatting
-                        delayText = `${formatDelay(overMins)} OVER`;
-                        slaDelayedOrders.push({ order: order, delay: delayText, status: 'COOKING', color: 'text-yellow-500' });
+                        delayMins = Math.floor((now - targetTime) / 60000);
+                        delayText = `${formatDelay(delayMins)} OVER`;
+                        slaDelayedOrders.push({ order: order, delay: delayText, delayMins: delayMins, status: 'COOKING', color: 'text-yellow-500' });
                         if (!order.alerted_cooking) { addNotification(`Order ${order.order_number} cooking delayed!`, 'sla_cooking'); order.alerted_cooking = true; }
                     }
                 }
@@ -1624,12 +1642,18 @@
                 }
             });
 
+            // 🌟 FIX: Sort array so the WORST delay is always shown first!
+            slaDelayedOrders.sort((a, b) => b.delayMins - a.delayMins);
+
             renderSlaCarousel(); 
         }
 
         function renderSlaCarousel() {
             const container = document.getElementById('sla-carousel-content');
             if (!container) return;
+
+            // Ensure smooth fade transitions are applied to the container itself
+            container.style.transition = 'opacity 0.3s ease-in-out';
 
             if (slaDelayedOrders.length === 0) {
                 if(slaCarouselInterval) clearInterval(slaCarouselInterval);
@@ -1639,21 +1663,25 @@
 
             function showSlide(index) {
                 const item = slaDelayedOrders[index];
-                // 🌟 FIX: Removed broken arbitrary animation class, replaced with standard Tailwind transitions
-                container.innerHTML = `
-                    <div class="flex flex-col justify-between h-full pb-1 transition-opacity duration-500">
-                        <!-- Top Half: Status & Order Number -->
-                        <div class="flex flex-col items-start gap-1.5 mt-1">
-                            <span class="text-[10px] font-black bg-white px-2 py-1 rounded shadow-sm inline-block ${item.color}">${item.status}</span>
-                            <span class="text-[22px] font-black leading-none">${item.order.order_number}</span>
+                
+                // 🌟 FIX: Fade out, swap content, fade in smoothly
+                container.style.opacity = '0';
+                
+                setTimeout(() => {
+                    container.innerHTML = `
+                        <div class="flex flex-col justify-between h-full pb-1">
+                            <div class="flex flex-col items-start gap-1.5 mt-1">
+                                <span class="text-[10px] font-black bg-white px-2 py-1 rounded shadow-sm inline-block ${item.color}">${item.status}</span>
+                                <span class="text-[22px] font-black leading-none">${item.order.order_number}</span>
+                            </div>
+                            <div class="flex flex-col items-start gap-0.5">
+                                <span class="text-[10px] font-bold text-red-200 uppercase block leading-none tracking-widest">Delayed</span>
+                                <span class="text-[26px] font-black text-yellow-300 leading-none drop-shadow-md">${item.delay}</span>
+                            </div>
                         </div>
-                        <!-- Bottom Half: Delayed Time -->
-                        <div class="flex flex-col items-start gap-0.5">
-                            <span class="text-[10px] font-bold text-red-200 uppercase block leading-none tracking-widest">Delayed</span>
-                            <span class="text-[26px] font-black text-yellow-300 leading-none drop-shadow-md">${item.delay}</span>
-                        </div>
-                    </div>
-                `;
+                    `;
+                    container.style.opacity = '1';
+                }, 300); // Wait for fade out to finish before swapping text
             }
 
             if(currentSlaIndex >= slaDelayedOrders.length) currentSlaIndex = 0;
@@ -1665,7 +1693,7 @@
                     currentSlaIndex++;
                     if (currentSlaIndex >= slaDelayedOrders.length) currentSlaIndex = 0;
                     showSlide(currentSlaIndex);
-                }, 3000);
+                }, 4000); // Cycle every 4 seconds
             }
         }
 
