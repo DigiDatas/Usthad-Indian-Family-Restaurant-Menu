@@ -92,8 +92,15 @@
         
         <!-- Top Action Bar -->
         <header class="h-16 bg-white shadow-sm border-b border-gray-200 flex justify-between items-center px-6 shrink-0 z-40">
+            
+            <!-- 🌟 NEW: Dynamic Tab Headers -->
+            <div id="top-header-titles" class="flex flex-col justify-center flex-1 mr-4">
+                <h2 id="th-title" class="text-lg font-black text-gray-800 leading-tight">Dashboard</h2>
+                <p id="th-desc" class="text-[10px] text-gray-500 font-bold hidden sm:block">Overview of your restaurant performance.</p>
+            </div>
+
             <!-- Dynamic Date Filters -->
-            <div class="flex gap-1.5 items-center bg-gray-50 p-1 rounded-lg border border-gray-200 overflow-x-auto hide-scrollbar max-w-[60%]" id="time-filter-container">
+            <div class="flex gap-1.5 items-center bg-gray-50 p-1 rounded-lg border border-gray-200 overflow-x-auto hide-scrollbar max-w-[50%]" id="time-filter-container">
                 <!-- JS WILL INJECT MONTHS HERE -->
             </div>
 
@@ -102,7 +109,6 @@
                 <button onclick="fetchDashboardData(this, false)" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-1.5 text-xs font-bold">
                     <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                 </button>
-                
                 <a href="index.html" target="_blank" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-1.5 text-xs font-bold" title="Preview App">
                     <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Preview</span>
                 </a>
@@ -119,9 +125,7 @@
                             <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Alerts & Events</span>
                             <button onclick="clearNotifications()" class="text-[9px] text-blue-500 font-bold hover:underline">Clear All</button>
                         </div>
-                        <div id="notif-list" class="max-h-64 overflow-y-auto flex flex-col">
-                            <div class="p-4 text-center text-xs font-bold text-gray-400 italic">No new notifications.</div>
-                        </div>
+                        <div id="notif-list" class="max-h-64 overflow-y-auto flex flex-col"></div>
                     </div>
                 </div>
             </div>
@@ -295,66 +299,61 @@
                         
                     </div> <!-- End Right Column -->
             </section>
-<!-- ================= TAB 2: MENU MANAGER ================= -->
-        <section id="section-menu" class="tab-section hidden">
-            <div class="flex flex-col mb-6 gap-4">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-2xl font-black text-gray-800">Menu Manager</h2>
-                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical mx-1 text-gray-400"></i> to reorder. Drag between groups to change categories.</p>
-                    </div>
-                    
-                    <div class="flex bg-gray-200 p-1 rounded-lg">
-                        <button onclick="switchAdminLanguage('en')" id="filter-lang-en" class="px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition">English (EN)</button>
-                        <button onclick="switchAdminLanguage('ar')" id="filter-lang-ar" class="px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition">Arabic (AR)</button>
-                    </div>
+<!-- ================= TAB 2: MENU MANAGER (REDESIGNED) ================= -->
+        <section id="section-menu" class="tab-section hidden h-full flex flex-col p-4 bg-gray-100">
+            
+            <!-- Action Bar -->
+            <div class="flex justify-between items-center mb-4 shrink-0 bg-white p-2.5 rounded-xl border border-gray-200 shadow-sm">
+                <div class="flex bg-gray-100 p-1 rounded-lg">
+                    <button onclick="switchAdminLanguage('en')" id="filter-lang-en" class="px-4 py-1.5 rounded-md text-[11px] font-bold bg-white shadow-sm text-gray-800 transition">English (EN)</button>
+                    <button onclick="switchAdminLanguage('ar')" id="filter-lang-ar" class="px-4 py-1.5 rounded-md text-[11px] font-bold text-gray-500 hover:text-gray-800 transition">Arabic (AR)</button>
                 </div>
 
-                <div class="flex gap-2 w-full justify-end border-t border-gray-200 pt-4">
-                    <button onclick="saveMenuOrder()" id="btn-save-order" class="hidden bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center justify-center gap-2 animate-pulse">
-                        <i class="fas fa-save"></i> Save Order Changes
+                <div class="flex gap-2">
+                    <button onclick="saveMenuOrder()" id="btn-save-order" class="hidden bg-green-500 text-white px-4 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition items-center gap-1.5 animate-pulse">
+                        <i class="fas fa-save"></i> Save Ordering
                     </button>
-                    <button onclick="openMenuModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-plus"></i> Add New Item
+                    <button onclick="openMenuModal('add')" class="bg-red-600 text-white px-4 py-1.5 rounded-lg shadow-sm hover:bg-red-700 font-bold text-xs transition flex items-center gap-1.5">
+                        <i class="fas fa-plus"></i> Add Item
                     </button>
-                    <button onclick="openJsonModal()" class="bg-gray-900 text-white px-4 py-2 rounded-xl shadow-md hover:bg-gray-800 font-bold text-sm transition flex items-center justify-center gap-2">
-                        <i class="fas fa-file-code"></i> Bulk JSON
+                    <button onclick="openJsonModal()" class="bg-gray-800 text-white px-4 py-1.5 rounded-lg shadow-sm hover:bg-gray-900 font-bold text-xs transition flex items-center gap-1.5">
+                        <i class="fas fa-file-code"></i> JSON
                     </button>
                 </div>
             </div>
 
-            <!-- Menu Table Grid -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                <div class="overflow-x-auto pb-20">
-                    <table class="w-full text-left border-collapse" id="menu-table">
-                        <thead>
-                            <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                <th class="p-4 w-10"></th> 
-                                <th class="p-4 w-12 text-center">SL#</th>
-                                <th class="p-4 w-12 text-center">Index</th>
-                                <th class="p-4">Item</th>
-                                <th class="p-4">Price / Stock</th>
-                                <th class="p-4">Special</th>
-                                <th class="p-4 text-end">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="menu-table-body" class="divide-y divide-gray-100 text-sm">
-                            <tr>
-                                <td colspan="7" class="p-8 text-center text-gray-400">Loading Menu Items...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <!-- Two Column Layout -->
+            <div class="flex flex-col lg:flex-row gap-4 flex-1 min-h-0 overflow-hidden">
+                
+                <!-- LEFT COLUMN: CATEGORIES -->
+                <div class="w-full lg:w-72 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 shrink-0 overflow-hidden">
+                    <div class="p-3 border-b border-gray-100 bg-gray-50 text-[10px] font-black text-gray-500 uppercase tracking-widest text-center shrink-0">
+                        Category Hierarchy
+                    </div>
+                    <div id="menu-cat-list" class="flex-1 overflow-y-auto hide-scrollbar p-2.5 flex flex-col gap-1.5">
+                        <!-- JS Injected Categories -->
+                    </div>
                 </div>
+
+                <!-- RIGHT COLUMN: ITEMS GRID -->
+                <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="p-3 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
+                        <span id="menu-active-path-label" class="text-xs font-black text-red-600 uppercase tracking-widest pl-2 flex items-center gap-2"><i class="fas fa-folder-open"></i> SELECT CATEGORY</span>
+                        <span id="menu-active-count-label" class="text-[10px] font-bold text-gray-500 pr-2 bg-gray-200 px-2 py-0.5 rounded">0 Items</span>
+                    </div>
+                    <div class="flex-1 overflow-y-auto hide-scrollbar p-4 bg-gray-50/50">
+                        <div id="menu-items-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+                            <!-- JS Injected Item Cards -->
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
-
         <!-- ================= TAB 3: CUSTOMERS & USER ORDERS ================= -->
         <section id="section-users" class="tab-section hidden h-full flex flex-col">
             <div class="flex justify-between items-end mb-4 shrink-0">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Customer Directory</h2>
-                    <p class="text-sm text-gray-500">View customer contact details, lifetime spend, and order history.</p>
-                </div>
+                
                 <button onclick="fetchUsersAndOrders(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
                     <i class="fas fa-sync-alt text-red-500 transition-all duration-300"></i> Refresh
                 </button>
@@ -707,10 +706,7 @@
 <!-- ================= TAB 8: REVIEW MANAGER ================= -->
         <section id="section-reviews" class="tab-section hidden h-full flex flex-col">
             <div class="flex justify-between items-end mb-6 shrink-0">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Review Manager</h2>
-                    <p class="text-sm text-gray-500">Approve or reject customer feedback before it appears on the live menu.</p>
-                </div>
+                
                 <button onclick="fetchReviews(this)" class="bg-white border border-gray-200 text-gray-700 px-4 py-2 rounded-xl shadow-sm hover:bg-gray-50 transition flex items-center gap-2 font-bold text-sm">
                     <i class="fas fa-sync-alt text-yellow-500 transition-all duration-300"></i> Refresh
                 </button>
@@ -730,10 +726,7 @@
 <!-- ================= TAB 6: RESTAURANT SETTINGS ================= -->
         <section id="section-settings" class="tab-section hidden">
             <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="text-2xl font-black text-gray-800">Restaurant Settings</h2>
-                    <p class="text-sm text-gray-500">Update your branding, contact info, and global configurations.</p>
-                </div>
+                
                 <button onclick="saveSettings()" id="btn-save-settings" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
                     <i class="fas fa-save"></i> Save Settings
                 </button>
@@ -1133,25 +1126,34 @@
                 const section = document.getElementById(`section-${t}`);
                 const btn = document.getElementById(`tab-btn-${t}`);
                 if(section) section.classList.add('hidden');
-                // Reset Inactive Buttons (Now using h-14 and rounded-2xl)
                 if(btn) btn.className = "sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center";
             });
             const activeSection = document.getElementById(`section-${tabName}`);
             if(activeSection) activeSection.classList.remove('hidden');
             const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-            // Set Active Button (Now using h-14 and rounded-2xl)
             if(activeBtn) activeBtn.className = "sidebar-btn relative h-14 w-full rounded-2xl bg-red-600 text-white transition-colors flex items-center shadow-sm";
 
-            // 🌟 NEW: Toggle Date Filters Visibility based on Active Tab
             const timeFilters = document.getElementById('time-filter-container');
             if (timeFilters) {
-                if (tabName === 'dashboard') {
-                    timeFilters.classList.remove('hidden');
-                    timeFilters.classList.add('flex');
-                } else {
-                    timeFilters.classList.add('hidden');
-                    timeFilters.classList.remove('flex');
-                }
+                if (tabName === 'dashboard') { timeFilters.classList.remove('hidden'); timeFilters.classList.add('flex'); } 
+                else { timeFilters.classList.add('hidden'); timeFilters.classList.remove('flex'); }
+            }
+
+            // 🌟 NEW: Update Dynamic Header Titles
+            const thTitle = document.getElementById('th-title');
+            const thDesc = document.getElementById('th-desc');
+            if (thTitle && thDesc) {
+                const headers = {
+                    'dashboard': { t: 'Dashboard', d: 'Overview of your restaurant performance and live orders.' },
+                    'menu': { t: 'Menu Manager', d: 'Drag categories or items to reorder. Edit properties instantly.' },
+                    'users': { t: 'Customer Directory', d: 'View customer contact details, lifetime spend, and history.' },
+                    'offers': { t: 'Offers & Banners', d: 'Manage promotional sliders, popups, and special deals.' },
+                    'settings': { t: 'Restaurant Settings', d: 'Update branding, currency, social links, and core config.' },
+                    'pos': { t: 'Cashier POS', d: 'Unified point of sale for tables, takeaways, and payments.' },
+                    'reviews': { t: 'Review Manager', d: 'Approve or reject customer feedback for the live app.' }
+                };
+                thTitle.textContent = headers[tabName].t;
+                thDesc.textContent = headers[tabName].d;
             }
         }
 
@@ -1936,307 +1938,273 @@ if (!graphActiveFilter) graphActiveFilter = 'week';
         
         
 
-        // --- NEW: MENU MANAGER STATE ---
+        // ==========================================
+        // 🌟 NEW: 2-COLUMN MENU MANAGER ENGINE
+        // ==========================================
         let currentAdminLang = 'en'; 
         let modifiedMenuIds = new Set(); 
+        let menuActiveMainCat = null;
+        let menuActiveSubCat = null;
 
         function switchAdminLanguage(lang) {
             currentAdminLang = lang;
-            document.getElementById('filter-lang-en').className = lang === 'en' ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition";
-            document.getElementById('filter-lang-ar').className = lang === 'ar' ? "px-4 py-1.5 rounded-md text-sm font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-sm font-bold text-gray-500 hover:text-gray-800 transition";
+            document.getElementById('filter-lang-en').className = lang === 'en' ? "px-4 py-1.5 rounded-md text-[11px] font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-[11px] font-bold text-gray-500 hover:text-gray-800 transition";
+            document.getElementById('filter-lang-ar').className = lang === 'ar' ? "px-4 py-1.5 rounded-md text-[11px] font-bold bg-white shadow-sm text-gray-800 transition" : "px-4 py-1.5 rounded-md text-[11px] font-bold text-gray-500 hover:text-gray-800 transition";
             
             document.getElementById('btn-save-order').classList.add('hidden');
             document.getElementById('btn-save-order').classList.remove('flex');
             modifiedMenuIds.clear();
             
-            renderMenuTable();
+            menuActiveMainCat = null; // Reset selection on lang change
+            renderMenuUI();
         }
 
-        // --- FETCH & RENDER MENU MANAGER ---
         async function fetchMenu() {
-            const tbody = document.getElementById('menu-table-body');
-            if(tbody) tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-500"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>`;
+            const grid = document.getElementById('menu-items-grid');
+            if(grid) grid.innerHTML = `<div class="col-span-full py-10 text-center text-red-500"><i class="fas fa-spinner fa-spin"></i> Loading...</div>`;
 
             const { data, error } = await supabaseClient.from('menu_items').select('*').order('order_index', { ascending: true });
-            
-            if (error) {
-                alert("Error loading menu items: " + error.message);
-                return;
-            }
+            if (error) return alert("Error loading menu: " + error.message);
 
             allMenuItems = data || [];
-            renderMenuTable();
-		updateDetailedAnalytics();
+            renderMenuUI();
+            if (typeof updateDetailedAnalytics === 'function') updateDetailedAnalytics();
         }
 
-        function renderMenuTable() {
-            const table = document.getElementById('menu-table');
-            const thead = table.querySelector('thead');
-            
-            // Clear the table completely, but keep the header
-            table.innerHTML = '';
-            table.appendChild(thead);
-
-            // Filter items safely so older database entries are not hidden!
-            let filteredItems = allMenuItems.filter(i => {
-                if (!i.language) return true; // Always show older data missing a language tag
+        function renderMenuUI() {
+            let items = allMenuItems.filter(i => {
+                if (!i.language) return true;
                 const lang = String(i.language).toLowerCase();
                 if (currentAdminLang === 'en') return lang === 'en' || lang.includes('english') || lang === 'both';
                 if (currentAdminLang === 'ar') return lang === 'ar' || lang.includes('arabic') || lang === 'both';
                 return lang === currentAdminLang;
             });
-            filteredItems.sort((a, b) => a.order_index - b.order_index);
+            items.sort((a, b) => a.order_index - b.order_index);
 
-            if (filteredItems.length === 0) {
-                const emptyBody = document.createElement('tbody');
-                emptyBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">No menu items found. Click 'Add New Item'.</td></tr>`;
-                table.appendChild(emptyBody);
+            // Group into tree Map
+            const grouped = new Map();
+            items.forEach(item => {
+                const mk = item.main_cat || 'Uncategorized';
+                const sk = item.sub_cat || 'General';
+                if (!grouped.has(mk)) grouped.set(mk, new Map());
+                if (!grouped.get(mk).has(sk)) grouped.get(mk).set(sk, []);
+                grouped.get(mk).get(sk).push(item);
+            });
+
+            // Set default active category
+            if (!menuActiveMainCat && grouped.size > 0) {
+                menuActiveMainCat = grouped.keys().next().value;
+                menuActiveSubCat = grouped.get(menuActiveMainCat).keys().next().value;
+            }
+
+            // 1. Render Left Column (Categories)
+            const catContainer = document.getElementById('menu-cat-list');
+            if(!catContainer) return;
+            catContainer.innerHTML = '';
+
+            grouped.forEach((subMap, mk) => {
+                const isMainActive = mk === menuActiveMainCat;
+                let subHtml = '';
+                
+                subMap.forEach((subItems, sk) => {
+                    const isSubActive = isMainActive && sk === menuActiveSubCat;
+                    const subBg = isSubActive ? 'bg-red-50 text-red-600 border-red-200 shadow-sm' : 'bg-white text-gray-600 border-transparent hover:bg-gray-100 hover:border-gray-200';
+                    
+                    subHtml += `
+                        <div class="sub-cat-row p-1.5 rounded-lg cursor-pointer border ${subBg} transition-all duration-300 text-[11px] font-bold flex justify-between items-center group" data-sub="${sk}" onclick="selectMenuCategory('${mk}', '${sk}')">
+                            <span class="flex items-center gap-1.5 truncate pr-2"><i class="fas fa-grip-vertical text-gray-300 hover:text-red-400 cursor-grab sub-drag-handle"></i> <span class="truncate">${sk}</span></span>
+                            <span class="text-[9px] ${isSubActive ? 'bg-red-200 text-red-800' : 'bg-gray-200 text-gray-500'} px-1.5 py-0.5 rounded font-black">${subItems.length}</span>
+                        </div>
+                    `;
+                });
+
+                catContainer.innerHTML += `
+                    <div class="main-cat-row bg-white border border-gray-200 rounded-xl mb-1.5 shadow-sm" data-main="${mk}">
+                        <div class="p-2.5 bg-gray-50 border-b border-gray-100 text-xs font-black text-gray-800 uppercase tracking-wider flex justify-between items-center cursor-pointer rounded-t-xl hover:bg-gray-100 transition" onclick="toggleMenuMainCat(this)">
+                            <span class="flex items-center gap-2 truncate pr-2"><i class="fas fa-grip-vertical text-gray-400 hover:text-red-500 cursor-grab main-drag-handle"></i> <span class="truncate">${mk}</span></span>
+                            <i class="fas fa-chevron-${isMainActive ? 'up' : 'down'} text-gray-400 text-[10px] transition-transform"></i>
+                        </div>
+                        <div class="sub-cat-container p-1.5 flex flex-col gap-1 ${isMainActive ? '' : 'hidden'}">
+                            ${subHtml}
+                        </div>
+                    </div>
+                `;
+            });
+
+            renderMenuItemsGrid(items);
+            initMenuSortables();
+        }
+
+        function toggleMenuMainCat(element) {
+            const row = element.closest('.main-cat-row');
+            const container = row.querySelector('.sub-cat-container');
+            const icon = row.querySelector('.fa-chevron-down, .fa-chevron-up');
+            if (container.classList.contains('hidden')) {
+                container.classList.remove('hidden');
+                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            } else {
+                container.classList.add('hidden');
+                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            }
+        }
+
+        function selectMenuCategory(main, sub) {
+            menuActiveMainCat = main;
+            menuActiveSubCat = sub;
+            renderMenuUI(); 
+        }
+
+	
+function renderMenuItemsGrid(allItemsList) {
+            const grid = document.getElementById('menu-items-grid');
+            if(!grid) return;
+            
+            const activeItems = allItemsList.filter(i => i.main_cat === menuActiveMainCat && i.sub_cat === menuActiveSubCat);
+            
+            document.getElementById('menu-active-path-label').innerHTML = `<i class="fas fa-folder-open text-gray-400 mr-1"></i> ${menuActiveMainCat} <i class="fas fa-chevron-right text-[8px] mx-1 text-gray-400"></i> <span class="text-red-600">${menuActiveSubCat}</span>`;
+            document.getElementById('menu-active-count-label').textContent = `${activeItems.length} Items`;
+
+            if(activeItems.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-10 text-center text-gray-400 font-bold text-sm italic">No items found in this category.</div>`;
                 return;
             }
 
-            // Group items using Map to guarantee visual insertion order is strictly preserved!
-            const grouped = new Map();
-            filteredItems.forEach(item => {
-                const groupKey = `${item.main_cat}|${item.sub_cat}`;
-                if (!grouped.has(groupKey)) grouped.set(groupKey, []);
-                grouped.get(groupKey).push(item);
-            });
-
-            // --- BUILD THE NESTED DRAGGABLE INTERFACE ---
-            grouped.forEach((items, groupKey) => {
-                const [mainCat, subCat] = groupKey.split('|');
+            grid.innerHTML = activeItems.map(item => {
+                const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
+                const isModified = modifiedMenuIds.has(item.id) ? 'border-yellow-400 shadow-md bg-yellow-50/50' : 'border-gray-200 bg-white hover:border-red-300 hover:shadow-md';
                 
-                const sortableTbody = document.createElement('tbody');
-                sortableTbody.className = "category-tbody transition-all duration-300";
-                sortableTbody.dataset.maincat = mainCat;
-                sortableTbody.dataset.subcat = subCat;
+                let stockDisplay = '';
+                if (item.stock_quantity === null) stockDisplay = '<i class="fas fa-infinity text-[8px]"></i> Unl';
+                else if (item.stock_quantity <= 0) stockDisplay = 'Sold Out';
+                else stockDisplay = `${item.stock_quantity} Left`;
 
-                // 1. Group Header Row (Acts as the drag handle for the entire category block)
-                const headerRow = document.createElement('tr');
-                headerRow.className = "bg-gray-200/80 border-t-[6px] border-white group-header";
-                headerRow.innerHTML = `
-                    <td colspan="7" class="p-2 px-4 hover:bg-gray-200 transition">
-                        <div class="flex justify-between items-center w-full">
-                            <div class="flex items-center gap-3 category-drag-handle cursor-grab active:cursor-grabbing w-full">
-                                <div class="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center text-gray-400 hover:text-red-500 transition">
-                                    <i class="fas fa-grip-vertical"></i>
-                                </div>
-                                <span class="font-black text-gray-800 text-sm uppercase tracking-widest flex items-center gap-2">
-                                    <i class="fas fa-folder text-red-500"></i> ${mainCat} 
-                                    <i class="fas fa-chevron-right text-[10px] text-gray-400"></i> 
-                                    <span class="text-red-600">${subCat}</span>
-                                </span>
-                            </div>
-                            <button onclick="toggleCategory(this)" class="w-8 h-8 bg-white rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 shadow-sm transition shrink-0 z-10">
-                                <i class="fas fa-chevron-up toggle-icon"></i>
-                            </button>
+                return `
+                    <div class="item-card flex flex-col rounded-xl border p-2 transition relative group cursor-grab active:cursor-grabbing item-drag-handle ${isModified}" data-id="${item.id}">
+                        <!-- Top actions -->
+                        <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition z-10">
+                            <button onclick="openMenuModal('edit', '${item.id}')" class="w-6 h-6 bg-white/90 backdrop-blur border border-gray-200 text-gray-600 rounded flex items-center justify-center hover:bg-gray-100 shadow-sm transition hover:text-blue-600"><i class="fas fa-pen text-[10px]"></i></button>
+                            <button onclick="deleteMenuItem('${item.id}')" class="w-6 h-6 bg-white/90 backdrop-blur border border-red-200 text-red-600 rounded flex items-center justify-center hover:bg-red-50 shadow-sm transition"><i class="fas fa-times text-[10px]"></i></button>
                         </div>
-                    </td>
+                        <div class="w-full aspect-[4/3] rounded-lg overflow-hidden mb-2 relative shrink-0">
+                            <img src="${img}" class="w-full h-full object-cover">
+                            ${item.is_today_special ? '<span class="absolute bottom-1 left-1 bg-amber-400 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-sm">SPECIAL</span>' : ''}
+                        </div>
+                        <h4 class="text-[11px] font-black text-gray-800 leading-tight line-clamp-2 mb-2 flex-1">${item.name}</h4>
+                        <div class="flex justify-between items-end mt-auto pt-1 shrink-0">
+                            <span class="text-xs font-black text-red-600 leading-none">${item.price} <span class="text-[8px] text-gray-400 font-bold">SR</span></span>
+                            <span class="text-[9px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded leading-none">${stockDisplay}</span>
+                        </div>
+                    </div>
                 `;
-                sortableTbody.appendChild(headerRow);
+            }).join('');
+        }
 
-                // 2. Individual Item Rows
-                items.forEach(item => {
-                    const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
-                    const isModified = modifiedMenuIds.has(item.id) ? 'bg-yellow-50/50' : 'bg-white hover:bg-gray-50/50';
-// NEW: Smart Stock Badge Generator
-                    let stockDisplay = '';
-                    if (item.stock_quantity === null) {
-                        stockDisplay = '<span class="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"><i class="fas fa-infinity text-[8px]"></i> Unlimited</span>';
-                    } else if (item.stock_quantity <= 0) {
-                        stockDisplay = '<span class="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[9px] font-black uppercase"><i class="fas fa-ban"></i> Sold Out</span>';
-                    } else if (item.stock_quantity <= 10) {
-                        stockDisplay = `<span class="bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"><i class="fas fa-exclamation-triangle"></i> Low: ${item.stock_quantity}</span>`;
-                    } else {
-                        stockDisplay = `<span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase"><i class="fas fa-box"></i> Stock: ${item.stock_quantity}</span>`;
-                    }
-                    
-                    const tr = document.createElement('tr');
-                    tr.className = `item-row border-b border-gray-100 transition-colors duration-500 ${isModified}`;
-                    tr.dataset.id = item.id;
-                    tr.innerHTML = `
-                        <td class="p-4 text-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 item-drag-handle">
-                            <i class="fas fa-grip-lines"></i>
-                        </td>
-                        <td class="p-4 font-black text-gray-400 text-center serial-col">0</td>
-                        <td class="p-4 text-center">
-                            <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-md font-bold text-[10px] index-col">${item.order_index}</span>
-                        </td>
-                        <td class="p-4 flex items-center gap-3">
-                            <img src="${img}" class="w-10 h-10 rounded-xl object-cover border border-gray-100 shrink-0">
-                            <div>
-                                <p class="font-bold text-gray-900 leading-tight">${item.name}</p>
-                                <div class="flex gap-1.5 mt-1">
-                                    <span class="bg-gray-800 text-white px-1.5 py-0.5 rounded text-[10px] font-bold">${item.item_code || 'NO-ID'}</span>
-                                    <span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase cat-indicator transition-colors">${subCat}</span>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="p-4">
-                            <div class="font-black text-red-600">${item.price}</div>
-                            <div class="mt-1">${stockDisplay}</div>
-                        </td>
-                        <td class="p-4">${item.is_today_special ? '<span class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-[10px] font-bold">Special</span>' : '-'}</td>
-                        <td class="p-4 text-end">
-                            <button onclick="openMenuModal('edit', '${item.id}')" class="w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition me-1"><i class="fas fa-pen text-xs"></i></button>
-                            <button onclick="deleteMenuItem('${item.id}')" class="w-8 h-8 rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition"><i class="fas fa-trash-alt text-xs"></i></button>
-                        </td>
-                    `;
-                    sortableTbody.appendChild(tr);
-                });
-
-                table.appendChild(sortableTbody);
+        function initMenuSortables() {
+            // Main Categories Sortable
+            const catList = document.getElementById('menu-cat-list');
+            if (window.mainCatSortable) window.mainCatSortable.destroy();
+            window.mainCatSortable = new Sortable(catList, {
+                handle: '.main-drag-handle', animation: 150, ghostClass: 'opacity-50',
+                onEnd: () => recalculateMenuHierarchy()
             });
 
-            // Set initial serial numbers
-            updateSerialNumbers();
-
-            // --- 3. INITIALIZE OUTER SORTABLE (Drags Entire Categories) ---
-            new Sortable(table, {
-                group: 'categories',
-                handle: '.category-drag-handle',
-                draggable: '.category-tbody',
-                animation: 250,
-                ghostClass: 'opacity-50',
-                onEnd: function (evt) {
-                    recalculateGlobalOrder(); // Recalculate everything when a block is moved
-                }
-            });
-
-            // --- 4. INITIALIZE INNER SORTABLE (Drags Items Inside/Between Categories) ---
-            document.querySelectorAll('.category-tbody').forEach(tbody => {
-                new Sortable(tbody, {
-                    group: 'menuItems',
-                    handle: '.item-drag-handle',
-                    draggable: '.item-row',
-                    animation: 150,
-                    ghostClass: 'bg-blue-50',
-                    onEnd: function (evt) {
-                        const itemEl = evt.item;
-                        const toBody = evt.to;
-                        const newSubCat = toBody.dataset.subcat;
+            // Sub Categories Sortable
+            document.querySelectorAll('.sub-cat-container').forEach(container => {
+                new Sortable(container, {
+                    group: 'subcats', handle: '.sub-drag-handle', animation: 150, ghostClass: 'bg-red-50',
+                    onEnd: (evt) => {
+                        const subName = evt.item.dataset.sub;
+                        const newMainName = evt.to.closest('.main-cat-row').dataset.main;
+                        const oldMainName = evt.from.closest('.main-cat-row').dataset.main;
                         
-                        // Visually Flash the item if it was moved!
-                        itemEl.classList.add('bg-yellow-100');
-                        setTimeout(() => itemEl.classList.remove('bg-yellow-100'), 1500);
-
-                        // Update the Category Pill indicator instantly
-                        const pill = itemEl.querySelector('.cat-indicator');
-                        pill.textContent = newSubCat;
-                        pill.classList.replace('bg-blue-100', 'bg-yellow-200');
-                        pill.classList.replace('text-blue-700', 'text-yellow-800');
-
-                        recalculateGlobalOrder();
-                    }
-                });
-            });
-        }
-
-        // --- NEW: EXPAND / COLLAPSE TOGGLE ---
-        function toggleCategory(btn) {
-            const tbody = btn.closest('tbody');
-            const icon = btn.querySelector('.toggle-icon');
-            const rows = tbody.querySelectorAll('.item-row');
-            
-            const isCollapsed = icon.classList.contains('fa-chevron-down');
-            
-            if (isCollapsed) {
-                icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
-                rows.forEach(r => r.classList.remove('hidden'));
-            } else {
-                icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
-                rows.forEach(r => r.classList.add('hidden'));
-            }
-        }
-
-        // --- NEW: GLOBAL SERIAL UPDATER ---
-        function updateSerialNumbers() {
-            let globalSerial = 1;
-            document.querySelectorAll('.item-row').forEach(tr => {
-                tr.querySelector('.serial-col').textContent = globalSerial++;
-            });
-        }
-
-        // --- NEW: GLOBAL RECALCULATION ENGINE ---
-        function recalculateGlobalOrder() {
-            let globalIndex = 1;
-
-            // Loop through categories top-to-bottom
-            document.querySelectorAll('.category-tbody').forEach(tbody => {
-                const newMainCat = tbody.dataset.maincat;
-                const newSubCat = tbody.dataset.subcat;
-
-                // Loop through items in that category top-to-bottom
-                tbody.querySelectorAll('.item-row').forEach(tr => {
-                    const itemId = tr.dataset.id;
-                    
-                    // Update visual index pill
-                    tr.querySelector('.index-col').textContent = globalIndex;
-                    
-                    // Update exact backend data map
-                    const item = allMenuItems.find(i => String(i.id) === String(itemId));
-                    if (item) {
-                        if (item.order_index !== globalIndex || item.main_cat !== newMainCat || item.sub_cat !== newSubCat) {
-                            item.order_index = globalIndex;
-                            item.main_cat = newMainCat;
-                            item.sub_cat = newSubCat;
-                            
-                            // Mark item as dirty and color it yellow
-                            modifiedMenuIds.add(itemId);
-                            tr.classList.add('bg-yellow-50/50');
+                        if (newMainName !== oldMainName) {
+                            allMenuItems.forEach(item => {
+                                if (item.main_cat === oldMainName && item.sub_cat === subName) {
+                                    item.main_cat = newMainName;
+                                    modifiedMenuIds.add(item.id);
+                                }
+                            });
+                            if (menuActiveSubCat === subName) menuActiveMainCat = newMainName;
                         }
+                        recalculateMenuHierarchy();
                     }
-                    globalIndex++;
                 });
             });
 
-            // Update serials dynamically just in case
-            updateSerialNumbers();
+            // Items Grid Sortable
+            const grid = document.getElementById('menu-items-grid');
+            if (grid) {
+                if (window.gridSortable) window.gridSortable.destroy();
+                window.gridSortable = new Sortable(grid, {
+                    handle: '.item-drag-handle', animation: 150, ghostClass: 'opacity-50',
+                    onEnd: () => {
+                        const newGridOrder = Array.from(grid.querySelectorAll('.item-card')).map(card => card.dataset.id);
+                        newGridOrder.forEach((id, idx) => {
+                            const item = allMenuItems.find(i => String(i.id) === String(id));
+                            if (item) {
+                                item._temp_sort = idx; 
+                                modifiedMenuIds.add(item.id);
+                            }
+                        });
+                        recalculateMenuHierarchy();
+                    }
+                });
+            }
+        }
+function recalculateMenuHierarchy() {
+            let globalIndex = 1;
+            
+            document.querySelectorAll('.main-cat-row').forEach(mainEl => {
+                const mainName = mainEl.dataset.main;
+                mainEl.querySelectorAll('.sub-cat-row').forEach(subEl => {
+                    const subName = subEl.dataset.sub;
+                    
+                    const itemsInSub = allMenuItems.filter(i => i.main_cat === mainName && i.sub_cat === subName);
+                    
+                    itemsInSub.sort((a, b) => {
+                        if (a._temp_sort !== undefined && b._temp_sort !== undefined) return a._temp_sort - b._temp_sort;
+                        return a.order_index - b.order_index;
+                    });
 
-            // Trigger the "Save Changes" button
+                    itemsInSub.forEach(item => {
+                        if (item.order_index !== globalIndex) {
+                            item.order_index = globalIndex;
+                            modifiedMenuIds.add(item.id);
+                        }
+                        delete item._temp_sort; 
+                        globalIndex++;
+                    });
+                });
+            });
+
             if (modifiedMenuIds.size > 0) {
-                const saveBtn = document.getElementById('btn-save-order');
-                saveBtn.classList.remove('hidden');
-                saveBtn.classList.add('flex');
+                const btn = document.getElementById('btn-save-order');
+                if(btn) { btn.classList.remove('hidden'); btn.classList.add('flex'); }
+                renderMenuUI(); 
             }
         }
 
-        // --- NEW: BATCH SAVE TO DATABASE ---
         async function saveMenuOrder() {
             if (modifiedMenuIds.size === 0) return;
-
             const btn = document.getElementById('btn-save-order');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
             let hasError = false;
-            
-            // Loop and save everything that was touched
             for (const id of modifiedMenuIds) {
                 const item = allMenuItems.find(i => String(i.id) === String(id));
                 if (item) {
-                    const { error } = await supabaseClient
-                        .from('menu_items')
-                        .update({ 
-                            order_index: item.order_index,
-                            main_cat: item.main_cat,
-                            sub_cat: item.sub_cat 
-                        })
-                        .eq('id', item.id);
-                    
+                    const { error } = await supabaseClient.from('menu_items').update({ order_index: item.order_index, main_cat: item.main_cat, sub_cat: item.sub_cat }).eq('id', item.id);
                     if (error) hasError = true;
                 }
             }
 
             if (hasError) {
                 alert('Warning: Some items failed to save. Please refresh the page and try again.');
-                btn.innerHTML = `<i class="fas fa-save"></i> Save Order Changes`;
+                btn.innerHTML = `<i class="fas fa-save"></i> Save Ordering`;
             } else {
                 modifiedMenuIds.clear();
-                btn.classList.add('hidden');
-                btn.classList.remove('flex');
-                btn.innerHTML = `<i class="fas fa-save"></i> Save Order Changes`;
-                
-                // Final re-fetch to lock everything in securely!
+                btn.classList.add('hidden'); btn.classList.remove('flex');
+                btn.innerHTML = `<i class="fas fa-save"></i> Save Ordering`;
                 fetchMenu();
             }
         }
