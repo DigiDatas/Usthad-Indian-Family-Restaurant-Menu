@@ -598,8 +598,8 @@
                             <!-- Legend -->
                             <div class="flex justify-center gap-6 mb-6 shrink-0 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                                 <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
-                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-teal-500 shadow-sm"></div> Selected (New Order)</span>
-                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm"></div> Occupied (View Order)</span>
+                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-teal-500 shadow-sm"></div> Selected (New)</span>
+                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm"></div> Occupied (View)</span>
                             </div>
                             
                             <!-- 🌟 Sections & Tables Grid -->
@@ -3902,17 +3902,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
         }
 
         // --- 🌟 UPGRADED: Smart Table Map Rendering ---
-        function renderPosAreas() {
-            const areas = [...new Set(restaurantTables.map(t => t.area))];
-            const container = document.getElementById('pos-area-tabs');
-            if(!container) return;
-            container.innerHTML = areas.map(a => `
-                <button onclick="posActiveArea='${a}'; renderPosTables();" class="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition whitespace-nowrap ${posActiveArea === a ? 'bg-teal-600 text-white shadow-sm' : 'bg-transparent text-gray-500 hover:bg-gray-200'}">${a}</button>
-            `).join('');
-        }
-
         function renderPosTables() {
-            renderPosAreas();
             const grid = document.getElementById('pos-table-grid');
             if(!grid) return;
             grid.innerHTML = '';
@@ -3931,87 +3921,103 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 }
             });
 
-            const areaTables = restaurantTables.filter(t => t.area === posActiveArea);
-            
-            areaTables.forEach(tbl => {
-                const tNum = tbl.id;
-                const ordersAtTable = tableOrders[tNum] || [];
-                const totalSeats = tbl.seats;
-                
-                // Track exactly which chair belongs to which Order ID
-                const occupiedChairs = {}; 
-                ordersAtTable.forEach(o => {
-                    let chairs = o.selected_chairs || [];
-                    if(chairs.length === 0) {
-                        // Fallback: Auto-fill chairs if ordered from app without specific chairs
-                        if (o.table_number && o.table_number.split(',')[0].trim() === tNum) {
-                            let assigned = 0;
-                            for(let c=1; c<=totalSeats && assigned < (o.guest_count || 1); c++) {
-                                if(!occupiedChairs[c]) { occupiedChairs[c] = o.id; assigned++; }
+            const areas = ['Main Dining', 'Family Section', 'Terrace', 'Outdoor'];
+
+            areas.forEach(areaName => {
+                const areaTables = restaurantTables.filter(t => t.area === areaName);
+                if(areaTables.length === 0) return;
+
+                let tablesHtml = '';
+                areaTables.forEach(tbl => {
+                    const tNum = tbl.id;
+                    const ordersAtTable = tableOrders[tNum] || [];
+                    const totalSeats = tbl.seats;
+                    
+                    // Track exactly which chair belongs to which Order ID
+                    const occupiedChairs = {}; 
+                    ordersAtTable.forEach(o => {
+                        let chairs = o.selected_chairs || [];
+                        if(chairs.length === 0) {
+                            // Fallback: Auto-fill chairs if ordered from app without specific chairs
+                            if (o.table_number && o.table_number.split(',')[0].trim() === tNum) {
+                                let assigned = 0;
+                                for(let c=1; c<=totalSeats && assigned < (o.guest_count || 1); c++) {
+                                    if(!occupiedChairs[c]) { occupiedChairs[c] = o.id; assigned++; }
+                                }
                             }
+                        } else {
+                            chairs.forEach(c => {
+                                if (typeof c === 'string' && c.includes('-')) {
+                                    const parts = c.split('-');
+                                    if(parts[0] === tNum) occupiedChairs[parseInt(parts[1])] = o.id;
+                                } else if (typeof c === 'number') {
+                                    if (o.table_number && o.table_number.split(',')[0].trim() === tNum) occupiedChairs[c] = o.id;
+                                }
+                            });
                         }
-                    } else {
-                        chairs.forEach(c => {
-                            if (typeof c === 'string' && c.includes('-')) {
-                                const parts = c.split('-');
-                                if(parts[0] === tNum) occupiedChairs[parseInt(parts[1])] = o.id;
-                            } else if (typeof c === 'number') {
-                                if (o.table_number && o.table_number.split(',')[0].trim() === tNum) occupiedChairs[c] = o.id;
-                            }
-                        });
+                    });
+
+                    let topChairs = '', botChairs = '';
+                    const isSelectedTable = posActiveTables.includes(tNum) && !posActiveOrderId;
+
+                    // Table Styling
+                    let tblColor = 'bg-gray-50 border-gray-200 border-dashed hover:bg-teal-50 hover:border-teal-300 hover:border-solid';
+                    let textColor = 'text-gray-400 group-hover:text-teal-600';
+                    let centerIcon = `<i class="fas fa-plus-circle"></i> New Order`;
+
+                    if (ordersAtTable.length > 0) {
+                        tblColor = 'bg-orange-50 border-orange-200 border-solid';
+                        textColor = 'text-orange-800';
+                        centerIcon = `<i class="fas fa-users"></i> ${Object.keys(occupiedChairs).length}/${totalSeats}`;
+                    } 
+                    if (isSelectedTable) {
+                        tblColor = 'bg-teal-50 border-teal-500 border-solid shadow-md';
+                        textColor = 'text-teal-800';
+                        centerIcon = `<i class="fas fa-check"></i> Selected`;
                     }
+
+                    for(let c = 1; c <= totalSeats; c++) {
+                        const occOrderId = occupiedChairs[c];
+                        const chairId = `${tNum}-${c}`;
+                        let chairColor = 'bg-gray-200';
+                        let hoverEffect = 'hover:scale-125 hover:shadow-md';
+                        
+                        if (occOrderId) chairColor = 'bg-orange-500 shadow-sm';
+                        else if (isSelectedTable && posActiveChairs.includes(chairId)) chairColor = 'bg-teal-500 shadow-md transform scale-110';
+                        else chairColor = 'bg-gray-300 hover:bg-teal-300';
+
+                        const rounding = c <= Math.ceil(totalSeats/2) ? 'rounded-t-full' : 'rounded-b-full';
+                        const clickAction = occOrderId ? `posLoadOrder('${occOrderId}')` : `posToggleChair('${tNum}', ${c})`;
+
+                        const chairHtml = `<div onclick="event.stopPropagation(); ${clickAction};" class="w-4 h-4 transition-all duration-300 cursor-pointer ${hoverEffect} ${chairColor} ${rounding}"></div>`;
+
+                        if (c <= Math.ceil(totalSeats/2)) topChairs += chairHtml;
+                        else botChairs += chairHtml;
+                    }
+
+                    // If any orders exist, clicking the center loads the primary order. Else it selects the table.
+                    const centerClick = ordersAtTable.length > 0 ? `posLoadOrder('${ordersAtTable[0].id}')` : `posSelectTableCenter('${tNum}')`;
+
+                    tablesHtml += `
+                        <div class="flex flex-col items-center group transition">
+                            <div class="flex gap-1.5 mb-1">${topChairs}</div>
+                            <div onclick="${centerClick}" class="w-28 h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 relative cursor-pointer ${tblColor}">
+                                ${ordersAtTable.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full z-10 shadow-sm">${ordersAtTable.length}</span>` : ''}
+                                <span class="font-black text-sm ${textColor}">${tNum}</span>
+                                <span class="text-[9px] font-bold ${textColor} mt-0.5">${centerIcon}</span>
+                            </div>
+                            <div class="flex gap-1.5 mt-1">${botChairs}</div>
+                        </div>
+                    `;
                 });
 
-                let topChairs = '', botChairs = '';
-                const isSelectedTable = posActiveTables.includes(tNum) && !posActiveOrderId;
-
-                // Table Styling
-                let tblColor = 'bg-gray-50 border-gray-200 border-dashed hover:bg-teal-50 hover:border-teal-300 hover:border-solid';
-                let textColor = 'text-gray-400 group-hover:text-teal-600';
-                let centerIcon = `<i class="fas fa-plus-circle"></i> New Order`;
-
-                if (ordersAtTable.length > 0) {
-                    tblColor = 'bg-orange-50 border-orange-200 border-solid';
-                    textColor = 'text-orange-800';
-                    centerIcon = `<i class="fas fa-users"></i> ${Object.keys(occupiedChairs).length}/${totalSeats}`;
-                } 
-                if (isSelectedTable) {
-                    tblColor = 'bg-teal-50 border-teal-500 border-solid shadow-md';
-                    textColor = 'text-teal-800';
-                    centerIcon = `<i class="fas fa-check"></i> Selected`;
-                }
-
-                for(let c = 1; c <= totalSeats; c++) {
-                    const occOrderId = occupiedChairs[c];
-                    const chairId = `${tNum}-${c}`;
-                    let chairColor = 'bg-gray-200';
-                    let hoverEffect = 'hover:scale-125 hover:shadow-md';
-                    
-                    if (occOrderId) chairColor = 'bg-orange-500 shadow-sm';
-                    else if (isSelectedTable && posActiveChairs.includes(chairId)) chairColor = 'bg-teal-500 shadow-md transform scale-110';
-                    else chairColor = 'bg-gray-300 hover:bg-teal-300';
-
-                    const rounding = c <= Math.ceil(totalSeats/2) ? 'rounded-t-full' : 'rounded-b-full';
-                    const clickAction = occOrderId ? `posLoadOrder('${occOrderId}')` : `posToggleChair('${tNum}', ${c})`;
-
-                    const chairHtml = `<div onclick="event.stopPropagation(); ${clickAction};" class="w-4 h-4 transition-all duration-300 cursor-pointer ${hoverEffect} ${chairColor} ${rounding}"></div>`;
-
-                    if (c <= Math.ceil(totalSeats/2)) topChairs += chairHtml;
-                    else botChairs += chairHtml;
-                }
-
-                // If any orders exist, clicking the center loads the primary order. Else it selects the table.
-                const centerClick = ordersAtTable.length > 0 ? `posLoadOrder('${ordersAtTable[0].id}')` : `posSelectTableCenter('${tNum}')`;
-
+                // Wrap tables in the vertical section
                 grid.innerHTML += `
-                    <div class="flex flex-col items-center group transition">
-                        <div class="flex gap-1.5 mb-1">${topChairs}</div>
-                        <div onclick="${centerClick}" class="w-28 h-16 rounded-xl border-2 flex flex-col items-center justify-center transition-all duration-300 relative cursor-pointer ${tblColor}">
-                            ${ordersAtTable.length > 0 ? `<span class="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] font-black w-4 h-4 flex items-center justify-center rounded-full z-10 shadow-sm">${ordersAtTable.length}</span>` : ''}
-                            <span class="font-black text-sm ${textColor}">${tNum}</span>
-                            <span class="text-[9px] font-bold ${textColor} mt-0.5">${centerIcon}</span>
+                    <div class="w-full mb-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
+                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-100 pb-3 mb-6 uppercase tracking-wider"><i class="fas fa-map-marker-alt text-teal-500 me-2"></i> ${areaName}</h3>
+                        <div class="flex flex-wrap justify-center gap-8 lg:gap-14">
+                            ${tablesHtml}
                         </div>
-                        <div class="flex gap-1.5 mt-1">${botChairs}</div>
                     </div>
                 `;
             });
@@ -4035,7 +4041,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             updatePosRightPanelLabels();
             renderPosTables();
-            if(posActiveChairs.length > 0) setPosMiddleView('menu'); 
+            // 🌟 FIX: Removed setPosMiddleView('menu') so you stay on the Table Map!
         }
 
         function posSelectTableCenter(tNum) {
@@ -4070,7 +4076,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             updatePosRightPanelLabels();
             renderPosTables();
-            if(posActiveChairs.length > 0) setPosMiddleView('menu');
+            // 🌟 FIX: Removed setPosMiddleView('menu') so you stay on the Table Map!
         }
 
         function updatePosRightPanelLabels() {
