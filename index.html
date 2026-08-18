@@ -723,10 +723,18 @@
                         </button>
                     </div>
 
-                    <!-- Hidden Table Dropdown -->
+                    <!-- Hidden Table Dropdown & Guest Count -->
                     <div id="table-select-container" class="hidden transition-all duration-300 mt-2">
-                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Select Table</div>
-                        <div id="table-grid" class="flex overflow-x-auto gap-1.5 pb-2 snap-x hide-scrollbar"></div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Select Table & Guests</div>
+                        
+                        <!-- Table Grid -->
+                        <div id="table-grid" class="flex overflow-x-auto gap-1.5 pb-2 snap-x hide-scrollbar mb-2"></div>
+                        
+                        <!-- 🌟 NEW: Guest Count Input -->
+                        <div class="flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-lg p-2 w-fit mx-auto shadow-sm">
+                            <label class="text-xs font-bold text-gray-600"><i class="fas fa-users text-gray-400 me-1"></i> Number of People:</label>
+                            <input type="number" id="order-guest-count" value="1" min="1" max="20" class="w-12 text-center text-sm font-black text-gray-800 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-green-500 transition">
+                        </div>
                     </div>
 
                     <!-- NEW: Address Input for Delivery/Takeaway -->
@@ -3035,13 +3043,16 @@ function toggleQuickCart(id) {
             let locationText = "";
             let addressInput = "";
 
+            // 🌟 FIX: Grab guest count and add it to the WhatsApp Message
+            const guestCount = parseInt(document.getElementById('order-guest-count').value) || 1;
+
             if (diningType === 'Dine In') {
                 if (!selectedTable) {
                     alert('Please select a table number from the list!');
                     btn.dataset.locked = "false"; // Unlock if failed
                     return;
                 }
-                orderTypeStr = `Dine In (${selectedTable})`;
+                orderTypeStr = `Dine In (${selectedTable}) - ${guestCount} People`;
             } else if (diningType === 'Takeaway') {
                 addressInput = document.getElementById('delivery-address').value.trim();
                 
@@ -3142,6 +3153,7 @@ function toggleQuickCart(id) {
                         customer_email: currentUser ? currentUser.email : null,
                         order_type: diningType,
                         table_number: diningType === 'Dine In' ? selectedTable : null,
+                        guest_count: diningType === 'Dine In' ? guestCount : 1, // 🌟 NEW: Saves to database
                         delivery_address: addressInput || null,
                         items: cart,
                         total_amount: subtotal,
