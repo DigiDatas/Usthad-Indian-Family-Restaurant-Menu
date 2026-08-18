@@ -723,14 +723,26 @@
                         </button>
                     </div>
 
-                    <!-- Hidden Table Dropdown & Guest Count -->
+                    <!-- Hidden Table Dropdown, Area & Guest Count -->
                     <div id="table-select-container" class="hidden transition-all duration-300 mt-2">
-                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Select Table & Guests</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Dine-In Details</div>
                         
+                        <!-- 🌟 NEW: Area Selector -->
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-gray-600 mb-1"><i class="fas fa-map-marker-alt text-gray-400 me-1"></i> Select Area:</label>
+                            <select id="order-dining-area" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:border-green-500 transition bg-gray-50">
+                                <option value="Main Dining">Main Dining</option>
+                                <option value="Family Section">Family Section</option>
+                                <option value="Terrace">Terrace</option>
+                                <option value="Outdoor">Outdoor</option>
+                            </select>
+                        </div>
+
+                        <label class="block text-xs font-bold text-gray-600 mb-1"><i class="fas fa-chair text-gray-400 me-1"></i> Select Table:</label>
                         <!-- Table Grid -->
-                        <div id="table-grid" class="flex overflow-x-auto gap-1.5 pb-2 snap-x hide-scrollbar mb-2"></div>
+                        <div id="table-grid" class="flex overflow-x-auto gap-1.5 pb-3 snap-x hide-scrollbar mb-2 border-b border-gray-100"></div>
                         
-                        <!-- 🌟 NEW: Guest Count Input -->
+                        <!-- Guest Count Input -->
                         <div class="flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-lg p-2 w-fit mx-auto shadow-sm">
                             <label class="text-xs font-bold text-gray-600"><i class="fas fa-users text-gray-400 me-1"></i> Number of People:</label>
                             <input type="number" id="order-guest-count" value="1" min="1" max="20" class="w-12 text-center text-sm font-black text-gray-800 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-green-500 transition">
