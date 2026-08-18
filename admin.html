@@ -438,98 +438,107 @@
             </div>
             <!-- 🌟 END SPLIT SCREEN -->
         </section>
+
 <!-- ================= TAB 5: OFFERS, BANNERS & FLASHCARDS ================= -->
-        <section id="section-offers" class="tab-section hidden">
+        <section id="section-offers" class="tab-section hidden h-full flex flex-col lg:flex-row gap-4 p-4 bg-gray-100 overflow-hidden">
             
-            <!-- 1. SPECIAL OFFERS MANAGER -->
-            <div class="mb-8">
-                <div class="flex justify-between items-end mb-4">
+            <!-- ================= LEFT COLUMN: SPECIAL OFFERS ================= -->
+            <div class="flex-1 flex flex-col bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden min-w-0">
+                <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center shrink-0">
                     <div>
-                        <h2 class="text-2xl font-black text-gray-800">1. Special Offers Manager</h2>
-                        <p class="text-sm text-gray-500">Drag <i class="fas fa-grip-vertical text-gray-400"></i> to reorder promotional cards.</p>
+                        <h2 class="text-base font-black text-gray-800"><i class="fas fa-tags text-red-500 me-2"></i>Special Offers</h2>
+                        <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Drag <i class="fas fa-grip-vertical mx-1"></i> to reorder</p>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="saveOfferOrder()" id="btn-save-offer-order" class="hidden bg-green-500 text-white px-4 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition items-center gap-2 animate-pulse">
+                        <button onclick="saveOfferOrder()" id="btn-save-offer-order" class="hidden bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition items-center gap-1.5 animate-pulse">
                             <i class="fas fa-save"></i> Save Order
                         </button>
-                        <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-red-700 font-bold text-sm transition flex items-center gap-2">
+                        <button onclick="openOfferModal('add')" class="bg-red-600 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-red-700 font-bold text-xs transition flex items-center gap-1.5">
                             <i class="fas fa-plus"></i> Add Offer
                         </button>
                     </div>
                 </div>
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
-                                    <th class="p-4 w-10"></th> <!-- NEW EMPTY TH FOR DRAG HANDLE -->
-                                    <th class="p-4">Image</th><th class="p-4">Offer Name</th><th class="p-4">Old Price</th><th class="p-4">New Price</th><th class="p-4 text-end">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="offers-table-body" class="divide-y divide-gray-100 text-sm">
-                                <tr><td colspan="6" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
+                
+                <div class="flex-1 overflow-y-auto hide-scrollbar">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-white shadow-sm z-10">
+                            <tr class="bg-gray-50/90 backdrop-blur border-b border-gray-200 text-[10px] font-black text-gray-500 uppercase tracking-wider">
+                                <th class="p-3 w-10 text-center"></th>
+                                <th class="p-3">Image</th>
+                                <th class="p-3">Offer Name</th>
+                                <th class="p-3">Old Price</th>
+                                <th class="p-3">New Price</th>
+                                <th class="p-3 text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offers-table-body" class="divide-y divide-gray-100 text-sm">
+                            <tr><td colspan="6" class="p-8 text-center text-gray-400">Loading Offers...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- 2. BANNERS MANAGER -->
-            <div class="mb-8 p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
-                <div class="flex justify-between items-end mb-4 border-b border-gray-100 pb-4">
-                    <div>
-                        <h2 class="text-xl font-black text-gray-800"><i class="fas fa-images text-blue-500"></i> 2. Homepage Banners</h2>
-                        <p class="text-sm text-gray-500 mt-1">Manage sliding banners. Select target languages and drag to reorder.</p>
+            <!-- ================= RIGHT COLUMN: BANNERS & FLASHCARDS ================= -->
+            <div class="w-full lg:w-[450px] xl:w-[500px] flex flex-col gap-4 overflow-y-auto hide-scrollbar shrink-0 pb-4">
+                
+                <!-- 2. BANNERS MANAGER -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
+                    <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
+                        <div>
+                            <h2 class="text-base font-black text-gray-800"><i class="fas fa-images text-blue-500 me-2"></i>Homepage Banners</h2>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Manage sliding banners</p>
+                        </div>
+                        <button onclick="saveAdminBanners()" id="btn-save-banners" class="bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition flex items-center gap-1.5">
+                            <i class="fas fa-save"></i> Save Banners
+                        </button>
                     </div>
-                    <button onclick="saveAdminBanners()" id="btn-save-banners" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
-                        <i class="fas fa-save"></i> Save Banners
-                    </button>
-                </div>
-                
-                <div class="flex gap-4 mb-4 bg-gray-50 p-3 rounded-xl border border-gray-200 w-fit">
-                    <span class="text-xs font-bold text-gray-500 uppercase">Master Switch:</span>
-                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer">
-                        <input type="checkbox" id="banner-lang-en" onchange="toggleAllBanners('en')" class="w-4 h-4 text-red-600 rounded"> All English
-                    </label>
-                    <label class="flex items-center gap-2 text-sm font-bold text-gray-800 cursor-pointer">
-                        <input type="checkbox" id="banner-lang-ar" onchange="toggleAllBanners('ar')" class="w-4 h-4 text-red-600 rounded"> All Arabic
-                    </label>
-                </div>
-
-                <!-- Dynamic Banner Sections Container -->
-                <div id="banner-sections-container" class="space-y-4 mt-4">
-                    <!-- Javascript will automatically inject the banner sections here -->
-                </div>
-                
-                <!-- NEW ADD SECTION BUTTON -->
-                <button type="button" onclick="addBannerSection()" class="w-full mt-4 bg-white text-blue-600 border-2 border-blue-200 border-dashed rounded-xl px-4 py-3 text-sm font-bold hover:bg-blue-50 transition shadow-sm flex items-center justify-center gap-2">
-                    <i class="fas fa-plus-circle text-lg"></i> Add New Banner Section
-                </button>
-            </div> <!-- 🔴 YOU JUST NEED TO ADD THIS CLOSING DIV HERE! 🔴 -->
-
-            <!-- 3. FLASH CARDS MANAGER -->
-            <div class="p-6 bg-white rounded-2xl shadow-sm border border-gray-200">
-                <div class="flex justify-between items-end mb-4 border-b border-gray-100 pb-4">
-                    <div>
-                        <h2 class="text-xl font-black text-gray-800"><i class="fas fa-clone text-purple-500"></i> 3. Flash Cards Manager</h2>
-                        <p class="text-sm text-gray-500 mt-1">Manage pop-up flashcards globally for the app.</p>
+                    
+                    <div class="flex gap-4 mb-4 bg-gray-50 p-2.5 rounded-xl border border-gray-200 w-fit">
+                        <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest mt-0.5">Master Switch:</span>
+                        <label class="flex items-center gap-1.5 text-xs font-bold text-gray-800 cursor-pointer">
+                            <input type="checkbox" id="banner-lang-en" onchange="toggleAllBanners('en')" class="w-3.5 h-3.5 text-red-600 rounded"> All EN
+                        </label>
+                        <label class="flex items-center gap-1.5 text-xs font-bold text-gray-800 cursor-pointer">
+                            <input type="checkbox" id="banner-lang-ar" onchange="toggleAllBanners('ar')" class="w-3.5 h-3.5 text-red-600 rounded"> All AR
+                        </label>
                     </div>
-                    <button onclick="saveAdminFlashcards()" id="btn-save-flashcards" class="bg-green-500 text-white px-6 py-2 rounded-xl shadow-md hover:bg-green-600 font-bold text-sm transition flex items-center gap-2">
-                        <i class="fas fa-save"></i> Save Flashcards
+
+                    <div id="banner-sections-container" class="space-y-3 mt-1">
+                        <!-- Javascript will automatically inject the banner sections here -->
+                    </div>
+                    
+                    <button type="button" onclick="addBannerSection()" class="w-full mt-3 bg-blue-50 text-blue-600 border border-blue-200 border-dashed rounded-xl px-4 py-2.5 text-xs font-bold hover:bg-blue-100 transition shadow-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-plus-circle"></i> Add Banner Section
                     </button>
+                </div> 
+
+                <!-- 3. FLASH CARDS MANAGER -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
+                    <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
+                        <div>
+                            <h2 class="text-base font-black text-gray-800"><i class="fas fa-clone text-purple-500 me-2"></i>Flash Cards</h2>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Global pop-up flashcards</p>
+                        </div>
+                        <button onclick="saveAdminFlashcards()" id="btn-save-flashcards" class="bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition flex items-center gap-1.5">
+                            <i class="fas fa-save"></i> Save Flashcards
+                        </button>
+                    </div>
+
+                    <div id="flashcard-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-gray-50 border border-gray-200 rounded-xl"></div>
+                    
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openMediaLibrary('flashcard')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-3 py-1.5 text-[11px] font-bold hover:bg-blue-100 transition shadow-sm whitespace-nowrap">
+                            <i class="fas fa-folder-open"></i> Browse
+                        </button>
+                        <input type="text" id="form-flashcard-input" placeholder="Paste URL..." class="flex-1 border border-gray-200 rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="addExternalGalleryUrl('flashcard')" class="bg-gray-900 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold hover:bg-gray-800 transition whitespace-nowrap">Add</button>
+                    </div>
                 </div>
 
-                <div id="flashcard-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[80px] p-3 bg-gray-50 border border-gray-200 rounded-xl"></div>
-                
-                <div class="flex gap-2">
-                    <button type="button" onclick="openMediaLibrary('flashcard')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-4 py-2 text-xs font-bold hover:bg-blue-100 transition shadow-sm">
-                        <i class="fas fa-folder-open"></i> Browse Storage
-                    </button>
-                    <input type="text" id="form-flashcard-input" placeholder="Paste external image URL..." class="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-blue-500">
-                    <button type="button" onclick="addExternalGalleryUrl('flashcard')" class="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-gray-800 transition">Add URL</button>
-                </div>
             </div>
         </section>
+
+
 <!-- ================= MODAL: CUSTOMER ORDER HISTORY ================= -->
     <div id="customerHistoryModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
