@@ -594,17 +594,26 @@
                     <div class="flex-1 overflow-y-auto hide-scrollbar relative bg-gray-50/30">
                         
                         <!-- VIEW: TABLES -->
-                        <div id="pos-view-tables" class="absolute inset-0 p-4 sm:p-6 flex flex-col overflow-y-auto hide-scrollbar bg-gray-50/50">
-                            <!-- Legend -->
-                            <div class="flex justify-center gap-6 mb-6 shrink-0 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
-                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-teal-500 shadow-sm"></div> Selected (New)</span>
-                                <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm"></div> Occupied (View)</span>
-                            </div>
+                        <div id="pos-view-tables" class="absolute inset-0 flex overflow-hidden bg-gray-50/50">
                             
-                            <!-- 🌟 Sections & Tables Grid -->
-                            <div id="pos-table-grid" class="flex flex-col w-full pb-10">
-                                <!-- JS Injected Sections (Main Dining, Terrace, etc.) -->
+                            <!-- 🌟 NEW: Narrow Table Accordion Column -->
+                            <div class="w-40 sm:w-48 shrink-0 bg-white border-r border-gray-200 flex flex-col overflow-y-auto hide-scrollbar" id="pos-table-accordion">
+                                <!-- JS Injected Accordion -->
+                            </div>
+
+                            <!-- Map Area -->
+                            <div class="flex-1 flex flex-col overflow-y-auto hide-scrollbar p-4 sm:p-6">
+                                <!-- Legend -->
+                                <div class="flex flex-wrap justify-center gap-4 sm:gap-6 mb-8 shrink-0 bg-white p-3 rounded-xl border border-gray-200 shadow-sm w-fit mx-auto">
+                                    <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-gray-200 border border-gray-300"></div> Available</span>
+                                    <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-teal-500 shadow-sm"></div> Selected (New)</span>
+                                    <span class="flex items-center gap-2 text-[10px] font-bold text-gray-600"><div class="w-3.5 h-3.5 rounded-full bg-orange-500 shadow-sm"></div> Occupied (View)</span>
+                                </div>
+                                
+                                <!-- 🌟 Sections & Tables Grid (Unified Card) -->
+                                <div class="bg-white border border-gray-200 rounded-2xl p-4 sm:p-8 shadow-sm flex flex-col w-full pb-10" id="pos-table-grid">
+                                    <!-- JS Injected Sections -->
+                                </div>
                             </div>
                         </div>
 
@@ -3805,12 +3814,10 @@ const dbLang = (mainRow.language || '').toLowerCase();
         let posLang = 'en';
         let posActiveCategory = 'All';
 
-        // --- 🌟 UPGRADED: Multi-Table & Smart Chair State ---
-        let posActiveTables = []; // Now an Array! (e.g., ['T01', 'T02'])
+        let posActiveTables = []; 
         let posActiveArea = 'Main Dining';
-        let posActiveChairs = []; // Format: ['T01-1', 'T01-2', 'T02-1']
+        let posActiveChairs = []; 
 
-        // Restaurant Layout Definition
         const restaurantTables = [
             { id: 'T01', seats: 6, area: 'Main Dining' },
             { id: 'T02', seats: 2, area: 'Main Dining' },
@@ -3901,15 +3908,13 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
         }
 
-        // --- 🌟 UPGRADED: Smart Table Map Rendering ---
+        // --- 🌟 UPGRADED: Unified Table Grid & Accordion ---
         function renderPosTables() {
             const grid = document.getElementById('pos-table-grid');
             if(!grid) return;
-            grid.innerHTML = '';
             
             const activeDineIn = dashboardFilteredOrders.filter(o => o.order_type === 'Dine In' && o.status !== 'Completed' && o.status !== 'Cancelled');
             
-            // Map orders to all their associated tables
             const tableOrders = {};
             activeDineIn.forEach(o => { 
                 if(o.table_number) {
@@ -3922,6 +3927,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             });
 
             const areas = ['Main Dining', 'Family Section', 'Terrace', 'Outdoor'];
+            let allHtml = '';
 
             areas.forEach(areaName => {
                 const areaTables = restaurantTables.filter(t => t.area === areaName);
@@ -3933,12 +3939,10 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     const ordersAtTable = tableOrders[tNum] || [];
                     const totalSeats = tbl.seats;
                     
-                    // Track exactly which chair belongs to which Order ID
                     const occupiedChairs = {}; 
                     ordersAtTable.forEach(o => {
                         let chairs = o.selected_chairs || [];
                         if(chairs.length === 0) {
-                            // Fallback: Auto-fill chairs if ordered from app without specific chairs
                             if (o.table_number && o.table_number.split(',')[0].trim() === tNum) {
                                 let assigned = 0;
                                 for(let c=1; c<=totalSeats && assigned < (o.guest_count || 1); c++) {
@@ -3960,7 +3964,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     let topChairs = '', botChairs = '';
                     const isSelectedTable = posActiveTables.includes(tNum) && !posActiveOrderId;
 
-                    // Table Styling
                     let tblColor = 'bg-gray-50 border-gray-200 border-dashed hover:bg-teal-50 hover:border-teal-300 hover:border-solid';
                     let textColor = 'text-gray-400 group-hover:text-teal-600';
                     let centerIcon = `<i class="fas fa-plus-circle"></i> New Order`;
@@ -3995,7 +3998,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
                         else botChairs += chairHtml;
                     }
 
-                    // If any orders exist, clicking the center loads the primary order. Else it selects the table.
                     const centerClick = ordersAtTable.length > 0 ? `posLoadOrder('${ordersAtTable[0].id}')` : `posSelectTableCenter('${tNum}')`;
 
                     tablesHtml += `
@@ -4011,37 +4013,79 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     `;
                 });
 
-                // Wrap tables in the vertical section
-                grid.innerHTML += `
-                    <div class="w-full mb-6 bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
-                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-100 pb-3 mb-6 uppercase tracking-wider"><i class="fas fa-map-marker-alt text-teal-500 me-2"></i> ${areaName}</h3>
+                allHtml += `
+                    <div class="w-full mb-8">
+                        <h3 class="text-sm font-black text-gray-800 border-b border-gray-100 pb-2 mb-6 uppercase tracking-wider flex items-center gap-2"><i class="fas fa-map-marker-alt text-teal-500"></i> ${areaName}</h3>
                         <div class="flex flex-wrap justify-center gap-8 lg:gap-14">
                             ${tablesHtml}
                         </div>
                     </div>
                 `;
             });
+            grid.innerHTML = allHtml;
+
+            // Trigger the Side Accordion update too
+            renderPosTableAccordion(tableOrders);
         }
 
-        // --- 🌟 UPGRADED: Smart Chair Selection ---
+        function renderPosTableAccordion(tableOrders) {
+            const acc = document.getElementById('pos-table-accordion');
+            if (!acc) return;
+            
+            let html = '<div class="p-3 bg-gray-100 border-b border-gray-200 text-xs font-black text-gray-600 uppercase tracking-wider sticky top-0 z-10 shadow-sm">Tables List</div>';
+            
+            restaurantTables.forEach(tbl => {
+                const tNum = tbl.id;
+                const orders = tableOrders[tNum] || [];
+                const isOcc = orders.length > 0;
+                const isSelected = posActiveTables.includes(tNum);
+                
+                let headerBg = isOcc ? 'bg-orange-50 text-orange-800 border-orange-200' : (isSelected ? 'bg-teal-50 text-teal-800 border-teal-200' : 'bg-white text-gray-700 border-gray-100');
+                
+                let ordersHtml = '';
+                if (isOcc) {
+                    ordersHtml = `<div class="flex flex-col gap-1 p-2 bg-gray-50 border-t border-gray-100">`;
+                    orders.forEach(o => {
+                        const isOrdSel = o.id === posActiveOrderId;
+                        ordersHtml += `
+                            <div onclick="posLoadOrder('${o.id}')" class="text-[10px] p-2 rounded cursor-pointer transition ${isOrdSel ? 'bg-teal-100 text-teal-800 font-bold border border-teal-200 shadow-inner' : 'bg-white text-gray-600 border border-gray-100 hover:bg-gray-200'}">
+                                <div class="flex justify-between items-center">
+                                    <span>${o.order_number}</span>
+                                    <span class="font-black text-green-600">${parseFloat(o.total_amount).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    ordersHtml += `</div>`;
+                } else {
+                    ordersHtml = `<div class="p-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 italic text-center">No active orders</div>`;
+                }
+
+                html += `
+                    <details class="group border-b border-gray-200 last:border-0" ${isOcc || isSelected ? 'open' : ''}>
+                        <summary class="flex justify-between items-center p-3 cursor-pointer transition ${headerBg} hover:brightness-95 select-none" style="list-style: none;">
+                            <span class="font-black text-xs">${tNum}</span>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded ${isOcc ? 'bg-orange-200 text-orange-800' : 'bg-gray-200 text-gray-500'}">${isOcc ? orders.length + ' Orders' : 'Free'}</span>
+                        </summary>
+                        ${ordersHtml}
+                    </details>
+                `;
+            });
+            acc.innerHTML = html;
+        }
+
         function posToggleChair(tNum, chairIndex) {
             if (posActiveOrderId) posClearCart(); // Wipe cart if switching from viewing to ordering
 
             const chairId = `${tNum}-${chairIndex}`;
+            if (posActiveChairs.includes(chairId)) posActiveChairs = posActiveChairs.filter(c => c !== chairId);
+            else posActiveChairs.push(chairId);
 
-            if (posActiveChairs.includes(chairId)) {
-                posActiveChairs = posActiveChairs.filter(c => c !== chairId);
-            } else {
-                posActiveChairs.push(chairId);
-            }
-
-            // Automatically extract unique tables from selected chairs
             const tablesSet = new Set(posActiveChairs.map(c => c.split('-')[0]));
             posActiveTables = Array.from(tablesSet);
 
             updatePosRightPanelLabels();
             renderPosTables();
-            // 🌟 FIX: Removed setPosMiddleView('menu') so you stay on the Table Map!
         }
 
         function posSelectTableCenter(tNum) {
@@ -4050,7 +4094,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             const tableDef = restaurantTables.find(t => t.id === tNum);
             if (!tableDef) return;
 
-            // Toggle table: If already selected, clear it. Else, add all empty chairs.
             if (posActiveTables.includes(tNum)) {
                 posActiveChairs = posActiveChairs.filter(c => !c.startsWith(tNum + '-'));
             } else {
@@ -4076,7 +4119,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             updatePosRightPanelLabels();
             renderPosTables();
-            // 🌟 FIX: Removed setPosMiddleView('menu') so you stay on the Table Map!
         }
 
         function updatePosRightPanelLabels() {
@@ -4089,6 +4131,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             }
         }
 
+        // 🌟 FIX: Loading an order NO LONGER forces a jump to the Menu!
         function posLoadOrder(id) {
             const order = allOrders.find(o => String(o.id) === String(id));
             if(!order) return;
@@ -4097,7 +4140,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             posActiveTables = order.table_number ? order.table_number.split(',').map(t=>t.trim()) : [];
             posActiveArea = order.dining_area || 'Main Dining';
             
-            // Normalize old data arrays to the new string format
             posActiveChairs = [];
             if(order.selected_chairs) {
                 order.selected_chairs.forEach(c => {
@@ -4118,7 +4160,8 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             renderPosCart();
             renderPosOrderLine();
-            setPosMiddleView('menu');
+            renderPosTables(); // Repaint table colors
+            renderPosMenu(); // Pre-sort the menu items for this order
         }
 
         function posClearCart() {
@@ -4137,6 +4180,8 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             renderPosCart();
             renderPosOrderLine();
+            renderPosTables();
+            renderPosMenu();
         }
 
         function posSetLang(lang) {
@@ -4146,6 +4191,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             renderPosMenu();
         }
 
+        // 🌟 FIX: Highlight and Sort Menu Items Already in the Cart!
         function renderPosMenu() {
             const catContainer = document.getElementById('pos-menu-cats');
             const grid = document.getElementById('pos-menu-grid');
@@ -4166,14 +4212,26 @@ const dbLang = (mainRow.language || '').toLowerCase();
                 items = items.filter(i => i.name.toLowerCase().includes(query) || (i.item_code && i.item_code.toLowerCase().includes(query)));
             }
 
+            // SMART SORTING: Items in the active order bubble to the top!
+            const cartItemIds = posCart.map(c => String(c.id));
+            const inCartItems = items.filter(i => cartItemIds.includes(String(i.id)));
+            const otherItems = items.filter(i => !cartItemIds.includes(String(i.id)));
+            items = [...inCartItems, ...otherItems];
+
             grid.innerHTML = items.map(item => {
                 const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/100';
+                const isInCart = cartItemIds.includes(String(item.id));
+                
+                const borderCls = isInCart ? 'border-teal-500 bg-teal-50 shadow-md transform scale-[1.02]' : 'border-gray-100 bg-white hover:border-teal-400 hover:shadow-md';
+                const qtyBadge = isInCart ? `<div class="absolute -top-2 -left-2 bg-teal-500 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full z-10 shadow-sm animate-bounce">${posCart.find(c=>String(c.id)===String(item.id)).qty}</div>` : '';
+                
                 return `
-                    <div onclick="posAddToCart('${item.id}', '${item.name}', ${item.price})" class="bg-white border border-gray-100 rounded-xl p-2 flex flex-col items-center text-center shadow-sm hover:border-teal-400 hover:shadow-md cursor-pointer transition group relative">
+                    <div onclick="posAddToCart('${item.id}', '${item.name}', ${item.price})" class="rounded-xl p-2 flex flex-col items-center text-center cursor-pointer transition group relative border ${borderCls}">
+                        ${qtyBadge}
                         <img src="${img}" class="w-12 h-12 rounded-full object-cover mb-2 group-hover:scale-110 transition">
                         <h4 class="text-[10px] font-bold text-gray-800 leading-tight line-clamp-2 w-full">${item.name}</h4>
                         <span class="text-[10px] font-black text-teal-600 mt-1">${item.price} SR</span>
-                        <div class="absolute top-1 right-1 w-5 h-5 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus text-[8px]"></i></div>
+                        <div class="absolute top-1 right-1 w-5 h-5 bg-teal-100 text-teal-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition"><i class="fas fa-plus text-[8px]"></i></div>
                     </div>
                 `;
             }).join('');
@@ -4184,6 +4242,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
             if(exist) exist.qty++;
             else posCart.push({ id, name, price, qty: 1 });
             renderPosCart();
+            renderPosMenu(); // Update the green badges dynamically
         }
 
         function posSetPayment(method) {
@@ -4228,7 +4287,6 @@ const dbLang = (mainRow.language || '').toLowerCase();
             countBadge.textContent = posCart.reduce((s, i) => s + i.qty, 0).toString().padStart(2, '0');
             
             if (posCart.length === 0) {
-                // 🌟 NEW: Smart UX - Show an "Open Menu" button if tables are selected but cart is empty!
                 if (posActiveTables.length > 0) {
                     container.innerHTML = `
                         <div class="flex flex-col items-center justify-center py-10 h-full">
@@ -4259,14 +4317,14 @@ const dbLang = (mainRow.language || '').toLowerCase();
                         <div class="flex-1">
                             <h4 class="font-bold text-gray-800 text-xs mb-1 leading-tight pr-2">${c.name}</h4>
                             <div class="flex items-center gap-2 bg-gray-100 w-fit rounded p-0.5 border border-gray-200">
-                                <button onclick="posCart[${idx}].qty--; if(posCart[${idx}].qty<=0)posCart.splice(${idx},1); renderPosCart();" class="w-5 h-5 bg-white text-gray-500 rounded shadow-sm text-[8px]"><i class="fas fa-minus"></i></button>
+                                <button onclick="posCart[${idx}].qty--; if(posCart[${idx}].qty<=0)posCart.splice(${idx},1); renderPosCart(); renderPosMenu();" class="w-5 h-5 bg-white text-gray-500 rounded shadow-sm text-[8px]"><i class="fas fa-minus"></i></button>
                                 <span class="text-[10px] font-black w-4 text-center">${c.qty}</span>
-                                <button onclick="posCart[${idx}].qty++; renderPosCart();" class="w-5 h-5 bg-white text-gray-500 rounded shadow-sm text-[8px]"><i class="fas fa-plus"></i></button>
+                                <button onclick="posCart[${idx}].qty++; renderPosCart(); renderPosMenu();" class="w-5 h-5 bg-white text-gray-500 rounded shadow-sm text-[8px]"><i class="fas fa-plus"></i></button>
                             </div>
                         </div>
                         <div class="text-right shrink-0 flex flex-col items-end gap-2">
                             <span class="font-black text-gray-800 text-xs">${tot.toFixed(2)}</span>
-                            <button onclick="posCart.splice(${idx},1); renderPosCart();" class="text-red-300 hover:text-red-500"><i class="fas fa-trash-alt text-[10px]"></i></button>
+                            <button onclick="posCart.splice(${idx},1); renderPosCart(); renderPosMenu();" class="text-red-300 hover:text-red-500"><i class="fas fa-trash-alt text-[10px]"></i></button>
                         </div>
                     </div>
                 `;
