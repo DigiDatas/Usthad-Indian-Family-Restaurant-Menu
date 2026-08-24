@@ -481,7 +481,31 @@
             <!-- ================= RIGHT COLUMN: BANNERS & FLASHCARDS ================= -->
             <div class="w-full lg:w-[450px] xl:w-[500px] flex flex-col gap-4 overflow-y-auto hide-scrollbar shrink-0 pb-4">
                 
-                <!-- 2. BANNERS MANAGER -->
+                
+
+                <!-- 3. FLASH CARDS MANAGER -->
+                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
+                    <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
+                        <div>
+                            <h2 class="text-base font-black text-gray-800"><i class="fas fa-clone text-purple-500 me-2"></i>Flash Cards</h2>
+                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Global pop-up flashcards</p>
+                        </div>
+                        <button onclick="saveAdminFlashcards()" id="btn-save-flashcards" class="bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition flex items-center gap-1.5">
+                            <i class="fas fa-save"></i> Save Flashcards
+                        </button>
+                    </div>
+
+                    <div id="flashcard-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-gray-50 border border-gray-200 rounded-xl"></div>
+                    
+                    <div class="flex gap-2">
+                        <button type="button" onclick="openMediaLibrary('flashcard')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-3 py-1.5 text-[11px] font-bold hover:bg-blue-100 transition shadow-sm whitespace-nowrap">
+                            <i class="fas fa-folder-open"></i> Browse
+                        </button>
+                        <input type="text" id="form-flashcard-input" placeholder="Paste URL..." class="flex-1 border border-gray-200 rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
+                        <button type="button" onclick="addExternalGalleryUrl('flashcard')" class="bg-gray-900 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold hover:bg-gray-800 transition whitespace-nowrap">Add</button>
+                    </div>
+                </div>
+<!-- 2. BANNERS MANAGER -->
                 <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
                     <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
                         <div>
@@ -511,29 +535,6 @@
                         <i class="fas fa-plus-circle"></i> Add Banner Section
                     </button>
                 </div> 
-
-                <!-- 3. FLASH CARDS MANAGER -->
-                <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col shrink-0">
-                    <div class="flex justify-between items-start mb-4 border-b border-gray-100 pb-3">
-                        <div>
-                            <h2 class="text-base font-black text-gray-800"><i class="fas fa-clone text-purple-500 me-2"></i>Flash Cards</h2>
-                            <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Global pop-up flashcards</p>
-                        </div>
-                        <button onclick="saveAdminFlashcards()" id="btn-save-flashcards" class="bg-green-500 text-white px-3 py-1.5 rounded-lg shadow-sm hover:bg-green-600 font-bold text-xs transition flex items-center gap-1.5">
-                            <i class="fas fa-save"></i> Save Flashcards
-                        </button>
-                    </div>
-
-                    <div id="flashcard-preview-gallery" class="flex flex-wrap gap-2 mb-3 min-h-[60px] p-2 bg-gray-50 border border-gray-200 rounded-xl"></div>
-                    
-                    <div class="flex gap-2">
-                        <button type="button" onclick="openMediaLibrary('flashcard')" class="bg-blue-50 text-blue-600 border border-blue-200 rounded-xl px-3 py-1.5 text-[11px] font-bold hover:bg-blue-100 transition shadow-sm whitespace-nowrap">
-                            <i class="fas fa-folder-open"></i> Browse
-                        </button>
-                        <input type="text" id="form-flashcard-input" placeholder="Paste URL..." class="flex-1 border border-gray-200 rounded-xl px-2 py-1.5 text-xs focus:outline-none focus:border-blue-500">
-                        <button type="button" onclick="addExternalGalleryUrl('flashcard')" class="bg-gray-900 text-white px-3 py-1.5 rounded-xl text-[11px] font-bold hover:bg-gray-800 transition whitespace-nowrap">Add</button>
-                    </div>
-                </div>
 
             </div>
         </section>
