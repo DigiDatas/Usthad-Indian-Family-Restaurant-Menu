@@ -73,6 +73,17 @@
                     <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Reviews</span>
                 </button>
 
+
+<!-- 🌟 INVENTORY (PREMIUM PLACEHOLDER) -->
+                <button onclick="alert('📦 Inventory Control & Recipe Costing is a Premium Feature.\n\nComing Soon in V2!')" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gradient-to-r hover:from-purple-900 hover:to-gray-900 hover:text-purple-300 transition-all flex items-center group overflow-hidden border border-transparent hover:border-purple-500/30">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300">
+                        <i class="fas fa-boxes text-lg"></i>
+                    </div>
+                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300 flex items-center gap-2">
+                        Inventory <i class="fas fa-crown text-[10px] text-yellow-500 pb-2"></i>
+                    </span>
+                </button>
+
         <!-- Profile & Logout at Bottom -->
         <div class="p-3 border-t border-gray-800">
             <div class="relative h-10 w-full flex items-center">
@@ -130,6 +141,11 @@
                 </div>
             </div>
         </header>
+
+<!-- 🌟 NEW: WAITER TOAST CONTAINER -->
+        <div id="waiter-toast-container" class="fixed top-20 right-6 z-[100] flex flex-col gap-3 w-72 pointer-events-none">
+            <!-- Incoming waiter calls will stack here -->
+        </div>
 
         <!-- Scrollable Main Content -->
         <main class="flex-1 overflow-hidden p-4 sm:p-6 lg:p-8 relative">
@@ -4960,6 +4976,75 @@ function updatePosRightPanelLabels() {
         };
 
         window.onload = verifyAdmin;
+// ==========================================
+        // 🌟 NEW: SUPABASE REALTIME RECEIVER (ADMIN)
+        // ==========================================
+        const waiterChannel = supabaseClient.channel('waiter-alerts');
+        
+        // Add a CSS animation for shaking if they ring twice
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                50% { transform: translateX(5px); }
+                75% { transform: translateX(-5px); }
+            }
+            .animate-shake { animation: shake 0.4s ease-in-out; }
+        `;
+        document.head.appendChild(style);
+
+        waiterChannel.on('broadcast', { event: 'bell-ring' }, (payload) => {
+            const data = payload.payload;
+            
+            // 1. Play the Bell Sound!
+            const audio = new Audio('https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/service-bell.mp3'); // A reliable free sound URL
+            audio.play().catch(e => console.log("Audio requires user interaction first."));
+
+            const container = document.getElementById('waiter-toast-container');
+            const existingToast = document.getElementById(`toast-${data.table}`);
+
+            // 2. Anti-Spam Stacking Logic
+            if (existingToast) {
+                // If it already exists, just shake it and play the sound!
+                existingToast.classList.remove('animate-shake');
+                void existingToast.offsetWidth; // Trigger reflow
+                existingToast.classList.add('animate-shake');
+                
+                // Update the time and badge
+                existingToast.querySelector('.call-time').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                return;
+            }
+
+            // 3. Create New Toast
+            const toast = document.createElement('div');
+            toast.id = `toast-${data.table}`;
+            toast.className = "bg-white p-4 rounded-2xl shadow-2xl border-l-4 border-yellow-400 flex items-start gap-3 pointer-events-auto transform transition-all duration-500 translate-x-full opacity-0";
+            
+            toast.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 shrink-0">
+                    <i class="fas fa-concierge-bell text-lg animate-bounce"></i>
+                </div>
+                <div class="flex-1">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-black text-gray-900 text-sm">Table ${data.table}</h4>
+                        <span class="text-[9px] font-bold text-gray-400 call-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <p class="text-[10px] text-gray-500 font-bold mt-0.5">${data.name} requires assistance.</p>
+                    <button onclick="this.closest('div[id^=toast-]').remove()" class="mt-2 text-[10px] font-black text-yellow-600 bg-yellow-50 hover:bg-yellow-100 px-3 py-1.5 rounded-lg transition uppercase tracking-wider w-full text-center">
+                        <i class="fas fa-check"></i> Mark Attended
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate it sliding in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full', 'opacity-0');
+            }, 50);
+            
+        }).subscribe();
 
 // 🌟 NEW: Universal Drag-to-Scroll for Desktop Admin Panels
         function startAdminDrag(e, slider) {
