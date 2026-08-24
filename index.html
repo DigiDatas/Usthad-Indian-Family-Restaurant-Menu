@@ -55,42 +55,40 @@
 </head>
 <body class="text-gray-800 antialiased transition-colors duration-300" ondragstart="return false;" onselectstart="return false;">
     <nav class="bg-white/90 backdrop-blur-md shadow-sm fixed w-full z-40 top-0 transition-all duration-300 border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8"> <!-- Reduced mobile padding slightly -->
             <div class="flex justify-between h-16">
-                <div class="flex items-center gap-3">
-                    <!-- FIX: Added cursor-pointer, hover effects, and onclick="openBrandModal()" to make it interactive! -->
-                    <div id="brand-logo-container" onclick="openBrandModal()" class="h-10 w-10 rounded-full bg-red-50 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-300 relative group">
+                
+                <!-- 🌟 LEFT SIDE: Added flex-1 and min-w-0 so it knows it is allowed to shrink -->
+                <div class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 pe-2">
+                    <div id="brand-logo-container" onclick="openBrandModal()" class="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-red-50 flex items-center justify-center overflow-hidden shrink-0 cursor-pointer hover:scale-105 hover:shadow-md transition-all duration-300 relative group">
                         <i id="default-logo-icon" class="fas fa-utensils text-red-500 text-xl group-hover:text-red-600 transition-colors"></i>
                         <img id="brand-logo-img" src="" alt="Logo" class="w-full h-full object-cover hidden group-hover:opacity-80 transition-opacity">
                     </div>
-                    <span id="nav-title" onclick="openBrandModal()" class="font-bold text-lg sm:text-xl tracking-tight text-gray-900 truncate cursor-pointer hover:text-red-600 transition-colors">Loading...</span>
+                    <!-- Added w-full and text-base for mobile so truncate works flawlessly -->
+                    <span id="nav-title" onclick="openBrandModal()" class="font-bold text-base sm:text-xl tracking-tight text-gray-900 truncate w-full cursor-pointer hover:text-red-600 transition-colors">Loading...</span>
                 </div>
-                <div class="flex items-center gap-3">
-                    <button id="lang-toggle-btn" onclick="toggleLanguage()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition">
+
+                <!-- 🌟 RIGHT SIDE: Added shrink-0 so the buttons NEVER get crushed or pushed off screen -->
+                <div class="flex items-center gap-1.5 sm:gap-3 shrink-0">
+                    <button id="lang-toggle-btn" onclick="toggleLanguage()" class="hidden items-center justify-center px-2.5 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs sm:text-sm transition">
                         <span id="lang-text">EN</span>
                     </button>
                     
-                    <!-- USER AUTH NAVIGATION & WAITER BELL -->
-                    <div class="flex items-center gap-2">
-                        <!-- 🌟 NEW: Waiter Bell Button -->
-                        <button id="btn-call-waiter" onclick="openWaiterModal()" class="flex items-center justify-center w-9 h-9 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 transition shadow-sm border border-yellow-200">
-                            <i class="fas fa-concierge-bell text-sm"></i>
+                    <div class="flex items-center gap-1.5 sm:gap-2">
+                        <button id="btn-call-waiter" onclick="openWaiterModal()" class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 transition shadow-sm border border-yellow-200">
+                            <i class="fas fa-concierge-bell text-xs sm:text-sm"></i>
                         </button>
-
-                        <!-- Show when logged OUT (Click to open login) -->
-                        <button id="btn-nav-login" onclick="document.getElementById('authModal').classList.replace('hidden', 'flex')" class="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition shadow-sm">
-                            <i class="fas fa-user text-sm"></i>
+                        <button id="btn-nav-login" onclick="document.getElementById('authModal').classList.replace('hidden', 'flex')" class="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition shadow-sm">
+                            <i class="fas fa-user text-xs sm:text-sm"></i>
                         </button>
-                        
-                        <!-- Show when logged IN (Click to view profile) -->
-                        <button id="btn-nav-profile" onclick="openProfileModal()" class="hidden items-center justify-center w-9 h-9 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition shadow-sm">
-                            <i class="fas fa-user-check text-sm"></i>
+                        <button id="btn-nav-profile" onclick="openProfileModal()" class="hidden items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition shadow-sm">
+                            <i class="fas fa-user-check text-xs sm:text-sm"></i>
                         </button>
                     </div>                
                     
-                    <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-10 h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
-                        <i class="fas fa-shopping-cart text-sm"></i> 
-                        <span id="cart-count-badge" class="absolute -top-1.5 -end-1.5 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">0</span>
+                    <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-9 h-9 sm:w-10 sm:h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
+                        <i class="fas fa-shopping-cart text-xs sm:text-sm"></i> 
+                        <span id="cart-count-badge" class="absolute -top-1.5 -end-1.5 bg-red-600 text-white text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">0</span>
                     </button>
                 </div>
             </div>
@@ -1298,6 +1296,10 @@ let relatedItemsData = []; // (You did this perfectly!)
 
                 // 5. FETCH MENU FOR CURRENT LANGUAGE
                 await fetchMenuDataForLang(currentLang);
+                
+                // 🌟 START THE LIVE ENGINE!
+                enableLiveCustomerUpdates();
+
             } catch (error) {
                 console.error("Initialization Error:", error);
                 document.getElementById('loading-state').classList.add('hidden');
@@ -4323,6 +4325,50 @@ function toggleQuickCart(id) {
 
             setTimeout(() => { closeWaiterModal(); }, 3000); // Auto-close after 3 seconds
         }
+
+
+// ==========================================
+        // 🌟 LIVE CUSTOMER APP UPDATES (STOCK & TABLES)
+        // ==========================================
+        function enableLiveCustomerUpdates() {
+            // 1. Listen for Live Stock/Menu Changes
+            supabaseClient
+                .channel('live-customer-menu')
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'menu_items' 
+                }, payload => {
+                    const updatedItem = payload.new;
+                    // Update our local menu memory instantly
+                    const localItem = activeMenuData.find(i => String(i.id) === String(updatedItem.id));
+                    if (localItem) {
+                        localItem.stockQty = updatedItem.stock_quantity;
+                        // Silently refresh the menu screen so the "Sold Out" badge appears!
+                        executeFilter();
+                    }
+                })
+                .subscribe();
+
+            // 2. Listen for Live Table Occupancy (Orders)
+            supabaseClient
+                .channel('live-customer-tables')
+                .on('postgres_changes', { 
+                    event: '*', // Listens to new orders OR order status changes
+                    schema: 'public', 
+                    table: 'orders' 
+                }, payload => {
+                    // If the customer has the table menu loaded, refresh the red/orange colors!
+                    if (customerTables && customerTables.length > 0) {
+                        fetchLiveOccupancy().then(() => {
+                            renderCustomerTablesList();
+                        });
+                    }
+                })
+                .subscribe();
+        }
+
+
         window.onload = init;
         setupSearch(); 
 
