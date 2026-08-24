@@ -1226,26 +1226,32 @@
             menu.classList.toggle('flex');
         }
 
-        // FIXED TABS ENGINE (Supports both ID styles safely)
+        // BULLETPROOF TABS ENGINE
         function switchTab(tabId) {
-            // Master list of all tab names used in your app
-            const allTabs = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social', 'offers', 'users'];
+            // List of all base tab names
+            const tabNames = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social', 'offers', 'users'];
             
-            // Safely hide every tab using either naming convention (with or without 'tab-' prefix)
-            allTabs.forEach(t => {
-                const elWithPrefix = document.getElementById('tab-' + t);
-                const elWithoutPrefix = document.getElementById(t);
-                
-                if (elWithPrefix) elWithPrefix.classList.add('hidden');
-                if (elWithoutPrefix) elWithoutPrefix.classList.add('hidden');
+            // Silently hide all known tab variations
+            tabNames.forEach(name => {
+                const candidates = [
+                    document.getElementById(name),
+                    document.getElementById('tab-' + name),
+                    document.getElementById(name + '-tab')
+                ];
+                candidates.forEach(el => {
+                    if (el) el.classList.add('hidden');
+                });
             });
 
-            // Show the specific tab requested (checking both formats)
-            const activeTab = document.getElementById('tab-' + tabId) || document.getElementById(tabId);
-            if (activeTab) {
-                activeTab.classList.remove('hidden');
+            // Find and show the target tab safely
+            const target = document.getElementById(tabId) || 
+                           document.getElementById('tab-' + tabId) || 
+                           document.getElementById(tabId + '-tab');
+
+            if (target) {
+                target.classList.remove('hidden');
             } else {
-                console.error("Oops! Could not find tab for: " + tabId);
+                console.log("Note: Could not find container for tab: " + tabId);
             }
         }
 
