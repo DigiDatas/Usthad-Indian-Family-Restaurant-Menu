@@ -66,13 +66,17 @@
                     <span id="nav-title" onclick="openBrandModal()" class="font-bold text-lg sm:text-xl tracking-tight text-gray-900 truncate cursor-pointer hover:text-red-600 transition-colors">Loading...</span>
                 </div>
                 <div class="flex items-center gap-3">
-    <button id="lang-toggle-btn" onclick="toggleLanguage()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition">
-        <span id="lang-text">EN</span>
-    </button>
-<!-- NEW SIGN OUT BUTTON -->
+                    <button id="lang-toggle-btn" onclick="toggleLanguage()" class="hidden items-center justify-center px-3 py-1.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-sm transition">
+                        <span id="lang-text">EN</span>
+                    </button>
+                    
+                    <!-- USER AUTH NAVIGATION & WAITER BELL -->
                     <div class="flex items-center gap-2">
-                    <!-- USER AUTH NAVIGATION -->
-                    <div class="flex items-center gap-2">
+                        <!-- 🌟 NEW: Waiter Bell Button -->
+                        <button id="btn-call-waiter" onclick="openWaiterModal()" class="flex items-center justify-center w-9 h-9 rounded-full bg-yellow-100 hover:bg-yellow-200 text-yellow-600 transition shadow-sm border border-yellow-200">
+                            <i class="fas fa-concierge-bell text-sm"></i>
+                        </button>
+
                         <!-- Show when logged OUT (Click to open login) -->
                         <button id="btn-nav-login" onclick="document.getElementById('authModal').classList.replace('hidden', 'flex')" class="flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition shadow-sm">
                             <i class="fas fa-user text-sm"></i>
@@ -82,14 +86,13 @@
                         <button id="btn-nav-profile" onclick="openProfileModal()" class="hidden items-center justify-center w-9 h-9 rounded-full bg-red-100 hover:bg-red-200 text-red-600 transition shadow-sm">
                             <i class="fas fa-user-check text-sm"></i>
                         </button>
-                    </div>
+                    </div>                
+                    
+                    <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-10 h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
+                        <i class="fas fa-shopping-cart text-sm"></i> 
+                        <span id="cart-count-badge" class="absolute -top-1.5 -end-1.5 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">0</span>
+                    </button>
                 </div>
-    
-    <button id="cart-floating-btn" onclick="openCartModal()" class="hidden relative bg-green-500 text-white w-10 h-10 rounded-full items-center justify-center shadow-md hover:scale-105 transition-transform duration-300">
-        <i class="fas fa-shopping-cart text-sm"></i> 
-        <span id="cart-count-badge" class="absolute -top-1.5 -end-1.5 bg-red-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-sm">0</span>
-    </button>
-</div>
             </div>
         </div>
     </nav>
@@ -597,6 +600,33 @@
             </button>
         </div>
     </div>
+
+<!-- 🌟 NEW: Waiter Bell Modal -->
+    <div id="waiterModal" class="fixed inset-0 z-[150] hidden items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
+        <div class="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-center transform transition-all duration-300 scale-95 opacity-0" id="waiterModalContent">
+            <button onclick="closeWaiterModal()" class="absolute top-3 end-3 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition"><i class="fas fa-times"></i></button>
+
+            <div class="w-16 h-16 bg-yellow-100 text-yellow-500 rounded-full flex items-center justify-center mx-auto mt-2">
+                <i class="fas fa-concierge-bell text-3xl animate-bounce"></i>
+            </div>
+            
+            <div>
+                <h2 class="text-xl font-black text-gray-900 leading-tight">Call a Waiter</h2>
+                <p class="text-xs text-gray-500 font-medium mt-1">Please select your table number.</p>
+            </div>
+
+            <div id="waiter-table-grid" class="grid grid-cols-4 gap-2 mt-2 max-h-[40vh] overflow-y-auto hide-scrollbar pb-2 px-1">
+                <!-- Tables injected via JS -->
+            </div>
+            
+            <div id="waiter-success-msg" class="hidden flex-col items-center justify-center py-4">
+                <i class="fas fa-check-circle text-4xl text-green-500 mb-2"></i>
+                <p class="text-sm font-bold text-gray-800">The waiter has been notified!</p>
+                <p class="text-xs text-gray-500 mt-1">They will be at your table shortly.</p>
+            </div>
+        </div>
+    </div>
+
 <!-- Authentication Modal -->
     <div id="authModal" class="fixed inset-0 z-[120] hidden items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm">
         <div class="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl p-6 flex flex-col gap-4 text-center">
@@ -4024,7 +4054,79 @@ function toggleQuickCart(id) {
             }
         }
 
-        
+        // ==========================================
+        // 🌟 NEW: SUPABASE REALTIME BROADCAST (USER)
+        // ==========================================
+        const waiterChannel = supabaseClient.channel('waiter-alerts');
+
+        function openWaiterModal() {
+            // Optional: Block guests from calling waiter
+            if (!currentUser) {
+                alert("Please sign in or continue as a guest to call a waiter.");
+                setAuthMode('login');
+                document.getElementById('authModal').classList.replace('hidden', 'flex');
+                return;
+            }
+
+            const modal = document.getElementById('waiterModal');
+            const content = document.getElementById('waiterModalContent');
+            const grid = document.getElementById('waiter-table-grid');
+            
+            // Build the table buttons
+            grid.innerHTML = '';
+            for(let i = 1; i <= 20; i++) {
+                const tNum = `T${String(i).padStart(2, '0')}`;
+                grid.innerHTML += `<button onclick="sendWaiterAlert('${tNum}')" class="py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 transition shadow-sm">${tNum}</button>`;
+            }
+
+            document.getElementById('waiter-table-grid').classList.remove('hidden');
+            document.getElementById('waiter-success-msg').classList.add('hidden');
+            document.getElementById('waiter-success-msg').classList.remove('flex');
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeWaiterModal() {
+            const modal = document.getElementById('waiterModal');
+            const content = document.getElementById('waiterModalContent');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); modal.classList.remove('flex'); }, 300);
+        }
+
+        let lastWaiterCallTime = 0;
+
+        function sendWaiterAlert(tableNum) {
+            const now = Date.now();
+            // 60-Second Cooldown logic!
+            if (now - lastWaiterCallTime < 60000) {
+                alert("The waiter is already on their way! Please wait a moment before ringing the bell again.");
+                return;
+            }
+
+            const customerName = currentUser?.user_metadata?.name || currentUser?.user_metadata?.full_name || 'Customer';
+
+            // Beam the signal directly to the Admin Dashboard! No database required.
+            waiterChannel.send({
+                type: 'broadcast',
+                event: 'bell-ring',
+                payload: { table: tableNum, name: customerName, time: now }
+            });
+
+            lastWaiterCallTime = now;
+
+            // Show Success UI
+            document.getElementById('waiter-table-grid').classList.add('hidden');
+            document.getElementById('waiter-success-msg').classList.remove('hidden');
+            document.getElementById('waiter-success-msg').classList.add('flex');
+
+            setTimeout(() => { closeWaiterModal(); }, 3000); // Auto-close after 3 seconds
+        }
         window.onload = init;
         setupSearch(); 
 
