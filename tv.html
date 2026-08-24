@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant TV Display</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background-color: black; margin: 0; overflow: hidden; cursor: none; }
+        .fade-in { animation: fadeIn 1s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="w-screen h-screen flex items-center justify-center bg-black">
+
+    <div id="media-container" class="w-full h-full flex items-center justify-center">
+        <!-- Images and Videos inject here -->
+        <h1 class="text-white text-3xl font-bold animate-pulse">Loading Digital Menu...</h1>
+    </div>
+
+    <script>
+        // 🌟 REPLACE WITH YOUR SUPABASE KEYS
+        const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k"; 
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+	
+
+
+        let playlist = [];
+        let currentIndex = 0;
+        let loopTimeout;
+
+        async function fetchPlaylist() {
+            const { data, error } = await supabase
+                .from('tv_playlist')
+                .select('*')
+                .eq('is_active', true)
+                .order('order_index', { ascending: true });
+            
+            if (!error && data.length > 0) {
+                playlist = data;
+                currentIndex = 0;
+                playMedia();
+            } else if (playlist.length === 0) {
+                document.getElementById('media-container').innerHTML = '<h1 class="text-white text-3xl">No Active Media</h1>';
+            }
+        }
+
+        function playMedia() {
+            clearTimeout(loopTimeout);
+            const container = document.getElementById('media-container');
+            const item = playlist[currentIndex];
+
+            if (!item) return;
+
+            if (item.media_type === 'image') {
+                container.innerHTML = `<img src="${item.media_url}" class="w-full h-full object-cover fade-in" />`;
+                loopTimeout = setTimeout(nextMedia, item.duration * 1000);
+            } 
+            else if (item.media_type === 'video') {
+                // Videos wait for 'onended' to finish playing naturally
+                container.innerHTML = `<video src="${item.media_url}" autoplay muted class="w-full h-full object-cover fade-in"></video>`;
+                const videoEl = container.querySelector('video');
+                videoEl.onended = nextMedia;
+                videoEl.onerror = nextMedia; // Skip if video fails to load
+            }
+        }
+
+        function nextMedia() {
+            currentIndex = (currentIndex + 1) % playlist.length;
+            playMedia();
+        }
+
+        // Listen for the "Cast to TV" signal from Admin Panel
+        supabase.channel('tv-channel').on('broadcast', { event: 'refresh_tv' }, () => {
+            fetchPlaylist();
+        }).subscribe();
+
+        // Start on boot!
+        window.onload = fetchPlaylist;
+    </script>
+</body>
+</html>
