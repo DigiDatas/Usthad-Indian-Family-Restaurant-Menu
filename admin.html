@@ -1226,25 +1226,26 @@
             menu.classList.toggle('flex');
         }
 
-        // FIXED TABS ENGINE (Preserves new h-14 height and gaps)
+        // FIXED TABS ENGINE (Supports both ID styles safely)
         function switchTab(tabId) {
-            // 1. A master list of all your tabs (including 'tv')
-            const allTabs = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social'];
+            // Master list of all tab names used in your app
+            const allTabs = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social', 'offers', 'users'];
             
-            // 2. Safely hide every tab
+            // Safely hide every tab using either naming convention (with or without 'tab-' prefix)
             allTabs.forEach(t => {
-                const tabElement = document.getElementById('tab-' + t);
-                if (tabElement) {
-                    tabElement.classList.add('hidden');
-                }
+                const elWithPrefix = document.getElementById('tab-' + t);
+                const elWithoutPrefix = document.getElementById(t);
+                
+                if (elWithPrefix) elWithPrefix.classList.add('hidden');
+                if (elWithoutPrefix) elWithoutPrefix.classList.add('hidden');
             });
 
-            // 3. Show the tab we clicked
-            const activeTab = document.getElementById('tab-' + tabId);
+            // Show the specific tab requested (checking both formats)
+            const activeTab = document.getElementById('tab-' + tabId) || document.getElementById(tabId);
             if (activeTab) {
                 activeTab.classList.remove('hidden');
             } else {
-                console.error("Oops! Could not find tab: tab-" + tabId);
+                console.error("Oops! Could not find tab for: " + tabId);
             }
         }
 
