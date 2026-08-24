@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin | SaaS Control Center</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-50 text-gray-800 flex h-screen overflow-hidden">
+
+    <!-- 🌟 SIDEBAR -->
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col justify-between hidden md:flex">
+        <div>
+            <!-- Brand Header -->
+            <div class="h-16 flex items-center px-6 border-b border-gray-100 gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-gray-900 leading-tight">SaaS Core</h1>
+                    <span class="text-[10px] bg-indigo-50 text-indigo-600 font-semibold px-2 py-0.5 rounded-full">Super Admin</span>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="p-4 space-y-1">
+                <a href="#" onclick="switchTab('tenants')" id="nav-tenants" class="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 transition">
+                    <i class="fas fa-building w-4"></i> Businesses & Tenants
+                </a>
+                <a href="#" onclick="switchTab('analytics')" id="nav-analytics" class="flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition">
+                    <i class="fas fa-chart-line w-4"></i> Global Analytics
+                </a>
+            </nav>
+        </div>
+
+        <!-- Logout / Profile footer -->
+        <div class="p-4 border-t border-gray-100">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-600 text-xs">SA</div>
+                    <div>
+                        <p class="text-xs font-bold text-gray-800" id="super-admin-email">Master Admin</p>
+                        <span class="text-[9px] text-green-600 font-medium">● System Online</span>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="text-gray-400 hover:text-red-600 transition" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 🌟 MAIN CONTENT WRAPPER -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        
+        <!-- Top Navigation Bar -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-30">
+            <div class="flex items-center gap-4 w-96">
+                <div class="relative w-full">
+                    <i class="fas fa-search absolute left-3.5 top-3 text-gray-400 text-xs"></i>
+                    <input type="text" id="search-tenant" onkeyup="filterTenants()" placeholder="Search businesses by name..." class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-indigo-500 transition">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button onclick="openAddTenantModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-plus"></i> Add New Business
+                </button>
+            </div>
+        </header>
+
+        <!-- Dynamic Body Area -->
+        <div class="p-6 max-w-7xl mx-auto w-full space-y-6">
+            
+            <!-- TAB 1: TENANTS MANAGEMENT -->
+            <div id="tab-tenants" class="space-y-6">
+                
+                <!-- Quick Metrics Row -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Businesses</p>
+                        <h3 class="text-2xl font-bold text-gray-900 mt-1" id="metric-total-tenants">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Active Subscriptions</p>
+                        <h3 class="text-2xl font-bold text-green-600 mt-1" id="metric-active-tenants">0</h3>
+                    </div>
+                    <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">System MRR (Est.)</p>
+                        <h3 class="text-2xl font-bold text-indigo-600 mt-1" id="metric-mrr">$0.00</h3>
+                    </div>
+                </div>
+
+                <!-- Tenants Table Container -->
+                <div class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
+                        <h2 class="font-bold text-sm text-gray-800"><i class="fas fa-list me-2 text-indigo-600"></i>Registered Businesses</h2>
+                        <span class="text-xs text-gray-500 font-medium" id="tenant-count-label">Loading records...</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-wider bg-gray-50/80">
+                                    <th class="p-4">Business Name</th>
+                                    <th class="p-4">Plan Tier</th>
+                                    <th class="p-4">Status</th>
+                                    <th class="p-4">Expiry Date</th>
+                                    <th class="p-4 text-end">Actions (Impersonate / Edit)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tenants-table-body" class="text-xs divide-y divide-gray-100">
+                                <!-- JS Injected Rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: GLOBAL ANALYTICS -->
+            <div id="tab-analytics" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+                    <h2 class="font-bold text-sm text-gray-800 mb-2">Platform Overview</h2>
+                    <p class="text-xs text-gray-500">Global cross-tenant analytics and activity telemetry will appear here.</p>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 🌟 MODAL: ADD / EDIT TENANT -->
+    <div id="tenantModal" class="fixed inset-0 bg-black/40 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-gray-100 space-y-4">
+            <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+                <h3 id="modal-title" class="font-bold text-sm text-gray-800">Add New Business</h3>
+                <button onclick="closeAddTenantModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <input type="hidden" id="edit-tenant-id">
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Business Name</label>
+                    <input type="text" id="input-business-name" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" placeholder="e.g. Burger Palace">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Subscription Plan</label>
+                    <select id="input-plan-tier" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                        <option value="basic">Basic Plan (Standard Menu)</option>
+                        <option value="pro">Pro Plan (Tables & POS)</option>
+                        <option value="premium">Premium Plan (AI Tools & Inventory)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Account Status</label>
+                    <select id="input-status" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                        <option value="active">Active (Paid)</option>
+                        <option value="pending">Pending Payment</option>
+                        <option value="suspended">Suspended (Locked Out)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-1">Plan Expiry Date</label>
+                    <input type="date" id="input-expiry" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <button onclick="closeAddTenantModal()" class="w-1/2 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-200 transition">Cancel</button>
+                <button onclick="saveTenantRecord()" class="w-1/2 bg-indigo-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-sm">Save Business</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🌟 CORE ENGINE JS -->
+    <script>
+        // REPLACE WITH YOUR ACTUAL SUPABASE CREDENTIALS
+        const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co"; 
+        const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let tenantsCache = [];
+
+        window.onload = async function() {
+            // Verify super admin session here if needed
+            await fetchTenantsData();
+        };
+
+        // Tab Switching
+        function switchTab(tabName) {
+            document.getElementById('tab-tenants').classList.add('hidden');
+            document.getElementById('tab-analytics').classList.add('hidden');
+            document.getElementById('nav-tenants').className = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition";
+            document.getElementById('nav-analytics').className = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition";
+
+            if(tabName === 'tenants') {
+                document.getElementById('tab-tenants').classList.remove('hidden');
+                document.getElementById('nav-tenants').className = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 transition";
+            } else if(tabName === 'analytics') {
+                document.getElementById('tab-analytics').classList.remove('hidden');
+                document.getElementById('nav-analytics').className = "flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 transition";
+            }
+        }
+
+        // Fetch Tenants from Supabase
+        async function fetchTenantsData() {
+            const { data, error } = await supabaseClient.from('tenants').select('*').order('created_at', { ascending: false });
+            if(error) {
+                console.error("Error fetching tenants:", error);
+                return;
+            }
+            tenantsCache = data || [];
+            renderTenantsTable(tenantsCache);
+            updateMetrics(tenantsCache);
+        }
+
+        // Render Table Rows
+        function renderTenantsTable(list) {
+            const tbody = document.getElementById('tenants-table-body');
+            tbody.innerHTML = '';
+            document.getElementById('tenant-count-label').innerText = `${list.length} businesses total`;
+
+            if(list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">No businesses found. Click "Add New Business" to start.</td></tr>`;
+                return;
+            }
+
+            list.forEach(tenant => {
+                const badgeColor = tenant.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : tenant.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200';
+                const planColor = tenant.plan_tier === 'premium' ? 'bg-purple-100 text-purple-700' : tenant.plan_tier === 'pro' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700';
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/50 transition";
+                tr.innerHTML = `
+                    <td class="p-4 font-bold text-gray-900">${tenant.business_name} <span class="block text-[10px] text-gray-400 font-mono font-normal">ID: ${tenant.id}</span></td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${planColor}">${tenant.plan_tier || 'basic'}</span></td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeColor}">${tenant.status || 'active'}</span></td>
+                    <td class="p-4 text-gray-500">${tenant.plan_expiry ? tenant.plan_expiry.split('T')[0] : 'Never'}</td>
+                    <td class="p-4 text-end space-x-2">
+                        <button onclick="impersonateTenant('${tenant.id}', '${tenant.business_name}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg font-bold text-[10px] transition" title="Login into their dashboard">
+                            <i class="fas fa-user-secret"></i> Impersonate
+                        </button>
+                        <button onclick="openEditTenantModal('${tenant.id}')" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-[10px] transition">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Calculate Metrics
+        function updateMetrics(list) {
+            document.getElementById('metric-total-tenants').innerText = list.length;
+            const activeCount = list.filter(t => t.status === 'active').length;
+            document.getElementById('metric-active-tenants').innerText = activeCount;
+            // Estimated MRR calculation
+            const mrr = list.reduce((acc, t) => {
+                if(t.status !== 'active') return acc;
+                if(t.plan_tier === 'premium') return acc + 99;
+                if(t.plan_tier === 'pro') return acc + 49;
+                return acc + 19;
+            }, 0);
+            document.getElementById('metric-mrr').innerText = `$${mrr}.00`;
+        }
+
+        // Search Filter
+        function filterTenants() {
+            const query = document.getElementById('search-tenant').value.toLowerCase();
+            const filtered = tenantsCache.filter(t => t.business_name.toLowerCase().includes(query));
+            renderTenantsTable(filtered);
+        }
+
+        // Modal Controls
+        function openAddTenantModal() {
+            document.getElementById('modal-title').innerText = "Add New Business";
+            document.getElementById('edit-tenant-id').value = '';
+            document.getElementById('input-business-name').value = '';
+            document.getElementById('input-plan-tier').value = 'basic';
+            document.getElementById('input-status').value = 'active';
+            document.getElementById('input-expiry').value = '';
+            document.getElementById('tenantModal').classList.replace('hidden', 'flex');
+        }
+
+        function openEditTenantModal(id) {
+            const tenant = tenantsCache.find(t => t.id === id);
+            if(!tenant) return;
+            document.getElementById('modal-title').innerText = "Edit Business & Plan";
+            document.getElementById('edit-tenant-id').value = tenant.id;
+            document.getElementById('input-business-name').value = tenant.business_name;
+            document.getElementById('input-plan-tier').value = tenant.plan_tier || 'basic';
+            document.getElementById('input-status').value = tenant.status || 'active';
+            document.getElementById('input-expiry').value = tenant.plan_expiry ? tenant.plan_expiry.split('T')[0] : '';
+            document.getElementById('tenantModal').classList.replace('hidden', 'flex');
+        }
+
+        function closeAddTenantModal() {
+            document.getElementById('tenantModal').classList.replace('flex', 'hidden');
+        }
+
+        // Save / Update Record
+        async function saveTenantRecord() {
+            const id = document.getElementById('edit-tenant-id').value;
+            const business_name = document.getElementById('input-business-name').value;
+            const plan_tier = document.getElementById('input-plan-tier').value;
+            const status = document.getElementById('input-status').value;
+            const plan_expiry = document.getElementById('input-expiry').value || null;
+
+            if(!business_name) return alert("Please enter a business name.");
+
+            if(id) {
+                // Update
+                const { error } = await supabaseClient.from('tenants').update({ business_name, plan_tier, status, plan_expiry }).eq('id', id);
+                if(error) return alert("Error updating tenant: " + error.message);
+            } else {
+                // Insert
+                const { error } = await supabaseClient.from('tenants').insert([{ business_name, plan_tier, status, plan_expiry }]);
+                if(error) return alert("Error creating tenant: " + error.message);
+            }
+
+            closeAddTenantModal();
+            fetchTenantsData();
+        }
+
+        // 🌟 GOD MODE / IMPERSONATION ENGINE
+        function impersonateTenant(tenantId, businessName) {
+            // Save the target tenant ID to browser localStorage
+            localStorage.setItem('impersonate_tenant_id', tenantId);
+            localStorage.setItem('impersonate_business_name', businessName);
+            
+            alert(`🔒 IMPERSONATION MODE ACTIVE\nYou are now logging into: ${businessName}`);
+            // Redirect to the regular admin panel, which will now boot up under their ID!
+            window.location.href = 'admin.html';
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('impersonate_tenant_id');
+            localStorage.removeItem('impersonate_business_name');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>
