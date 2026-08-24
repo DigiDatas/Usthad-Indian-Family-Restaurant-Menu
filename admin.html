@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
@@ -877,6 +878,39 @@
                             <!-- JS Inject -->
                             <div id="settings-tables-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto hide-scrollbar">
                             </div>
+                        </div>
+			<!-- 🌟 NEW: Data Export & Reports -->
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl mt-6">
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm"><i class="fas fa-file-export text-blue-600 me-2"></i>Data Export & Reports</h3>
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Download your business data</p>
+                                </div>
+                            </div>
+                            
+                            <!-- Export Checkboxes -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                                <label class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                                    <input type="checkbox" id="export-menu" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-xs font-bold text-gray-700"><i class="fas fa-utensils text-gray-400 w-4"></i> Menu & Inventory</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                                    <input type="checkbox" id="export-orders" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-xs font-bold text-gray-700"><i class="fas fa-receipt text-gray-400 w-4"></i> Order History</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                                    <input type="checkbox" id="export-reviews" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-xs font-bold text-gray-700"><i class="fas fa-star text-gray-400 w-4"></i> Customer Reviews</span>
+                                </label>
+                                <label class="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-blue-400 transition shadow-sm">
+                                    <input type="checkbox" id="export-tables" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                    <span class="text-xs font-bold text-gray-700"><i class="fas fa-chair text-gray-400 w-4"></i> Floor Plan & Tables</span>
+                                </label>
+                            </div>
+
+                            <button onclick="executeDataExport()" id="btn-execute-export" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl shadow-md hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                <i class="fas fa-download"></i> Download Selected Data
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -5479,6 +5513,113 @@ function updatePosRightPanelLabels() {
         }
 
         setTimeout(loadTvPlaylist, 1500);
+
+// ==========================================
+        // 🌟 DATA EXPORT & REPORTING ENGINE
+        // ==========================================
+        
+        // Helper: Converts JSON data to a proper CSV text string
+        function jsonToCSV(jsonArray) {
+            if (!jsonArray || jsonArray.length === 0) return '';
+            const keys = Object.keys(jsonArray[0]);
+            const header = keys.join(',');
+            const rows = jsonArray.map(obj => {
+                return keys.map(k => {
+                    let val = obj[k] === null || obj[k] === undefined ? '' : String(obj[k]);
+                    val = val.replace(/"/g, '""'); // Escape quotes
+                    return `"${val}"`; // Wrap in quotes to handle commas inside text
+                }).join(',');
+            });
+            return header + '\n' + rows.join('\n');
+        }
+
+        async function executeDataExport() {
+            const wantsMenu = document.getElementById('export-menu').checked;
+            const wantsOrders = document.getElementById('export-orders').checked;
+            const wantsReviews = document.getElementById('export-reviews').checked;
+            const wantsTables = document.getElementById('export-tables').checked;
+
+            if (!wantsMenu && !wantsOrders && !wantsReviews && !wantsTables) {
+                return alert("Please select at least one dataset to export.");
+            }
+
+            const btn = document.getElementById('btn-execute-export');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Generating Files...`;
+            btn.disabled = true;
+
+            const filesToDownload = []; // Will hold { name: "filename.csv", content: "csv_data" }
+
+            try {
+                // 1. Fetch Menu
+                if (wantsMenu) {
+                    const { data } = await supabaseClient.from('menu_items').select('*');
+                    if (data && data.length > 0) filesToDownload.push({ name: 'Menu_Inventory.csv', content: jsonToCSV(data) });
+                }
+                
+                // 2. Fetch Orders
+                if (wantsOrders) {
+                    const { data } = await supabaseClient.from('orders').select('*');
+                    if (data && data.length > 0) {
+                        // Quick formatting to make the JSON order items readable in CSV
+                        const formattedOrders = data.map(o => ({
+                            ...o,
+                            items_summary: Array.isArray(o.items) ? o.items.map(i => `${i.qty}x ${i.name}`).join(' | ') : 'No Items'
+                        }));
+                        filesToDownload.push({ name: 'Order_History.csv', content: jsonToCSV(formattedOrders) });
+                    }
+                }
+
+                // 3. Fetch Reviews
+                if (wantsReviews) {
+                    const { data } = await supabaseClient.from('reviews').select('*');
+                    if (data && data.length > 0) filesToDownload.push({ name: 'Customer_Reviews.csv', content: jsonToCSV(data) });
+                }
+
+                // 4. Fetch Tables
+                if (wantsTables) {
+                    const { data } = await supabaseClient.from('restaurant_tables').select('*');
+                    if (data && data.length > 0) filesToDownload.push({ name: 'Floor_Plan.csv', content: jsonToCSV(data) });
+                }
+
+                if (filesToDownload.length === 0) {
+                    alert("No data found for the selected categories.");
+                } 
+                // 🌟 SCENARIO A: Single File Download (Direct CSV)
+                else if (filesToDownload.length === 1) {
+                    const file = filesToDownload[0];
+                    const blob = new Blob(["\uFEFF" + file.content], { type: 'text/csv;charset=utf-8;' }); // \uFEFF enables Excel UTF-8 support
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    link.download = file.name;
+                    link.click();
+                } 
+                // 🌟 SCENARIO B: Multiple Files (Bundle into ZIP)
+                else {
+                    const zip = new JSZip();
+                    const folder = zip.folder("Restaurant_Data_Export");
+                    
+                    filesToDownload.forEach(file => {
+                        folder.file(file.name, "\uFEFF" + file.content);
+                    });
+
+                    const blob = await zip.generateAsync({ type: "blob" });
+                    const link = document.createElement("a");
+                    link.href = URL.createObjectURL(blob);
+                    
+                    const dateStr = new Date().toISOString().split('T')[0];
+                    link.download = `Restaurant_Export_${dateStr}.zip`;
+                    link.click();
+                }
+            } catch (error) {
+                console.error(error);
+                alert("An error occurred while generating the export.");
+            }
+
+            // Reset Button
+            btn.innerHTML = originalHtml;
+            btn.disabled = false;
+        }
 
     </script>
 </body>
