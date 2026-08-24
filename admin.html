@@ -65,8 +65,22 @@
                     <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cog text-lg"></i></div>
                     <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Settings</span>
                 </button>
+<!-- 🌟 NEW: My TV Button -->
+            <button onclick="switchTab('tv')" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gradient-to-r hover:from-blue-900 hover:to-gray-900 hover:text-blue-300 transition-all flex items-center group overflow-hidden border border-transparent hover:border-blue-500/30">
+                <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300">
+                    <i class="fas fa-tv text-lg"></i>
+                </div>
+                <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">
+                    My TV
+                </span>
+            </button>
             </nav>
         </div>
+
+
+
+
+
 <!-- 🌟 NEW: REVIEWS BUTTON -->
                 <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
                     <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-star text-lg"></i></div>
@@ -895,6 +909,48 @@
 
             </div>
         </section>
+
+<!-- 🌟 NEW: MY TV TAB PASTED HERE 🌟 -->
+        <!-- ===================== MY TV TAB ===================== -->
+        <div id="tab-tv" class="hidden h-full flex flex-col p-6 animate-fade-in">
+            <div class="flex justify-between items-center mb-6 shrink-0">
+                <div>
+                    <h2 class="text-3xl font-black text-white tracking-tight">Digital Signage</h2>
+                    <p class="text-gray-400 text-sm mt-1">Manage what plays on the restaurant TVs.</p>
+                </div>
+                <button onclick="castToTv()" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-blue-900/50 hover:bg-blue-500 hover:scale-105 font-black tracking-wide transition-all flex items-center gap-2">
+                    <i class="fas fa-bolt text-yellow-300"></i> Cast to TV
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 overflow-hidden">
+                <!-- Add Media Form -->
+                <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 h-fit">
+                    <h3 class="text-lg font-bold text-white mb-4">Add to TV Loop</h3>
+                    <input type="text" id="tv-media-url" placeholder="Paste Image/Video URL" class="w-full bg-gray-900 text-white border border-gray-700 rounded-xl px-4 py-2.5 text-sm mb-3 focus:border-blue-500 outline-none">
+                    
+                    <div class="flex gap-3 mb-4">
+                        <select id="tv-media-type" class="flex-1 bg-gray-900 text-white border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none">
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                        </select>
+                        <input type="number" id="tv-duration" placeholder="Seconds" value="10" class="w-24 bg-gray-900 text-white border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none">
+                    </div>
+
+                    <button onclick="addTvMedia()" class="w-full bg-gray-700 text-white py-2 rounded-xl hover:bg-gray-600 font-bold text-sm transition">
+                        <i class="fas fa-plus"></i> Add to Loop
+                    </button>
+                </div>
+
+                <!-- Playlist Preview -->
+                <div class="md:col-span-2 bg-gray-900 rounded-2xl border border-gray-800 p-2 overflow-y-auto hide-scrollbar flex flex-col gap-2" id="tv-playlist-container">
+                    <!-- Fetched from Supabase -->
+                </div>
+            </div>
+        </div>
+
+
+
     </main>
 </div> <!-- 🚨 NEW: THIS CLOSES THE MAIN CONTENT WRAPPER 🚨 -->
 
@@ -5074,6 +5130,132 @@ function updatePosRightPanelLabels() {
             slider.addEventListener('mouseup', stopDrag, {once: true});
             slider.addEventListener('mousemove', doDrag);
         }
+
+// ==========================================
+        // 🌟 DIGITAL SIGNAGE (MY TV) LOGIC
+        // ==========================================
+
+        // 1. Fetch and Display the Playlist
+        async function loadTvPlaylist() {
+            const container = document.getElementById('tv-playlist-container');
+            container.innerHTML = '<div class="text-center p-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Loading playlist...</div>';
+
+            const { data, error } = await supabaseClient
+                .from('tv_playlist')
+                .select('*')
+                .order('order_index', { ascending: true })
+                .order('created_at', { ascending: true });
+
+            if (error) {
+                console.error("TV Playlist Error:", error);
+                container.innerHTML = '<div class="text-red-500 text-xs p-4">Error loading playlist.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            if (data.length === 0) {
+                container.innerHTML = '<div class="text-gray-500 text-center py-10 font-bold text-sm">Playlist is empty. Add media to start looping!</div>';
+                return;
+            }
+
+            data.forEach((item) => {
+                const isImage = item.media_type === 'image';
+                const icon = isImage ? '<i class="fas fa-image text-blue-400"></i>' : '<i class="fas fa-video text-purple-400"></i>';
+                const durationText = isImage ? `${item.duration}s` : 'Full Video';
+                const activeClass = item.is_active ? 'bg-gray-800 border-gray-600' : 'bg-gray-900 border-gray-800 opacity-50';
+
+                container.innerHTML += `
+                    <div class="flex items-center justify-between p-3 rounded-xl border ${activeClass} transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-12 bg-black rounded-lg overflow-hidden shrink-0 border border-gray-700 flex items-center justify-center">
+                                ${isImage ? `<img src="${item.media_url}" class="w-full h-full object-cover">` : `<i class="fas fa-play text-gray-500"></i>`}
+                            </div>
+                            <div>
+                                <div class="text-white font-bold text-sm flex items-center gap-2">${icon} ${item.media_type.toUpperCase()}</div>
+                                <div class="text-gray-400 text-xs mt-0.5">Duration: ${durationText}</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleTvMedia('${item.id}', ${item.is_active})" class="w-8 h-8 rounded-full ${item.is_active ? 'bg-green-500/20 text-green-500 hover:bg-green-500 hover:text-white' : 'bg-gray-800 text-gray-500 hover:bg-gray-700'} flex items-center justify-center transition" title="Toggle Visibility">
+                                <i class="fas ${item.is_active ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                            </button>
+                            <button onclick="deleteTvMedia('${item.id}')" class="w-8 h-8 rounded-full bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center transition" title="Delete">
+                                <i class="fas fa-trash text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 2. Add New Media to the Database
+        async function addTvMedia() {
+            const urlInput = document.getElementById('tv-media-url');
+            const typeInput = document.getElementById('tv-media-type');
+            const durationInput = document.getElementById('tv-duration');
+
+            const url = urlInput.value.trim();
+            if (!url) return alert("Please enter a valid image or video URL!");
+
+            const { error } = await supabaseClient
+                .from('tv_playlist')
+                .insert([{
+                    media_url: url,
+                    media_type: typeInput.value,
+                    duration: parseInt(durationInput.value) || 10,
+                    is_active: true
+                }]);
+
+            if (error) {
+                alert("Error adding media: " + error.message);
+            } else {
+                urlInput.value = ''; // Clear the input
+                loadTvPlaylist(); // Refresh the list
+            }
+        }
+
+        // 3. Delete Media
+        async function deleteTvMedia(id) {
+            if (!confirm('Are you sure you want to delete this from the TV?')) return;
+            await supabaseClient.from('tv_playlist').delete().eq('id', id);
+            loadTvPlaylist();
+        }
+
+        // 4. Turn Media ON or OFF
+        async function toggleTvMedia(id, currentState) {
+            await supabaseClient.from('tv_playlist').update({ is_active: !currentState }).eq('id', id);
+            loadTvPlaylist();
+        }
+
+        // 5. The Magic "Cast to TV" Button (Realtime Broadcast!)
+        function castToTv() {
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            
+            // Show loading state
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Casting...';
+            
+            // Beam the signal!
+            supabaseClient.channel('tv-channel').send({
+                type: 'broadcast',
+                event: 'refresh_tv',
+                payload: { time: Date.now() }
+            });
+
+            // Show success state then reset
+            setTimeout(() => {
+                btn.classList.replace('bg-blue-600', 'bg-green-500');
+                btn.innerHTML = '<i class="fas fa-check"></i> Sent to TV!';
+                
+                setTimeout(() => {
+                    btn.classList.replace('bg-green-500', 'bg-blue-600');
+                    btn.innerHTML = originalHtml;
+                }, 2000);
+            }, 600);
+        }
+
+        // 6. Automatically load the playlist when you open the Admin Dashboard
+        setTimeout(loadTvPlaylist, 1500);
 
     </script>
 </body>
