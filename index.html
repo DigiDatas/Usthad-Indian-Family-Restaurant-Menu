@@ -2788,7 +2788,12 @@ function setGuestCount(val) {
     currentGuestCount = val;
     document.getElementById('display-guest-count').textContent = val;
     document.getElementById('order-guest-count').value = val; // Syncs with WhatsApp checkout
-    
+    // 🌟 If a table is already selected, re-trigger the smart allocation
+    if (selectedTable) {
+        const primaryTable = selectedTable.split(',')[0].trim(); // Grab the main table
+        selectCustomerTable(primaryTable); // Re-calculate combinations!
+    }
+
     for (let i = 1; i <= 6; i++) {
         const btn = document.getElementById(`guest-btn-${i}`);
         if (btn) {
@@ -2802,7 +2807,7 @@ function setGuestCount(val) {
 }
 
 // ==========================================
-// 🌟 DYNAMIC TABLES & AREAS LOGIC (Supabase)
+// 🌟 DYNAMIC TABLES & SMART ALLOCATION
 // ==========================================
 let customerTables = [];
 let selectedCustomerArea = '';
@@ -2814,8 +2819,42 @@ async function loadCustomerTables() {
         .order('table_number', { ascending: true });
         
     if (!error && data) {
-        customerTables = data;
+        // Initialize an 'occupied' counter for each table
+        customerTables = data.map(t => ({...t, occupied: 0})); 
+        await fetchLiveOccupancy(); // Fetch active orders to color tables!
         renderCustomerAreas();
+    }
+}
+
+// 🌟 FETCH LIVE ORDERS TO CALCULATE OCCUPANCY
+async function fetchLiveOccupancy() {
+    const { data, error } = await supabaseClient
+        .from('orders')
+        .select('table_number, guest_count')
+        .in('status', ['Pending', 'Preparing', 'Ready']) // Only look at active orders
+        .eq('order_type', 'Dine In');
+
+    if (!error && data) {
+        customerTables.forEach(t => t.occupied = 0); // Reset
+        
+        data.forEach(order => {
+            if (!order.table_number) return;
+            
+            // Handle if an order is split across multiple tables (e.g. "T02, T03")
+            const tNums = order.table_number.split(',').map(s => s.trim());
+            let guestsRemaining = order.guest_count || 1;
+            
+            tNums.forEach(tNum => {
+                const table = customerTables.find(t => t.table_number === tNum);
+                if (table) {
+                    const spaceLeft = table.seats - table.occupied;
+                    // Distribute guests across the chained tables
+                    const guestsToAssign = Math.min(spaceLeft > 0 ? spaceLeft : guestsRemaining, guestsRemaining);
+                    table.occupied += guestsToAssign;
+                    guestsRemaining -= guestsToAssign;
+                }
+            });
+        });
     }
 }
 
@@ -2844,6 +2883,7 @@ function selectCustomerArea(area) {
     renderCustomerAreas(); 
 }
 
+// 🌟 RENDER TABLES WITH SMART COLORS (RED/ORANGE/GREEN)
 function renderCustomerTablesList() {
     const tableContainer = document.getElementById('customer-table-grid');
     if (!tableContainer) return;
@@ -2855,18 +2895,82 @@ function renderCustomerTablesList() {
         return;
     }
 
-    tableContainer.innerHTML = filteredTables.map(t => `
-        <button type="button" onclick="selectCustomerTable('${t.table_number}')" class="w-16 h-16 shrink-0 snap-start rounded-xl border-2 transition flex flex-col items-center justify-center gap-1 ${selectedTable === t.table_number ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md scale-110' : 'border-gray-200 bg-white text-gray-600 hover:border-teal-300'}">
-            <span class="font-black text-sm">${t.table_number}</span>
-            <span class="text-[9px] font-bold ${selectedTable === t.table_number ? 'text-teal-500' : 'text-gray-400'}"><i class="fas fa-chair"></i> ${t.seats}</span>
-        </button>
-    `).join('');
+    // Convert string "T02, T03" into an array to highlight multiple tables
+    const selectedArr = selectedTable ? selectedTable.split(',').map(s => s.trim()) : [];
+
+    tableContainer.innerHTML = filteredTables.map(t => {
+        const isSelected = selectedArr.includes(t.table_number);
+        const isFull = t.occupied >= t.seats;
+        const isPartiallyOccupied = t.occupied > 0 && !isFull;
+        
+        let colorClasses = 'border-gray-200 bg-white text-gray-600 hover:border-teal-300';
+        let iconColor = 'text-gray-400';
+        
+        if (isSelected) {
+            colorClasses = 'border-teal-500 bg-teal-50 text-teal-700 shadow-md scale-110';
+            iconColor = 'text-teal-500';
+        } else if (isFull) {
+            colorClasses = 'border-red-300 bg-red-50 text-red-700 opacity-60'; // Fully Occupied
+            iconColor = 'text-red-500';
+        } else if (isPartiallyOccupied) {
+            colorClasses = 'border-orange-300 bg-orange-50 text-orange-700'; // Partially Occupied
+            iconColor = 'text-orange-500';
+        }
+
+        return `
+            <button type="button" onclick="selectCustomerTable('${t.table_number}')" class="w-16 h-16 shrink-0 snap-start rounded-xl border-2 transition flex flex-col items-center justify-center gap-1 ${colorClasses}">
+                <span class="font-black text-sm">${t.table_number}</span>
+                <span class="text-[9px] font-bold ${iconColor}"><i class="fas fa-chair"></i> ${t.occupied}/${t.seats}</span>
+            </button>
+        `;
+    }).join('');
 }
 
+// 🌟 SMART CHAIN-ALLOCATION ALGORITHM
 function selectCustomerTable(tNum) {
-    selectedTable = tNum; // Updates global variable for WhatsApp Checkout
-    document.getElementById('selected-customer-table').value = tNum;
-    renderCustomerTablesList();
+    let neededSeats = parseInt(document.getElementById('order-guest-count').value) || 1;
+    let selectedArr = [];
+    let seatsGathered = 0;
+
+    const areaTables = customerTables.filter(t => (t.dining_area || 'Main Dining') === selectedCustomerArea);
+    const clickedTable = areaTables.find(t => t.table_number === tNum);
+    
+    if (!clickedTable) return;
+
+    // Check how many seats are left on the clicked table
+    const availableOnClicked = Math.max(0, clickedTable.seats - (clickedTable.occupied || 0));
+
+    if (availableOnClicked <= 0) {
+        alert("This table is fully occupied. Please select an available table.");
+        return;
+    }
+
+    // Assign first table
+    selectedArr.push(clickedTable.table_number);
+    seatsGathered += availableOnClicked;
+
+    // If we STILL need more seats, automatically hunt for adjacent available tables!
+    if (seatsGathered < neededSeats) {
+        for (const t of areaTables) {
+            if (t.table_number === clickedTable.table_number) continue; // Skip the one we just picked
+            
+            const available = Math.max(0, t.seats - (t.occupied || 0));
+            if (available > 0) {
+                selectedArr.push(t.table_number); // Add table to the chain
+                seatsGathered += available;
+                if (seatsGathered >= neededSeats) break; // Stop when we have enough seats!
+            }
+        }
+    }
+
+    // Save multiple tables as a comma-separated string (e.g., "T02, T03, T04")
+    selectedTable = selectedArr.join(', ');
+    document.getElementById('selected-customer-table').value = selectedTable;
+    renderCustomerTablesList(); // Triggers UI update to highlight all selected tables
+
+    if (seatsGathered < neededSeats) {
+        alert(`Note: We chained tables (${selectedTable}) together, but it only holds ${seatsGathered} people. You are still short by ${neededSeats - seatsGathered} seats!`);
+    }
 }
 
         
@@ -4150,7 +4254,6 @@ function toggleQuickCart(id) {
         const waiterChannel = supabaseClient.channel('waiter-alerts');
 
         function openWaiterModal() {
-            // Optional: Block guests from calling waiter
             if (!currentUser) {
                 alert("Please sign in or continue as a guest to call a waiter.");
                 setAuthMode('login');
@@ -4162,11 +4265,14 @@ function toggleQuickCart(id) {
             const content = document.getElementById('waiterModalContent');
             const grid = document.getElementById('waiter-table-grid');
             
-            // Build the table buttons
+            // 🌟 NEW: Dynamically render tables from the SaaS Database!
             grid.innerHTML = '';
-            for(let i = 1; i <= 20; i++) {
-                const tNum = `T${String(i).padStart(2, '0')}`;
-                grid.innerHTML += `<button onclick="sendWaiterAlert('${tNum}')" class="py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 transition shadow-sm">${tNum}</button>`;
+            if (customerTables.length === 0) {
+                 grid.innerHTML = '<div class="col-span-full text-xs text-gray-400 text-center py-4">No tables found.</div>';
+            } else {
+                 customerTables.forEach(t => {
+                     grid.innerHTML += `<button onclick="sendWaiterAlert('${t.table_number}')" class="py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-bold text-gray-600 hover:bg-yellow-50 hover:text-yellow-600 hover:border-yellow-300 transition shadow-sm">${t.table_number}</button>`;
+                 });
             }
 
             document.getElementById('waiter-table-grid').classList.remove('hidden');
