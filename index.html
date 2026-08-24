@@ -68,12 +68,25 @@
         </div>
     </section>
 
-    script>
+    <script>
     const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
     
     // Initialize the client
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // 🌟 This is the function your buttons are waiting for!
+    async function loginWithGoogle() {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: window.location.origin + '/Usthad-Indian-Family-Restaurant-Menu/onboarding-handler.html'
+            }
+        });
+        if (error) {
+            alert("Login Error: " + error.message);
+        }
+    }
 </script>
 </body>
 </html>
