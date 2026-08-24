@@ -1231,11 +1231,12 @@
             // List of all base tab names
             const tabNames = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social', 'offers', 'users'];
             
-            // Silently hide all known tab variations
+            // Silently hide all known tab variations (including section- and tab- prefixes)
             tabNames.forEach(name => {
                 const candidates = [
                     document.getElementById(name),
                     document.getElementById('tab-' + name),
+                    document.getElementById('section-' + name),
                     document.getElementById(name + '-tab')
                 ];
                 candidates.forEach(el => {
@@ -1243,9 +1244,10 @@
                 });
             });
 
-            // Find and show the target tab safely
+            // Find and show the target tab safely (checking section-, tab-, and plain IDs)
             const target = document.getElementById(tabId) || 
                            document.getElementById('tab-' + tabId) || 
+                           document.getElementById('section-' + tabId) || 
                            document.getElementById(tabId + '-tab');
 
             if (target) {
