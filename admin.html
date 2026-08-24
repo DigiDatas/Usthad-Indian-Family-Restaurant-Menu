@@ -3749,6 +3749,16 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
             if (!name) return alert("Table Name is required!");
 
+            // 🛑 SMART DUPLICATE CHECKER 
+            // Checks if another table already has this exact name (ignoring uppercase/lowercase)
+            const isDuplicate = restaurantTables.some(t => 
+                t.id.toLowerCase() === name.toLowerCase() && t.db_id !== db_id
+            );
+
+            if (isDuplicate) {
+                return alert(`⚠️ WAIT! A table named "${name}" already exists. Please choose a unique name.`);
+            }
+
             const btn = document.getElementById('btn-save-table');
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
