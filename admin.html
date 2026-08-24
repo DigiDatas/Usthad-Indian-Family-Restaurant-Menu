@@ -863,7 +863,21 @@
                                 <label for="set-game" class="text-sm font-bold text-gray-700">Enable Arcade Game Feature</label>
                             </div>
                         </div>
-
+			<!-- 🌟 NEW: Floor Plan & Tables Manager -->
+                        <div class="p-4 bg-gray-50 border border-gray-200 rounded-2xl mt-6">
+                            <div class="flex justify-between items-center mb-4 border-b border-gray-200 pb-3">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm"><i class="fas fa-chair text-teal-600 me-2"></i>Floor Plan & Tables</h3>
+                                    <p class="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Manage POS Layout</p>
+                                </div>
+                                <button type="button" onclick="openTableModal('add')" class="bg-teal-100 text-teal-700 px-3 py-1.5 rounded-lg text-[10px] font-black hover:bg-teal-200 transition shadow-sm uppercase tracking-wider">
+                                    <i class="fas fa-plus"></i> Add Table
+                                </button>
+                            </div>
+                            <!-- JS Inject -->
+                            <div id="settings-tables-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-60 overflow-y-auto hide-scrollbar">
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1165,6 +1179,33 @@
             </div>
         </div>
     </div>
+<!-- ================= MODAL: ADD / EDIT TABLE ================= -->
+    <div id="tableModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl max-w-sm w-full overflow-hidden shadow-2xl flex flex-col">
+            <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 id="table-modal-title" class="font-bold text-lg text-gray-900">Add New Table</h3>
+                <button onclick="closeTableModal()" class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-300"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="p-6 flex flex-col gap-4">
+                <input type="hidden" id="table-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Table Name / Number *</label>
+                    <input type="text" id="table-name" placeholder="e.g. T01 or VIP-1" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-teal-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Number of Seats *</label>
+                    <input type="number" id="table-seats" value="4" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-teal-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dining Area *</label>
+                    <input type="text" id="table-area" placeholder="e.g. Main Dining" value="Main Dining" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:border-teal-500 outline-none">
+                </div>
+                <button onclick="saveTable()" id="btn-save-table" class="w-full bg-teal-600 text-white py-3 rounded-xl font-bold hover:bg-teal-700 shadow-md mt-2 transition">
+                    Save Table
+                </button>
+            </div>
+        </div>
+    </div>
 <!-- ================= MODAL: STORAGE MEDIA LIBRARY ================= -->
     <div id="mediaLibraryModal" class="fixed inset-0 z-[60] hidden items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div class="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl flex flex-col h-[70vh]">
@@ -1221,7 +1262,7 @@
                 fetchOffers();
                 fetchSettings();
                 fetchReviews(); // 🌟 NEW: Added to load reviews on login
-                
+                fetchTables(); // Loads the POS floor plan
                 // 🚨 ADD THESE 2 LINES HERE ➔
                 graphActiveFilter = 'week';
                 if(typeof setGraphFilter === 'function') setGraphFilter('week');
@@ -3619,6 +3660,124 @@ const dbLang = (mainRow.language || '').toLowerCase();
             if (hasError) alert("Warning: There was an issue saving some settings.");
             else alert("Restaurant settings updated successfully!");
         }
+
+// ==========================================
+        // 🌟 DYNAMIC FLOOR PLAN MANAGER (SAAS)
+        // ==========================================
+        async function fetchTables() {
+            const container = document.getElementById('settings-tables-container');
+            if (container) container.innerHTML = '<div class="col-span-full text-center text-gray-400 text-xs py-4"><i class="fas fa-spinner fa-spin"></i> Loading Tables...</div>';
+
+            const { data, error } = await supabaseClient
+                .from('restaurant_tables')
+                .select('*')
+                .order('dining_area', { ascending: true })
+                .order('table_number', { ascending: true });
+
+            if (!error) {
+                // Map database columns to the format required by your POS system
+                restaurantTables = (data || []).map(t => ({
+                    db_id: t.id,
+                    id: t.table_number,
+                    seats: t.seats,
+                    area: t.dining_area
+                }));
+            }
+
+            renderSettingsTables();
+            if (typeof renderPosTables === 'function') renderPosTables(); // Auto-updates the Cashier screen!
+        }
+
+        function renderSettingsTables() {
+            const container = document.getElementById('settings-tables-container');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            if (restaurantTables.length === 0) {
+                container.innerHTML = '<div class="col-span-full text-center text-gray-400 text-xs py-4 font-bold italic">No tables created yet.</div>';
+                return;
+            }
+
+            restaurantTables.forEach(t => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-gray-200 shadow-sm hover:border-teal-300 transition group">
+                        <div>
+                            <h4 class="font-black text-gray-800 text-xs">${t.id} <span class="text-[9px] text-gray-400 font-bold ml-1">(${t.seats} Seats)</span></h4>
+                            <p class="text-[9px] font-bold text-teal-600 mt-0.5"><i class="fas fa-map-marker-alt"></i> ${t.area}</p>
+                        </div>
+                        <div class="flex gap-1 opacity-50 group-hover:opacity-100 transition">
+                            <button onclick="openTableModal('edit', '${t.db_id}')" class="w-7 h-7 rounded-lg bg-gray-50 text-gray-500 hover:text-blue-500 hover:bg-blue-50 transition border border-gray-100 shadow-sm"><i class="fas fa-pen text-[10px]"></i></button>
+                            <button onclick="deleteTable('${t.db_id}')" class="w-7 h-7 rounded-lg bg-gray-50 text-gray-500 hover:text-red-500 hover:bg-red-50 transition border border-gray-100 shadow-sm"><i class="fas fa-trash text-[10px]"></i></button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function openTableModal(mode, db_id = null) {
+            const modal = document.getElementById('tableModal');
+            document.getElementById('table-id').value = db_id || '';
+            
+            if (mode === 'add') {
+                document.getElementById('table-modal-title').innerHTML = '<i class="fas fa-plus text-teal-500 me-2"></i> Add New Table';
+                document.getElementById('table-name').value = '';
+                document.getElementById('table-seats').value = '4';
+                document.getElementById('table-area').value = 'Main Dining';
+            } else {
+                document.getElementById('table-modal-title').innerHTML = '<i class="fas fa-pen text-blue-500 me-2"></i> Edit Table';
+                const t = restaurantTables.find(x => x.db_id === db_id);
+                if (t) {
+                    document.getElementById('table-name').value = t.id;
+                    document.getElementById('table-seats').value = t.seats;
+                    document.getElementById('table-area').value = t.area;
+                }
+            }
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeTableModal() {
+            document.getElementById('tableModal').classList.remove('flex');
+            document.getElementById('tableModal').classList.add('hidden');
+        }
+
+        async function saveTable() {
+            const db_id = document.getElementById('table-id').value;
+            const name = document.getElementById('table-name').value.trim();
+            const seats = parseInt(document.getElementById('table-seats').value) || 4;
+            const area = document.getElementById('table-area').value.trim() || 'Main Dining';
+
+            if (!name) return alert("Table Name is required!");
+
+            const btn = document.getElementById('btn-save-table');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const payload = { table_number: name, seats: seats, dining_area: area };
+
+            let error;
+            if (db_id) {
+                const res = await supabaseClient.from('restaurant_tables').update(payload).eq('id', db_id);
+                error = res.error;
+            } else {
+                const res = await supabaseClient.from('restaurant_tables').insert([payload]);
+                error = res.error;
+            }
+
+            btn.innerHTML = 'Save Table';
+            if (error) {
+                alert("Error saving table: " + error.message);
+            } else {
+                closeTableModal();
+                fetchTables();
+            }
+        }
+
+        async function deleteTable(db_id) {
+            if (!confirm("Are you sure you want to delete this table?")) return;
+            await supabaseClient.from('restaurant_tables').delete().eq('id', db_id);
+            fetchTables();
+        }
+
 // NEW: Currency Selector Logic
         function selectCurrency(curr) {
             document.getElementById('set-currency').value = curr; // Saves to hidden input
@@ -4080,21 +4239,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
         let posActiveArea = 'Main Dining';
         let posActiveChairs = []; 
 
-        const restaurantTables = [
-            { id: 'T01', seats: 6, area: 'Main Dining' },
-            { id: 'T02', seats: 2, area: 'Main Dining' },
-            { id: 'T03', seats: 2, area: 'Main Dining' },
-            { id: 'T04', seats: 3, area: 'Main Dining' },
-            { id: 'T05', seats: 4, area: 'Main Dining' },
-            { id: 'T06', seats: 7, area: 'Main Dining' },
-            { id: 'T07', seats: 10, area: 'Main Dining' },
-            { id: 'T08', seats: 2, area: 'Main Dining' },
-            { id: 'T09', seats: 4, area: 'Family Section' },
-            { id: 'T10', seats: 6, area: 'Family Section' },
-            { id: 'T11', seats: 4, area: 'Terrace' },
-            { id: 'T12', seats: 8, area: 'Outdoor' }
-        ];
-
+        let restaurantTables = [];
         function posSetFilter(filter) {
             posFilter = filter;
             ['All', 'Dine In', 'Takeaway'].forEach(f => {
