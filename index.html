@@ -755,27 +755,54 @@
 
                     <!-- Hidden Table Dropdown, Area & Guest Count -->
                     <div id="table-select-container" class="hidden transition-all duration-300 mt-2">
-                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-2 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Dine-In Details</div>
+                        <div class="text-[10px] font-bold text-gray-400 uppercase mb-4 text-center flex items-center gap-2 before:h-px before:flex-1 before:bg-gray-200 after:h-px after:flex-1 after:bg-gray-200">Dine-In Details</div>
                         
-                        <!-- 🌟 NEW: Area Selector -->
-                        <div class="mb-3">
-                            <label class="block text-xs font-bold text-gray-600 mb-1"><i class="fas fa-map-marker-alt text-gray-400 me-1"></i> Select Area:</label>
-                            <select id="order-dining-area" class="w-full border border-gray-200 rounded-lg px-3 py-2 text-xs font-bold text-gray-700 focus:outline-none focus:border-green-500 transition bg-gray-50">
-                                <option value="Main Dining">Main Dining</option>
-                                <option value="Family Section">Family Section</option>
-                                <option value="Terrace">Terrace</option>
-                                <option value="Outdoor">Outdoor</option>
-                            </select>
+                        <!-- 🌟 GUEST COUNT UI -->
+                        <div class="mb-5">
+                            <label class="text-xs font-bold text-gray-500 uppercase flex items-center gap-2 mb-2">
+                                <i class="fas fa-users text-teal-500"></i> Number of people:
+                            </label>
+                            
+                            <div class="flex items-center gap-3">
+                                <!-- Plus/Minus Controls -->
+                                <div class="flex items-center bg-gray-100 rounded-xl border border-gray-200 p-1 shrink-0">
+                                    <button type="button" onclick="changeGuestCount(-1)" class="w-8 h-8 bg-white rounded-lg shadow-sm text-gray-600 font-black hover:text-red-500 transition">-</button>
+                                    <span id="display-guest-count" class="w-8 text-center font-black text-gray-800">1</span>
+                                    <button type="button" onclick="changeGuestCount(1)" class="w-8 h-8 bg-white rounded-lg shadow-sm text-gray-600 font-black hover:text-teal-500 transition">+</button>
+                                </div>
+                                
+                                <!-- Quick Pick Buttons -->
+                                <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+                                    <button type="button" onclick="setGuestCount(1)" id="guest-btn-1" class="guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-teal-600 text-white shadow-sm transition">1</button>
+                                    <button type="button" onclick="setGuestCount(2)" id="guest-btn-2" class="guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition">2</button>
+                                    <button type="button" onclick="setGuestCount(3)" id="guest-btn-3" class="guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition">3</button>
+                                    <button type="button" onclick="setGuestCount(4)" id="guest-btn-4" class="guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition">4</button>
+                                    <button type="button" onclick="setGuestCount(5)" id="guest-btn-5" class="guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition">5</button>
+                                    <button type="button" onclick="setGuestCount(6)" id="guest-btn-6" class="guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition">6</button>
+                                </div>
+                            </div>
                         </div>
 
-                        <label class="block text-xs font-bold text-gray-600 mb-1"><i class="fas fa-chair text-gray-400 me-1"></i> Select Table:</label>
-                        <!-- Table Grid -->
-                        <div id="table-grid" class="flex overflow-x-auto gap-1.5 pb-3 snap-x hide-scrollbar mb-2 border-b border-gray-100"></div>
-                        
-                        <!-- Guest Count Input -->
-                        <div class="flex items-center justify-center gap-3 bg-white border border-gray-200 rounded-lg p-2 w-fit mx-auto shadow-sm">
-                            <label class="text-xs font-bold text-gray-600"><i class="fas fa-users text-gray-400 me-1"></i> Number of People:</label>
-                            <input type="number" id="order-guest-count" value="1" min="1" max="20" class="w-12 text-center text-sm font-black text-gray-800 bg-gray-50 border border-gray-200 rounded focus:outline-none focus:border-green-500 transition">
+                        <!-- 🌟 DYNAMIC AREAS & TABLES UI -->
+                        <div class="flex flex-col gap-4 border-t border-gray-100 pt-4">
+                            <!-- Areas Horizontal Scroll -->
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Select Area</label>
+                                <div id="customer-area-scroll" class="flex gap-2 overflow-x-auto hide-scrollbar pb-2 snap-x">
+                                    <!-- JS Injects Areas Here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Tables Grid -->
+                            <div>
+                                <label class="text-xs font-bold text-gray-500 uppercase mb-2 block">Select Table</label>
+                                <div id="customer-table-grid" class="flex gap-2 overflow-x-auto hide-scrollbar pb-2 snap-x">
+                                    <!-- JS Injects Tables Here -->
+                                </div>
+                            </div>
+                            <!-- Hidden inputs so the WhatsApp order function still works! -->
+                            <input type="hidden" id="selected-customer-table" value="">
+                            <input type="hidden" id="order-guest-count" value="1">
                         </div>
                     </div>
 
@@ -2421,15 +2448,15 @@ function setupVerticalDraggable(elementId) {
                     matchedItems.forEach(relItem => {
                         relatedSlider.innerHTML += `
                             <div onclick="openModal('${relItem.id}')" class="relative w-[28vw] sm:w-[110px] flex-shrink-0 snap-start bg-orange-50 border border-orange-100 rounded-xl p-2 shadow-sm cursor-pointer hover:shadow-md transition-shadow group">
-                                <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 pointer-events-none" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
-                                <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1 pointer-events-none">${relItem.name}</h4>
-                                <div class="flex justify-between items-center mt-1 pointer-events-none">
-                                    <p class="text-[10px] text-orange-600 font-bold flex items-baseline gap-1">${relItem.price} ${getSmartCurrency(globalCurrency, '')}</p>
-                                    <button type="button" onclick="event.stopPropagation(); toggleQuickCart('${relItem.id}')" class="quick-add-btn-${relItem.id} bg-orange-500 text-white w-5 h-5 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-colors pointer-events-auto z-10 relative">
-                                        <i class="quick-add-icon-${relItem.id} fas fa-plus text-[8px] transition-transform duration-500 pointer-events-none"></i>
-                                    </button>
-                                </div>
-                            </div>
+    <img src="${relItem.img}" class="w-full h-16 object-cover rounded-lg mb-1.5 pointer-events-none" onerror="this.src='${rawBranding.smartLogo || 'https://via.placeholder.com/100'}';">
+    <h4 class="text-[10px] font-bold text-gray-800 line-clamp-1">${relItem.name}</h4>
+    <div class="flex justify-between items-center mt-1">
+        <p class="text-[10px] text-orange-600 font-bold flex items-baseline gap-1">${relItem.price} ${getSmartCurrency(globalCurrency, '')}</p>
+        <button type="button" onclick="event.stopPropagation(); toggleQuickCart('${relItem.id}')" class="quick-add-btn-${relItem.id} bg-orange-500 text-white w-6 h-6 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-colors z-20 relative">
+            <i class="quick-add-icon-${relItem.id} fas fa-plus text-[10px] transition-transform duration-500"></i>
+        </button>
+    </div>
+</div>
                         `;
                     });
                     relatedArea.classList.remove('hidden');
@@ -2746,23 +2773,103 @@ function smartWhatsAppOrder() {
 let diningType = 'Takeaway'; 
         let selectedTable = '';
 
-        function initTableSelect() {
-            const grid = document.getElementById('table-grid');
-            grid.innerHTML = '';
-            
-            for(let i = 1; i <= 20; i++) {
-                // This creates the 01, 02 format automatically
-                const formattedNum = String(i).padStart(2, '0'); 
-                const tableLabel = `T${formattedNum}`; // Adds the "T"
-                
-                // Adjusted to w-10 and text-xs to fit the new text perfectly
-                grid.innerHTML += `
-                    <button onclick="selectTableNumber('${i}')" id="btn-table-num-${i}" class="w-10 h-10 shrink-0 snap-start rounded-lg border-2 border-gray-200 bg-white text-gray-500 font-bold text-xs hover:border-green-300 transition-all flex items-center justify-center">
-                        ${tableLabel}
-                    </button>
-                `;
+// ==========================================
+// 🌟 GUEST COUNT LOGIC
+// ==========================================
+let currentGuestCount = 1;
+
+function changeGuestCount(change) {
+    let newVal = currentGuestCount + change;
+    if (newVal < 1) newVal = 1;
+    setGuestCount(newVal);
+}
+
+function setGuestCount(val) {
+    currentGuestCount = val;
+    document.getElementById('display-guest-count').textContent = val;
+    document.getElementById('order-guest-count').value = val; // Syncs with WhatsApp checkout
+    
+    for (let i = 1; i <= 6; i++) {
+        const btn = document.getElementById(`guest-btn-${i}`);
+        if (btn) {
+            if (i === val) {
+                btn.className = "guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-teal-600 text-white shadow-sm transition";
+            } else {
+                btn.className = "guest-btn w-10 h-10 shrink-0 rounded-xl font-black text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 transition";
             }
         }
+    }
+}
+
+// ==========================================
+// 🌟 DYNAMIC TABLES & AREAS LOGIC (Supabase)
+// ==========================================
+let customerTables = [];
+let selectedCustomerArea = '';
+
+async function loadCustomerTables() {
+    const { data, error } = await supabaseClient
+        .from('restaurant_tables')
+        .select('*')
+        .order('table_number', { ascending: true });
+        
+    if (!error && data) {
+        customerTables = data;
+        renderCustomerAreas();
+    }
+}
+
+function renderCustomerAreas() {
+    const areaContainer = document.getElementById('customer-area-scroll');
+    if (!areaContainer) return;
+    
+    const areas = [...new Set(customerTables.map(t => t.dining_area || 'Main Dining'))];
+    if (areas.length === 0) return;
+    
+    if (!selectedCustomerArea || !areas.includes(selectedCustomerArea)) {
+        selectedCustomerArea = areas[0];
+    }
+
+    areaContainer.innerHTML = areas.map(area => `
+        <button type="button" onclick="selectCustomerArea('${area}')" class="whitespace-nowrap px-5 py-2 rounded-xl text-xs font-black transition snap-start border ${selectedCustomerArea === area ? 'bg-teal-600 text-white border-teal-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}">
+            ${area}
+        </button>
+    `).join('');
+
+    renderCustomerTablesList();
+}
+
+function selectCustomerArea(area) {
+    selectedCustomerArea = area;
+    renderCustomerAreas(); 
+}
+
+function renderCustomerTablesList() {
+    const tableContainer = document.getElementById('customer-table-grid');
+    if (!tableContainer) return;
+    
+    const filteredTables = customerTables.filter(t => (t.dining_area || 'Main Dining') === selectedCustomerArea);
+
+    if (filteredTables.length === 0) {
+        tableContainer.innerHTML = `<div class="w-full text-center text-gray-400 text-xs italic py-4">No tables in this area.</div>`;
+        return;
+    }
+
+    tableContainer.innerHTML = filteredTables.map(t => `
+        <button type="button" onclick="selectCustomerTable('${t.table_number}')" class="w-16 h-16 shrink-0 snap-start rounded-xl border-2 transition flex flex-col items-center justify-center gap-1 ${selectedTable === t.table_number ? 'border-teal-500 bg-teal-50 text-teal-700 shadow-md scale-110' : 'border-gray-200 bg-white text-gray-600 hover:border-teal-300'}">
+            <span class="font-black text-sm">${t.table_number}</span>
+            <span class="text-[9px] font-bold ${selectedTable === t.table_number ? 'text-teal-500' : 'text-gray-400'}"><i class="fas fa-chair"></i> ${t.seats}</span>
+        </button>
+    `).join('');
+}
+
+function selectCustomerTable(tNum) {
+    selectedTable = tNum; // Updates global variable for WhatsApp Checkout
+    document.getElementById('selected-customer-table').value = tNum;
+    renderCustomerTablesList();
+}
+
+        
       function setupDraggable(element) {
             const slider = typeof element === 'string' ? document.getElementById(element) : element;
             if(!slider) return;
@@ -2798,23 +2905,7 @@ if (slider.dataset.dragAttached === "true") return;
             });
         }
 
-        function selectTableNumber(num) {
-            // Saves the exact T01 format to send to WhatsApp
-            const formattedNum = String(num).padStart(2, '0');
-            selectedTable = `T${formattedNum}`; 
-            
-            // Reset all table buttons to default gray
-            for(let i = 1; i <= 20; i++) {
-                const btn = document.getElementById(`btn-table-num-${i}`);
-                if(btn) btn.className = "w-10 h-10 shrink-0 snap-start rounded-lg border-2 border-gray-200 bg-white text-gray-500 font-bold text-xs hover:border-green-300 transition-all flex items-center justify-center";
-            }
-            
-            // Highlight the clicked button in Green
-            const activeBtn = document.getElementById(`btn-table-num-${num}`);
-            if(activeBtn) {
-                activeBtn.className = "w-10 h-10 shrink-0 snap-start rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-bold text-xs transition-all shadow-sm scale-110 flex items-center justify-center";
-            }
-        }
+        
 
         function setDiningType(type) {
             diningType = type;
@@ -2838,10 +2929,7 @@ if (slider.dataset.dragAttached === "true") return;
 
         
 
-        setTimeout(() => { 
-            initTableSelect(); 
-            setupDraggable('table-grid'); // Enable desktop drag
-        }, 500);
+        loadCustomerTables();
       
         function addToCart() {
             if(!currentOpenItemId) return;
@@ -3718,7 +3806,8 @@ function toggleQuickCart(id) {
                 }
             }
         }, { passive: true });
-      // --- NEW: Premium Pull-To-Close Elastic Engine for Expanded View ---
+      
+        // --- NEW: Premium Pull-To-Close Elastic Engine for Expanded View ---
         const pModal = document.getElementById('productModal');
         const pContent = document.getElementById('modalContent');
         let pullStartY = 0;
@@ -3744,8 +3833,9 @@ function toggleQuickCart(id) {
             // If pulling DOWN (deltaY is positive)
             if (deltaY > 0) {
                 if (e.cancelable) e.preventDefault(); // Stop normal background scrolling
-                // Apply a 0.4 friction multiplier to create that satisfying "heavy elastic" feel
-                pContent.style.transform = `translateY(${deltaY * 0.4}px)`;
+                
+                // 🌟 TWEAK 1: Changed from 0.4 to 0.8 so the card moves much easier with the finger!
+                pContent.style.transform = `translateY(${deltaY * 0.8}px)`;
             } else {
                 // If they push UP, cancel the pull and let native scrolling take over
                 pContent.style.transform = '';
@@ -3760,13 +3850,13 @@ function toggleQuickCart(id) {
             // Turn CSS smooth transitions back on
             pContent.classList.add('transition-all', 'duration-300');
             
-            // If they pulled it down more than 100 pixels, snap it closed!
+            // 🌟 TWEAK 2: Changed from 100 to 60 so it closes with a much shorter swipe!
             const currentPullAmount = parseInt(pContent.style.transform.replace(/[^\d.]/g, '') || "0");
-            if (currentPullAmount > 100) {
+            if (currentPullAmount > 60) {
                 pContent.style.transform = ''; 
                 closeModal();
             } else {
-                // Snap back to the top like a rubber band!
+                // Snap back to the top if they didn't swipe far enough
                 pContent.style.transform = ''; 
             }
         });
