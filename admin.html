@@ -3209,9 +3209,41 @@ let currentMediaTarget = 'product';
                 }
             }
 
-            container.innerHTML = '';
+            // 🌟 FIX 2: Create Horizontal Carousel & properly inject it before orders!
+            if (targetEmail && window.customerProfilesMap && window.customerProfilesMap[targetEmail]) {
+                const wishlistIds = window.customerProfilesMap[targetEmail].wishlist || [];
+                
+                if (wishlistIds.length > 0 && typeof allMenuItems !== 'undefined') {
+                    const favItems = allMenuItems.filter(m => wishlistIds.includes(String(m.id)));
+                    
+                    if (favItems.length > 0) {
+                        let favCards = '';
+                        favItems.forEach(item => {
+                            const img = item.img_urls && item.img_urls.length > 0 ? item.img_urls[0] : 'https://via.placeholder.com/50';
+                            favCards += `
+                                <div class="relative w-[120px] flex-shrink-0 snap-start bg-red-50 border border-red-100 rounded-xl p-2 shadow-sm flex flex-col gap-1 items-center justify-center text-center">
+                                    <div class="absolute top-1 right-1 z-10 w-5 h-5 bg-white rounded-full flex items-center justify-center shadow-sm"><i class="fas fa-heart text-red-500 text-[10px]"></i></div>
+                                    <img src="${img}" class="w-full h-16 object-cover rounded-lg shadow-sm shrink-0">
+                                    <span class="text-[10px] font-bold text-gray-800 line-clamp-2 leading-tight">${item.name}</span>
+                                </div>
+                            `;
+                        });
+                        wishlistHtml = `
+                            <div class="mb-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-200 shrink-0">
+                                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5"><i class="fas fa-star text-yellow-400"></i> Customer Favorites</h4>
+                                <div class="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x">
+                                    ${favCards}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            container.innerHTML = wishlistHtml; // 🌟 Safely injects the Wishlist row!
+
             if (customerOrders.length === 0) {
-                container.innerHTML = `<div class="p-8 text-center text-gray-400 font-bold text-xs italic">No orders found for this customer profile.</div>`;
+                container.innerHTML += `<div class="p-8 text-center text-gray-400 font-bold text-xs italic">No orders found for this customer profile.</div>`;
             }
 
             customerOrders.forEach(order => {
@@ -3236,7 +3268,6 @@ let currentMediaTarget = 'product';
                 }
 
                 container.innerHTML += `
-                    <!-- 🌟 FIX: Added shrink-0 to prevent flexbox from squishing the cards! -->
                     <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-200 relative overflow-hidden flex flex-col gap-3 mb-4 shrink-0">
                         <div class="flex justify-between items-start">
                             <div>
@@ -3866,7 +3897,7 @@ const dbLang = (mainRow.language || '').toLowerCase();
 
         function renderReviews() {
             const container = document.getElementById('reviews-container');
-            if (!container) return; // 🌟 FIX: Stops crashing if HTML is missing!
+            if (!container) return; 
 
             container.innerHTML = '';
 
@@ -3899,12 +3930,23 @@ const dbLang = (mainRow.language || '').toLowerCase();
                     `;
                 }
 
+                // 🌟 FIX 1: Check if this exact customer favorited this exact item!
+                let isLoved = false;
+                const matchedItem = allMenuItems.find(m => m.name === review.item_name);
+                if (matchedItem && window.customerProfilesMap) {
+                    const custProfile = Object.values(window.customerProfilesMap).find(p => p.name === review.customer_name);
+                    if (custProfile && custProfile.wishlist && custProfile.wishlist.includes(String(matchedItem.id))) {
+                        isLoved = true;
+                    }
+                }
+                const heartHtml = isLoved ? `<i class="fas fa-heart text-red-500 ms-1" title="Favorited Item"></i>` : `<i class="fas fa-heart text-gray-300 ms-1" title="Not Favorited"></i>`;
+
                 container.innerHTML += `
                     <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col gap-3 shadow-sm hover:shadow-md transition">
                         <div class="flex justify-between items-start">
                             <div>
                                 <h4 class="font-black text-gray-900 text-sm">${review.customer_name || 'Anonymous'}</h4>
-                                <p class="text-[10px] font-bold text-blue-500 mt-0.5">Item: ${review.item_name || 'General'}</p>
+                                <p class="text-[10px] font-bold text-blue-500 mt-0.5 flex items-center">Item: ${review.item_name || 'General'} ${heartHtml}</p>
                             </div>
                             <div class="flex flex-col items-end gap-1.5">
                                 ${statusBadge}
