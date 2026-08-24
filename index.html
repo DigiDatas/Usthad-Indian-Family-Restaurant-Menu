@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>QRGate POS | Modern Multi-Tenant Restaurant Platform</title>
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Poppins', sans-serif; }</style>
+    <!-- Supabase JS Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-white text-gray-800">
@@ -68,25 +72,25 @@
         </div>
     </section>
 
+    <!-- SUPABASE CONFIG & AUTH SCRIPT -->
     <script>
-    const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
-    
-    // Initialize the client
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co";
+        const SUPABASE_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
+        
+        // Initialize Supabase client
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // 🌟 This is the function your buttons are waiting for!
-    async function loginWithGoogle() {
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-            provider: 'google',
-            options: {
-                redirectTo: window.location.origin + '/Usthad-Indian-Family-Restaurant-Menu/onboarding-handler.html'
+        async function loginWithGoogle() {
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + '/Usthad-Indian-Family-Restaurant-Menu/onboarding-handler.html'
+                }
+            });
+            if (error) {
+                alert("Login Error: " + error.message);
             }
-        });
-        if (error) {
-            alert("Login Error: " + error.message);
         }
-    }
-</script>
+    </script>
 </body>
 </html>
