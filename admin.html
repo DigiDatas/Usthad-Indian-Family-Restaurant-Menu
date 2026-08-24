@@ -915,7 +915,7 @@
         <div id="tab-tv" class="hidden h-full flex flex-col p-6 animate-fade-in">
             <div class="flex justify-between items-center mb-6 shrink-0">
                 <div>
-                    <h2 class="text-3xl font-black text-white tracking-tight">Digital Signage</h2>
+                    <h2 class="text-3xl font-black text-gray-900 tracking-tight">Digital Signage</h2>
                     <p class="text-gray-400 text-sm mt-1">Manage what plays on the restaurant TVs.</p>
                 </div>
                 <button onclick="castToTv()" class="bg-blue-600 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-blue-900/50 hover:bg-blue-500 hover:scale-105 font-black tracking-wide transition-all flex items-center gap-2">
@@ -925,22 +925,32 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 overflow-hidden">
                 <!-- Add Media Form -->
-                <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 h-fit">
-                    <h3 class="text-lg font-bold text-white mb-4">Add to TV Loop</h3>
-                    <input type="text" id="tv-media-url" placeholder="Paste Image/Video URL" class="w-full bg-gray-900 text-white border border-gray-700 rounded-xl px-4 py-2.5 text-sm mb-3 focus:border-blue-500 outline-none">
-                    
-                    <div class="flex gap-3 mb-4">
-                        <select id="tv-media-type" class="flex-1 bg-gray-900 text-white border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none">
-                            <option value="image">Image</option>
-                            <option value="video">Video</option>
-                        </select>
-                        <input type="number" id="tv-duration" placeholder="Seconds" value="10" class="w-24 bg-gray-900 text-white border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none">
-                    </div>
+                <!-- Add / Edit Media Form -->
+<div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 h-fit">
+    <h3 id="tv-form-title" class="text-lg font-bold text-white mb-4">Add to TV Loop</h3>
+    
+    <!-- 🌟 Hidden ID field to track what we are editing -->
+    <input type="hidden" id="tv-edit-id">
+    
+    <input type="text" id="tv-media-url" placeholder="Paste Image/Video URL" class="w-full bg-gray-900 text-white border border-gray-700 rounded-xl px-4 py-2.5 text-sm mb-3 focus:border-blue-500 outline-none">
+    
+    <div class="flex gap-3 mb-4">
+        <select id="tv-media-type" class="flex-1 bg-gray-900 text-white border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none">
+            <option value="image">Image</option>
+            <option value="video">Video</option>
+        </select>
+        <input type="number" id="tv-duration" placeholder="Seconds" value="10" class="w-24 bg-gray-900 text-white border border-gray-700 rounded-xl px-3 py-2 text-sm outline-none">
+    </div>
 
-                    <button onclick="addTvMedia()" class="w-full bg-gray-700 text-white py-2 rounded-xl hover:bg-gray-600 font-bold text-sm transition">
-                        <i class="fas fa-plus"></i> Add to Loop
-                    </button>
-                </div>
+    <div class="flex gap-2">
+        <button onclick="saveTvMedia()" id="tv-submit-btn" class="flex-1 bg-blue-600 text-white py-2 rounded-xl hover:bg-blue-500 font-bold text-sm transition">
+            <i class="fas fa-plus"></i> Add to Loop
+        </button>
+        <button onclick="resetTvForm()" id="tv-cancel-btn" class="hidden bg-gray-700 text-gray-300 px-4 py-2 rounded-xl hover:bg-gray-600 text-sm transition">
+            Cancel
+        </button>
+    </div>
+</div>
 
                 <!-- Playlist Preview -->
                 <div class="md:col-span-2 bg-gray-900 rounded-2xl border border-gray-800 p-2 overflow-y-auto hide-scrollbar flex flex-col gap-2" id="tv-playlist-container">
@@ -5126,10 +5136,12 @@ function updatePosRightPanelLabels() {
         }
 
 // ==========================================
-        // 🌟 DIGITAL SIGNAGE (MY TV) LOGIC
+        // 🌟 DIGITAL SIGNAGE (MY TV) ADVANCED LOGIC
         // ==========================================
 
-        // 1. Fetch and Display the Playlist
+        let allTvPlaylistItems = [];
+
+        // 1. Fetch and Display the Playlist with Drag Handles
         async function loadTvPlaylist() {
             const container = document.getElementById('tv-playlist-container');
             container.innerHTML = '<div class="text-center p-4 text-gray-500"><i class="fas fa-spinner fa-spin"></i> Loading playlist...</div>';
@@ -5146,21 +5158,24 @@ function updatePosRightPanelLabels() {
                 return;
             }
 
+            allTvPlaylistItems = data || [];
             container.innerHTML = '';
-            if (data.length === 0) {
+
+            if (allTvPlaylistItems.length === 0) {
                 container.innerHTML = '<div class="text-gray-500 text-center py-10 font-bold text-sm">Playlist is empty. Add media to start looping!</div>';
                 return;
             }
 
-            data.forEach((item) => {
+            allTvPlaylistItems.forEach((item) => {
                 const isImage = item.media_type === 'image';
                 const icon = isImage ? '<i class="fas fa-image text-blue-400"></i>' : '<i class="fas fa-video text-purple-400"></i>';
                 const durationText = isImage ? `${item.duration}s` : 'Full Video';
                 const activeClass = item.is_active ? 'bg-gray-800 border-gray-600' : 'bg-gray-900 border-gray-800 opacity-50';
 
                 container.innerHTML += `
-                    <div class="flex items-center justify-between p-3 rounded-xl border ${activeClass} transition-all">
-                        <div class="flex items-center gap-4">
+                    <div class="tv-item-row flex items-center justify-between p-3 rounded-xl border ${activeClass} transition-all cursor-grab active:cursor-grabbing" data-id="${item.id}">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-grip-vertical text-gray-500 hover:text-white transition"></i>
                             <div class="w-16 h-12 bg-black rounded-lg overflow-hidden shrink-0 border border-gray-700 flex items-center justify-center">
                                 ${isImage ? `<img src="${item.media_url}" class="w-full h-full object-cover">` : `<i class="fas fa-play text-gray-500"></i>`}
                             </div>
@@ -5170,6 +5185,9 @@ function updatePosRightPanelLabels() {
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
+                            <button onclick="prepareEditTvMedia('${item.id}')" class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white flex items-center justify-center transition" title="Edit Item">
+                                <i class="fas fa-pen text-xs"></i>
+                            </button>
                             <button onclick="toggleTvMedia('${item.id}', ${item.is_active})" class="w-8 h-8 rounded-full ${item.is_active ? 'bg-green-500/20 text-green-500 hover:bg-green-500 hover:text-white' : 'bg-gray-800 text-gray-500 hover:bg-gray-700'} flex items-center justify-center transition" title="Toggle Visibility">
                                 <i class="fas ${item.is_active ? 'fa-eye' : 'fa-eye-slash'}"></i>
                             </button>
@@ -5180,10 +5198,59 @@ function updatePosRightPanelLabels() {
                     </div>
                 `;
             });
+
+            // Initialize SortableJS for drag-and-drop repositioning
+            if (window.tvSortableInstance) window.tvSortableInstance.destroy();
+            window.tvSortableInstance = new Sortable(container, {
+                animation: 150,
+                ghostClass: 'opacity-50',
+                onEnd: async () => {
+                    // Automatically re-index and save positions to database on drop
+                    const rows = container.querySelectorAll('.tv-item-row');
+                    for (let index = 0; index < rows.length; index++) {
+                        const rowId = rows[index].dataset.id;
+                        await supabaseClient
+                            .from('tv_playlist')
+                            .update({ order_index: index })
+                            .eq('id', rowId);
+                    }
+                    loadTvPlaylist();
+                }
+            });
         }
 
-        // 2. Add New Media to the Database
-        async function addTvMedia() {
+        // 2. Load Item Data into Form for Editing
+        function prepareEditTvMedia(id) {
+            const item = allTvPlaylistItems.find(i => String(i.id) === String(id));
+            if (!item) return;
+
+            document.getElementById('tv-edit-id').value = item.id;
+            document.getElementById('tv-media-url').value = item.media_url;
+            document.getElementById('tv-media-type').value = item.media_type;
+            document.getElementById('tv-duration').value = item.duration;
+
+            document.getElementById('tv-form-title').textContent = 'Edit TV Loop Item';
+            document.getElementById('tv-submit-btn').innerHTML = '<i class="fas save"></i> Update Item';
+            document.getElementById('tv-cancel-btn').classList.remove('hidden');
+
+            // Scroll form into view smoothly
+            document.getElementById('tv-media-url').focus();
+        }
+
+        function resetTvForm() {
+            document.getElementById('tv-edit-id').value = '';
+            document.getElementById('tv-media-url').value = '';
+            document.getElementById('tv-media-type').value = 'image';
+            document.getElementById('tv-duration').value = '10';
+
+            document.getElementById('tv-form-title').textContent = 'Add to TV Loop';
+            document.getElementById('tv-submit-btn').innerHTML = '<i class="fas fa-plus"></i> Add to Loop';
+            document.getElementById('tv-cancel-btn').classList.add('hidden');
+        }
+
+        // 3. Save or Update Media in Database
+        async function saveTvMedia() {
+            const editId = document.getElementById('tv-edit-id').value;
             const urlInput = document.getElementById('tv-media-url');
             const typeInput = document.getElementById('tv-media-type');
             const durationInput = document.getElementById('tv-duration');
@@ -5191,52 +5258,59 @@ function updatePosRightPanelLabels() {
             const url = urlInput.value.trim();
             if (!url) return alert("Please enter a valid image or video URL!");
 
-            const { error } = await supabaseClient
-                .from('tv_playlist')
-                .insert([{
-                    media_url: url,
-                    media_type: typeInput.value,
-                    duration: parseInt(durationInput.value) || 10,
-                    is_active: true
-                }]);
+            const payload = {
+                media_url: url,
+                media_type: typeInput.value,
+                duration: parseInt(durationInput.value) || 10,
+                is_active: true
+            };
+
+            let error;
+            if (editId) {
+                // Update existing record
+                const res = await supabaseClient.from('tv_playlist').update(payload).eq('id', editId);
+                error = res.error;
+            } else {
+                // Insert new record at the end
+                payload.order_index = allTvPlaylistItems.length;
+                const res = await supabaseClient.from('tv_playlist').insert([payload]);
+                error = res.error;
+            }
 
             if (error) {
-                alert("Error adding media: " + error.message);
+                alert("Error saving media: " + error.message);
             } else {
-                urlInput.value = ''; // Clear the input
-                loadTvPlaylist(); // Refresh the list
+                resetTvForm();
+                loadTvPlaylist();
             }
         }
 
-        // 3. Delete Media
+        // 4. Delete Media
         async function deleteTvMedia(id) {
             if (!confirm('Are you sure you want to delete this from the TV?')) return;
             await supabaseClient.from('tv_playlist').delete().eq('id', id);
             loadTvPlaylist();
         }
 
-        // 4. Turn Media ON or OFF
+        // 5. Turn Media ON or OFF
         async function toggleTvMedia(id, currentState) {
             await supabaseClient.from('tv_playlist').update({ is_active: !currentState }).eq('id', id);
             loadTvPlaylist();
         }
 
-        // 5. The Magic "Cast to TV" Button (Realtime Broadcast!)
+        // 6. The Magic "Cast to TV" Button (Realtime Broadcast!)
         function castToTv() {
             const btn = event.currentTarget;
             const originalHtml = btn.innerHTML;
             
-            // Show loading state
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Casting...';
             
-            // Beam the signal!
             supabaseClient.channel('tv-channel').send({
                 type: 'broadcast',
                 event: 'refresh_tv',
                 payload: { time: Date.now() }
             });
 
-            // Show success state then reset
             setTimeout(() => {
                 btn.classList.replace('bg-blue-600', 'bg-green-500');
                 btn.innerHTML = '<i class="fas fa-check"></i> Sent to TV!';
@@ -5248,7 +5322,6 @@ function updatePosRightPanelLabels() {
             }, 600);
         }
 
-        // 6. Automatically load the playlist when you open the Admin Dashboard
         setTimeout(loadTvPlaylist, 1500);
 
     </script>
