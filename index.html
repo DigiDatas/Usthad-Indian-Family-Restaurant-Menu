@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shawar Max Menu</title>
+    <title>Usthad Menu</title>
   <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#ef4444">
     <link rel="apple-touch-icon" href="logo.png">
@@ -452,7 +452,7 @@
                 <!-- 🌟 NEW: DISPLAY APPROVED REVIEWS -->
                 <div id="modalApprovedReviewsArea" class="hidden mb-4 flex-col gap-3">
                     <h4 class="font-bold text-gray-800 text-sm border-b border-gray-100 pb-1 flex items-center gap-2"><i class="fas fa-star text-yellow-400"></i> Customer Reviews</h4>
-                    <div id="approved-reviews-container" class="flex flex-col gap-2 max-h-48 overflow-y-auto hide-scrollbar">
+                    <div id="approved-reviews-container" class="flex gap-3 overflow-x-auto hide-scrollbar pb-2 snap-x">
                         <!-- Reviews injected here -->
                     </div>
                 </div>
@@ -866,20 +866,19 @@
 
                 const cloudWishlist = (profileData && profileData.wishlist) ? profileData.wishlist : (currentUser.user_metadata?.wishlist || []);
                 
+                // 🌟 FIX 3a: Force mapping ALL database IDs into Strings so the browser can read them!
                 if (cloudWishlist.length > 0) {
-                    // Overwrite local memory with the Cloud truth
-                    likedItems = new Set(cloudWishlist);
+                    likedItems = new Set(cloudWishlist.map(String));
                     localStorage.setItem('likedItems', JSON.stringify([...likedItems]));
                 }
 
-                // 🌟 FIX: FORCE UI UPDATE! Find all heart buttons currently on screen and paint them red instantly.
+                // 🌟 FIX 3b: Ensure String Conversion when coloring hearts upon login!
                 document.querySelectorAll('.menu-card').forEach(card => {
                     const btn = card.querySelector('button[onclick^="toggleLike"]');
                     if (btn) {
-                        // Extract the item ID from the onclick attribute text
                         const match = btn.getAttribute('onclick').match(/'([^']+)'/);
                         if (match && match[1]) {
-                            const itemId = match[1];
+                            const itemId = String(match[1]); // <--- Converted to string
                             const icon = btn.querySelector('i');
                             if (likedItems.has(itemId)) {
                                 icon.classList.replace('far', 'fas');
@@ -2124,7 +2123,7 @@ function setupVerticalDraggable(elementId) {
                 card.style.animation = `fadeInUp 0.4s ease forwards ${delay}ms`;
                 card.onclick = () => openModal(item.id);
 
-                const isLiked = likedItems.has(item.id);
+                const isLiked = likedItems.has(String(item.id));
                 
                 let cardCurrencyDisplay = getSmartCurrency(globalCurrency, "text-[10px] sm:text-xs font-normal mx-0.5 text-gray-500");
 
@@ -2420,7 +2419,7 @@ function setupVerticalDraggable(elementId) {
             const reviewsContainer = document.getElementById('approved-reviews-container');
             reviewsContainer.innerHTML = '';
             
-            // Find reviews that match this specific food item
+            // Find reviews that match this specific food item (Already sorted newest first by fetch!)
             const itemReviews = (window.liveReviews || []).filter(r => r.item_name === item.name);
             
             if (itemReviews.length > 0) {
@@ -2431,23 +2430,31 @@ function setupVerticalDraggable(elementId) {
                     }
                     const dateStr = new Date(review.created_at).toLocaleDateString();
                     
+                    // 🌟 FIX: Added width (w-[65vw] sm:w-[240px]), shrink-0, and snap-start to make it a horizontal carousel!
                     reviewsContainer.innerHTML += `
-                        <div class="bg-white border border-gray-100 rounded-xl p-3 flex flex-col gap-1 shadow-sm">
-                            <div class="flex justify-between items-center">
-                                <span class="font-bold text-gray-800 text-xs"><i class="fas fa-user-circle text-gray-300 me-1"></i> ${review.customer_name}</span>
-                                <span class="text-[9px] font-bold text-gray-400">${dateStr}</span>
+                        <div class="w-[65vw] sm:w-[240px] shrink-0 snap-start bg-white border border-gray-100 rounded-xl p-3 flex flex-col gap-1 shadow-sm overflow-hidden cursor-pointer hover:border-red-200 transition group">
+                            <div class="flex justify-between items-start gap-2">
+                                <span class="font-bold text-gray-800 text-xs truncate flex-1 group-hover:text-red-500 transition"><i class="fas fa-user-circle text-gray-300 me-1"></i> ${review.customer_name}</span>
+                                <span class="text-[9px] font-bold text-gray-400 shrink-0 mt-0.5">${dateStr}</span>
                             </div>
                             <div class="flex gap-0.5 text-[10px] my-0.5">${starsHtml}</div>
-                            ${review.comment ? `<p class="text-xs text-gray-600 mt-1 italic">"${review.comment}"</p>` : ''}
+                            ${review.comment ? `<p class="text-xs text-gray-600 mt-1 italic line-clamp-3">"${review.comment}"</p>` : ''}
                         </div>
                     `;
                 });
+                
+                // Allow desktop drag-to-scroll for the carousel
+                if (typeof setupDraggable === 'function') {
+                    setupDraggable('approved-reviews-container');
+                }
+
                 reviewsArea.classList.remove('hidden');
                 reviewsArea.classList.add('flex');
             } else {
                 reviewsArea.classList.add('hidden');
                 reviewsArea.classList.remove('flex');
             }
+            // --- 🌟 END APPROVED REVIEWS ---
            
 
             const modal = document.getElementById('productModal');
