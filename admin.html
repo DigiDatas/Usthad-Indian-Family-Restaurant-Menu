@@ -1227,39 +1227,24 @@
         }
 
         // FIXED TABS ENGINE (Preserves new h-14 height and gaps)
-        function switchTab(tabName) {
-            ['dashboard', 'menu', 'users', 'offers', 'settings', 'pos', 'reviews'].forEach(t => {
-                const section = document.getElementById(`section-${t}`);
-                const btn = document.getElementById(`tab-btn-${t}`);
-                if(section) section.classList.add('hidden');
-                if(btn) btn.className = "sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center";
+        function switchTab(tabId) {
+            // 1. A master list of all your tabs (including 'tv')
+            const allTabs = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social'];
+            
+            // 2. Safely hide every tab
+            allTabs.forEach(t => {
+                const tabElement = document.getElementById('tab-' + t);
+                if (tabElement) {
+                    tabElement.classList.add('hidden');
+                }
             });
-            const activeSection = document.getElementById(`section-${tabName}`);
-            if(activeSection) activeSection.classList.remove('hidden');
-            const activeBtn = document.getElementById(`tab-btn-${tabName}`);
-            if(activeBtn) activeBtn.className = "sidebar-btn relative h-14 w-full rounded-2xl bg-red-600 text-white transition-colors flex items-center shadow-sm";
 
-            const timeFilters = document.getElementById('time-filter-container');
-            if (timeFilters) {
-                if (tabName === 'dashboard') { timeFilters.classList.remove('hidden'); timeFilters.classList.add('flex'); } 
-                else { timeFilters.classList.add('hidden'); timeFilters.classList.remove('flex'); }
-            }
-
-            // 🌟 NEW: Update Dynamic Header Titles
-            const thTitle = document.getElementById('th-title');
-            const thDesc = document.getElementById('th-desc');
-            if (thTitle && thDesc) {
-                const headers = {
-                    'dashboard': { t: 'Dashboard', d: 'Overview of your restaurant performance and live orders.' },
-                    'menu': { t: 'Menu Manager', d: 'Drag categories or items to reorder. Edit properties instantly.' },
-                    'users': { t: 'Customer Directory', d: 'View customer contact details, lifetime spend, and history.' },
-                    'offers': { t: 'Offers & Banners', d: 'Manage promotional sliders, popups, and special deals.' },
-                    'settings': { t: 'Restaurant Settings', d: 'Update branding, currency, social links, and core config.' },
-                    'pos': { t: 'Cashier POS', d: 'Unified point of sale for tables, takeaways, and payments.' },
-                    'reviews': { t: 'Review Manager', d: 'Approve or reject customer feedback for the live app.' }
-                };
-                thTitle.textContent = headers[tabName].t;
-                thDesc.textContent = headers[tabName].d;
+            // 3. Show the tab we clicked
+            const activeTab = document.getElementById('tab-' + tabId);
+            if (activeTab) {
+                activeTab.classList.remove('hidden');
+            } else {
+                console.error("Oops! Could not find tab: tab-" + tabId);
             }
         }
 
