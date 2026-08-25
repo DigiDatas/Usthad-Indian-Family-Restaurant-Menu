@@ -3841,18 +3841,31 @@ const ordersRes = await supabaseClient
             };
 
             let hasError = false;
+            
             if (settingId) {
+                // Try to update existing row
                 const { error } = await supabaseClient.from('restaurant_settings').update(payload).eq('id', settingId);
-                if (error) hasError = true;
+                if (error) { 
+                    hasError = true; 
+                    alert("Supabase Update Error: " + error.message); // 🌟 Now it tells you exactly what went wrong!
+                }
             } else {
+                // Insert a brand new row
                 const { data, error } = await supabaseClient.from('restaurant_settings').insert([payload]).select().single();
-                if (error) hasError = true;
-                if (data) document.getElementById('setting-id').value = data.id; // Save ID for future updates
+                if (error) { 
+                    hasError = true; 
+                    alert("Supabase Insert Error: " + error.message); // 🌟 Now it tells you exactly what went wrong!
+                }
+                if (data) {
+                    document.getElementById('setting-id').value = data.id; // Save ID for future updates without refreshing
+                }
             }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;
-            if (hasError) alert("Warning: There was an issue saving some settings.");
-            else alert("Restaurant settings updated successfully!");
+            
+            if (!hasError) {
+                alert("Restaurant settings updated successfully!");
+            }
         }
 
 // ==========================================
