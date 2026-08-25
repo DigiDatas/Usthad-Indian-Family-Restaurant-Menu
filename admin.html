@@ -1291,36 +1291,73 @@
 
             currentUser = session.user;
 
+            // 1. Fetch user profile
             let { data: profile } = await supabaseClient
                 .from('profiles')
                 .select('*, tenants(*)')
                 .eq('id', currentUser.id)
                 .maybeSingle();
 
-            // Check if Super Admin is currently impersonating a tenant
+            // 2. AUTO-PROVISION IF BRAND NEW USER
+            if (!profile) {
+                const defaultName = currentUser.user_metadata?.full_name 
+                    ? `${currentUser.user_metadata.full_name}'s Restaurant` 
+                    : 'New Restaurant';
+
+                // Create new pending tenant
+                const { data: newTenant, error: tenantErr } = await supabaseClient
+                    .from('tenants')
+                    .insert([{
+                        restaurant_name: defaultName,
+                        plan_tier: 'basic',
+                        status: 'pending'
+                    }])
+                    .select()
+                    .single();
+
+                if (tenantErr) {
+                    alert("Account setup error: " + tenantErr.message);
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Create profile linked to the new tenant
+                const { data: newProfile, error: profErr } = await supabaseClient
+                    .from('profiles')
+                    .insert([{
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        full_name: currentUser.user_metadata?.full_name || 'Restaurant Admin',
+                        role: 'tenant_admin',
+                        restaurant_id: newTenant.id
+                    }])
+                    .select('*, tenants(*)')
+                    .single();
+
+                if (profErr) {
+                    alert("Profile setup error: " + profErr.message);
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                profile = newProfile;
+            }
+
+            // 3. Super Admin Routing vs Impersonation
             const impersonatedId = localStorage.getItem('impersonate_tenant_id');
             const impersonatedName = localStorage.getItem('impersonate_business_name');
 
             if (profile?.role === 'super_admin') {
                 if (!impersonatedId) {
-                    // Not impersonating anyone: go back to Master Control
                     window.location.href = 'super-admin.html';
                     return;
                 }
-                // Act as the selected tenant
                 activeRestaurantId = impersonatedId;
                 const { data: impTenant } = await supabaseClient.from('tenants').select('*').eq('id', impersonatedId).single();
                 currentTenantPlan = impTenant?.plan_tier || 'basic';
-                
-                // Show Impersonation Alert Banner
                 showImpersonationBanner(impersonatedName || impTenant?.restaurant_name);
             } else {
-                // Standard Tenant Admin
-                if (!profile?.restaurant_id) {
-                    window.location.href = 'index.html';
-                    return;
-                }
-
+                // 4. Standard Merchant Verification Gate
                 if (profile.tenants?.status === 'pending') {
                     overlay.classList.remove('hidden');
                     overlay.innerHTML = `
@@ -1329,7 +1366,7 @@
                         </div>
                         <h1 class="text-2xl font-black mb-2 text-white">Account Pending Verification</h1>
                         <p class="text-gray-400 mb-6 text-center text-xs max-w-sm leading-relaxed">
-                            Welcome, <span class="text-white font-bold">${profile.full_name}</span>! Your restaurant account is pending approval by the platform administrator.
+                            Welcome, <span class="text-white font-bold">${profile.full_name}</span>! Your restaurant account has been submitted and is pending approval by the platform administrator.
                         </p>
                         <div class="flex gap-3">
                             <button onclick="window.location.href='index.html'" class="bg-gray-800 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Return to Home</button>
@@ -1349,10 +1386,9 @@
             const profileEl = document.getElementById('admin-profile-name');
             if (profileEl) profileEl.textContent = adminName;
 
-            // Apply Plan Gates to Sidebar UI
             applyPlanGating(currentTenantPlan);
 
-            // Fetch Data Scoped Exclusively to activeRestaurantId
+            // Fetch Data
             fetchDashboardData();
             fetchMenu();
             fetchUsersAndOrders();
