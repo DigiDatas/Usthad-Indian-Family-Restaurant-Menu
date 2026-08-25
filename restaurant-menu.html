@@ -931,7 +931,7 @@ if (!restaurantId) {
                 // 🌟 FIX 3a: Force mapping ALL database IDs into Strings so the browser can read them!
                 if (cloudWishlist.length > 0) {
                     likedItems = new Set(cloudWishlist.map(String));
-                    localStorage.setItem('likedItems', JSON.stringify([...likedItems]));
+                    localStorage.setItem('likedItems_' + restaurantId, JSON.stringify([...likedItems]));
                 }
 
                 // 🌟 FIX 3b: Ensure String Conversion when coloring hearts upon login!
@@ -1196,7 +1196,7 @@ let relatedItemsData = []; // (You did this perfectly!)
         let selectedSubCategories = new Set();  // NEW: Multi-select logic
         let searchQuery = '';
         
-        let likedItems = new Set(JSON.parse(localStorage.getItem('likedItems')) || []);
+        let likedItems = new Set(JSON.parse(localStorage.getItem('likedItems_' + restaurantId)) || []);
         let currentOpenItemId = null;
         let offerInterval = null;
         let currentOfferIndex = 0;
@@ -2587,7 +2587,7 @@ function setupVerticalDraggable(elementId) {
             }
             
             // Save locally
-            localStorage.setItem('likedItems', JSON.stringify([...likedItems]));
+            localStorage.setItem('likedItems_' + restaurantId, JSON.stringify([...likedItems]));
             
             // Sync to Supabase if the user is logged in!
             if (currentUser) {
