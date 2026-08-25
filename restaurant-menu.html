@@ -953,6 +953,7 @@ if (!restaurantId) {
                 const meta = currentUser.user_metadata || {};
                 await supabaseClient.from('profiles').upsert({
                     id: currentUser.id,
+                    restaurant_id: restaurantId, // 🌟 ADD THIS LINE so they appear in your Customer Tab
                     email: currentUser.email,
                     full_name: meta.name || meta.full_name || currentUser.email.split('@')[0],
                     phone: meta.phone || 'No Phone',
@@ -1144,8 +1145,8 @@ async function handleGoogleLogin() {
             const { data, error } = await supabaseClient.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    // Redirects them exactly back to your live restaurant page after logging in
-                    redirectTo: 'https://digidatas.github.io/Usthad-Indian-Family-Restaurant-Menu/'
+                    // 🌟 DYNAMIC REDIRECT: Sends them back to the exact restaurant URL they are on!
+                    redirectTo: window.location.href
                 }
             });
 
@@ -4235,11 +4236,12 @@ if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
 
             // 3. Build Payload
             const payload = {
+                restaurant_id: restaurantId, // 🌟 ADD THIS LINE to bind it to the store
                 customer_name: customerName,
                 item_name: itemName,
                 rating: rating,
                 comment: comment,
-                status: 'Pending' // Goes straight to the Admin panel for approval!
+                status: 'Pending' 
             };
 
             // 4. Send to Supabase
