@@ -1408,6 +1408,17 @@
             if (typeof setGraphFilter === 'function') setGraphFilter('week');
             livePollingTimer = setInterval(() => fetchDashboardData(null, true), 30000);
         }
+async function logoutAdmin() {
+    // 1. Clear any active impersonation tokens
+    localStorage.removeItem('impersonate_tenant_id');
+    localStorage.removeItem('impersonate_business_name');
+    
+    // 2. Securely log out of Supabase
+    await supabaseClient.auth.signOut();
+    
+    // 3. Redirect back to the main app homepage
+    window.location.href = 'index.html';
+}
 
         function showImpersonationBanner(tenantName) {
             // Remove any existing banner first to prevent duplicates
