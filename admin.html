@@ -136,9 +136,10 @@
                 <button onclick="fetchDashboardData(this, false)" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-1.5 text-xs font-bold">
                     <i class="fas fa-sync-alt"></i> <span class="hidden sm:inline">Refresh</span>
                 </button>
-                <a href="index.html" target="_blank" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-1.5 text-xs font-bold" title="Preview App">
-                    <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Preview</span>
-                </a>
+                <!-- Update this line in your header -->
+<a href="#" id="preview-link" target="_blank" class="text-gray-500 hover:text-blue-600 transition flex items-center gap-1.5 text-xs font-bold" title="Preview Customer Menu">
+    <i class="fas fa-external-link-alt"></i> <span class="hidden sm:inline">Preview</span>
+</a>
 
                 <!-- Notification Center -->
                 <div class="relative notif-container">
@@ -1387,6 +1388,12 @@
             if (profileEl) profileEl.textContent = adminName;
 
             applyPlanGating(currentTenantPlan);
+
+            // 🌟 ADD THIS CODE RIGHT HERE:
+            const previewBtn = document.getElementById('preview-link');
+            if (previewBtn && activeRestaurantId) {
+                previewBtn.href = `restaurant-menu.html?rest=${activeRestaurantId}`;
+            }
 
             // Fetch Data
             fetchDashboardData();
@@ -3253,11 +3260,13 @@ const ordersRes = await supabaseClient
     .order('created_at', { ascending: false });
                 
                 let profilesRes = { data: [] };
-                try {
-                    profilesRes = await supabaseClient.from('profiles').select('*');
-                } catch (e) {
-                    // Fallback if profiles table is not set up
-                }
+        try {
+            // 🔒 Scoped strictly to the active restaurant's assigned profiles or members
+            profilesRes = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('restaurant_id', activeRestaurantId); 
+        } catch (e) {}
 
                 if (icon) icon.classList.remove('fa-spin');
 
