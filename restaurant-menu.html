@@ -4344,6 +4344,52 @@ if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
 
             setTimeout(() => { closeWaiterModal(); }, 3000); // Auto-close after 3 seconds
         }
+// ==========================================
+        // 🌟 LIVE MENU SYNC (INSTANT SOLD OUT ENGINE)
+        // ==========================================
+        supabaseClient.channel('live-menu-updates')
+            .on('postgres_changes', { 
+                event: 'UPDATE', 
+                schema: 'public', 
+                table: 'menu_items',
+                filter: `restaurant_id=eq.${restaurantId}` // 🔒 Only listen to this exact restaurant!
+            }, (payload) => {
+                const updatedItem = payload.new;
+                
+                // 1. Update the local memory quietly
+                const localItem = activeMenuData.find(i => String(i.id) === String(updatedItem.id));
+                if (localItem) {
+                    localItem.stockQty = updatedItem.stock_quantity;
+                    localItem.price = updatedItem.price; 
+                }
+
+                // 2. Find every instance of this item on the screen and update it instantly
+                const buttons = document.querySelectorAll(`.quick-add-btn-${updatedItem.id}`);
+                
+                buttons.forEach(btn => {
+                    const card = btn.closest('.menu-card') || btn.closest('.group');
+                    if (!card) return;
+
+                    const isSoldOut = updatedItem.stock_quantity !== null && updatedItem.stock_quantity <= 0;
+                    
+                    if (isSoldOut) {
+                        // Turn it gray and disable clicks
+                        card.classList.add('grayscale', 'opacity-60', 'pointer-events-none');
+                        
+                        // Inject the Sold Out badge if it isn't there already
+                        const imgContainer = card.querySelector('.relative.aspect-\\[4\\/3\\]') || card.querySelector('.relative');
+                        if (imgContainer && !card.querySelector('.sold-out-badge')) {
+                            imgContainer.insertAdjacentHTML('beforeend', `<div class="absolute inset-0 bg-white/40 backdrop-blur-[2px] z-30 flex items-center justify-center sold-out-badge"><span class="bg-red-600 text-white text-sm font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-xl transform -rotate-12 border-2 border-white">Sold Out</span></div>`);
+                        }
+                    } else {
+                        // Stock restored! Remove gray filter and remove the badge
+                        card.classList.remove('grayscale', 'opacity-60', 'pointer-events-none');
+                        const badge = card.querySelector('.sold-out-badge');
+                        if (badge) badge.remove();
+                    }
+                });
+            })
+            .subscribe();
         window.onload = init;
         setupSearch(); 
 
