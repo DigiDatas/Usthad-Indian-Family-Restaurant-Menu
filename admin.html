@@ -1268,42 +1268,130 @@
         let livePollingTimer = null;
         let lastKnownOrderCount = 0;
 
+        // ==========================================
+        // 🌟 UNIFIED MULTI-TENANT AUTH & VERIFICATION
+        // ==========================================
         async function verifyAdmin() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            currentUser = session?.user || null;
             const overlay = document.getElementById('admin-login-overlay');
-            const userMeta = session?.user?.app_metadata;
-            const isAdmin = userMeta && userMeta.is_admin === true;
+
+            // 1. Fetch active Supabase session
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
             
-            if (!session || !isAdmin) {
+            if (sessionError || !session) {
                 overlay.innerHTML = `
                     <i class="fas fa-shield-alt text-6xl text-red-500 mb-6"></i>
                     <h1 class="text-3xl font-black mb-2">Access Denied</h1>
-                    <p class="text-gray-400 mb-6 text-center">This area is restricted to verified administrators.</p>
-                    <button onclick="window.location.href='index.html'" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition">Return to Main Menu</button>
+                    <p class="text-gray-400 mb-6 text-center">Please sign in to access your business management dashboard.</p>
+                    <button onclick="window.location.href='index.html'" class="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold transition">Return to Home</button>
                 `;
-            } else {
-                overlay.classList.add('hidden');
-                
-                // Set Profile Name
-                const adminName = currentUser.user_metadata?.name || currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
-                document.getElementById('admin-profile-name').textContent = adminName;
-
-                // Load all data
-                fetchDashboardData();
-                fetchMenu();
-                fetchUsersAndOrders();
-                fetchOffers();
-                fetchSettings();
-                fetchReviews(); // 🌟 NEW: Added to load reviews on login
-                fetchTables(); // Loads the POS floor plan
-                // 🚨 ADD THESE 2 LINES HERE ➔
-                graphActiveFilter = 'week';
-                if(typeof setGraphFilter === 'function') setGraphFilter('week');
-
-                livePollingTimer = setInterval(() => fetchDashboardData(null, true), 30000);
+                return;
             }
+
+            currentUser = session.user;
+
+            // 2. Fetch or Provision User Profile & Tenant
+            let { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('*, tenants(*)')
+                .eq('id', currentUser.id)
+                .maybeSingle();
+
+            // Auto-provision brand new merchant
+            if (!profile) {
+                const defaultBusinessName = currentUser.user_metadata?.full_name 
+                    ? `${currentUser.user_metadata.full_name}'s Restaurant` 
+                    : 'New Restaurant';
+
+                const { data: newTenant, error: tenantErr } = await supabaseClient
+                    .from('tenants')
+                    .insert([{
+                        restaurant_name: defaultBusinessName,
+                        plan_tier: 'basic',
+                        status: 'pending'
+                    }])
+                    .select()
+                    .single();
+
+                if (tenantErr) {
+                    alert("Error provisioning business container: " + tenantErr.message);
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                const { data: newProfile, error: profErr } = await supabaseClient
+                    .from('profiles')
+                    .insert([{
+                        id: currentUser.id,
+                        email: currentUser.email,
+                        full_name: currentUser.user_metadata?.full_name || 'Restaurant Admin',
+                        role: 'tenant_admin',
+                        restaurant_id: newTenant.id
+                    }])
+                    .select('*, tenants(*)')
+                    .single();
+
+                if (profErr) {
+                    alert("Error setting up user profile: " + profErr.message);
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                profile = newProfile;
+            }
+
+            // 3. Super Admin Fast-Route
+            if (profile.role === 'super_admin') {
+                window.location.href = 'super-admin.html';
+                return;
+            }
+
+            // 4. Check Business Approval Status
+            const tenantStatus = profile.tenants?.status || 'pending';
+            if (tenantStatus === 'pending') {
+                overlay.innerHTML = `
+                    <div class="w-16 h-16 bg-amber-500/20 text-amber-500 rounded-3xl flex items-center justify-center text-3xl mb-6 shadow-inner animate-pulse">
+                        <i class="fas fa-hourglass-half"></i>
+                    </div>
+                    <h1 class="text-2xl font-black mb-2 text-white">Account Pending Verification</h1>
+                    <p class="text-gray-400 mb-6 text-center text-xs max-w-sm leading-relaxed">
+                        Welcome, <span class="text-white font-bold">${profile.full_name}</span>! Your restaurant container has been registered and is pending approval by the platform administrator.
+                    </p>
+                    <div class="flex gap-3">
+                        <button onclick="window.location.href='index.html'" class="bg-gray-800 hover:bg-gray-700 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Return to Home</button>
+                        <button onclick="window.location.reload()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition">Check Status</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // 5. Active Merchant: Unlock Dashboard UI
+            overlay.classList.add('hidden');
+
+            const adminName = profile.full_name || currentUser.email.split('@')[0];
+            const profileEl = document.getElementById('admin-profile-name');
+            if (profileEl) profileEl.textContent = adminName;
+
+            // Load all initial restaurant data
+            fetchDashboardData();
+            fetchMenu();
+            fetchUsersAndOrders();
+            fetchOffers();
+            fetchSettings();
+            fetchReviews();
+            fetchTables();
+
+            graphActiveFilter = 'week';
+            if (typeof setGraphFilter === 'function') setGraphFilter('week');
+
+            livePollingTimer = setInterval(() => fetchDashboardData(null, true), 30000);
+            
+            setTimeout(() => {
+                renderPosOrderLine();
+                setPosMiddleView('tables'); 
+            }, 1000);
         }
+
+        
 
         // Profile Menu Toggle
         function toggleProfileMenu() {
@@ -5229,71 +5317,6 @@ function updatePosRightPanelLabels() {
             }, 1000);
         };
 
-window.onload = async function() {
-    // 1. Grab the session from the URL after Google redirects here
-    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
-    
-    if (!session) {
-        // If they aren't logged in, kick them back to login
-        window.location.href = 'login.html';
-        return;
-    }
-
-    const user = session.user;
-
-    // 2. Check if they exist in the database yet
-    let { data: profile } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-    // 3. IF BRAND NEW USER: Auto-provision them instantly behind the scenes!
-    if (!profile) {
-        const defaultBusinessName = user.user_metadata && user.user_metadata.full_name 
-            ? `${user.user_metadata.full_name}'s Restaurant` 
-            : 'New Restaurant';
-
-        // Create Tenant
-        const { data: newTenant } = await supabaseClient
-            .from('tenants')
-            .insert([{ 
-                restaurant_name: defaultBusinessName,
-                plan_tier: 'basic',
-                status: 'pending' 
-            }])
-            .select().single();
-
-        // Create Profile
-        await supabaseClient
-            .from('profiles')
-            .insert([{
-                id: user.id,
-                email: user.email,
-                full_name: user.user_metadata ? user.user_metadata.full_name : 'Restaurant Admin',
-                role: 'tenant_admin',
-                restaurant_id: newTenant.id
-            }]);
-            
-        // Done! Hide the loading spinner and show the dashboard UI
-        document.getElementById('loading-spinner').style.display = 'none';
-        document.getElementById('dashboard-ui').style.display = 'block';
-        return;
-    }
-
-    // 4. IF EXISTING USER: Route them correctly
-    if (profile.role === 'super_admin') {
-        // If you (the super admin) log in, quickly teleport to your master control room
-        window.location.href = 'super-admin.html';
-    } else {
-        // Normal restaurant owner: Hide spinner, show dashboard
-        document.getElementById('loading-spinner').style.display = 'none';
-        document.getElementById('dashboard-ui').style.display = 'block';
-    }
-};
-
-
-        window.onload = verifyAdmin;
 // ==========================================
         // 🌟 NEW: SUPABASE REALTIME RECEIVER (ADMIN)
         // ==========================================
@@ -5684,6 +5707,8 @@ window.onload = async function() {
             btn.innerHTML = originalHtml;
             btn.disabled = false;
         }
+// Single clean entry point
+        window.onload = verifyAdmin;
 
     </script>
 </body>
