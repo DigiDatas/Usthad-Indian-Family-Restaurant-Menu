@@ -233,7 +233,7 @@
             updateMetrics(tenantsCache);
         }
 
-        // Render Table Rows (Using restaurant_name)
+        // Render Table Rows with safe string escaping and quick Approve button
         function renderTenantsTable(list) {
             const tbody = document.getElementById('tenants-table-body');
             tbody.innerHTML = '';
@@ -245,19 +245,30 @@
             }
 
             list.forEach(tenant => {
-                const name = tenant.restaurant_name || tenant.business_name || 'Unnamed Business';
-                const badgeColor = tenant.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : tenant.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200';
+                const rawName = tenant.restaurant_name || tenant.business_name || 'Unnamed Business';
+                // Escape single quotes to prevent JavaScript syntax errors
+                const safeName = rawName.replace(/'/g, "\\'");
+                
+                const isPending = (tenant.status || 'pending') === 'pending';
+                const badgeColor = tenant.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : isPending ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200';
                 const planColor = tenant.plan_tier === 'premium' ? 'bg-purple-100 text-purple-700' : tenant.plan_tier === 'pro' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700';
                 
+                const approveBtn = isPending 
+                    ? `<button onclick="approveTenant('${tenant.id}')" class="bg-green-600 text-white hover:bg-green-700 px-3 py-1.5 rounded-lg font-bold text-[10px] transition shadow-sm">
+                           <i class="fas fa-check"></i> Approve
+                       </button>`
+                    : '';
+
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-gray-50/50 transition border-b border-gray-100";
                 tr.innerHTML = `
-                    <td class="p-4 font-bold text-gray-900">${name} <span class="block text-[10px] text-gray-400 font-mono font-normal">ID: ${tenant.id}</span></td>
+                    <td class="p-4 font-bold text-gray-900">${rawName} <span class="block text-[10px] text-gray-400 font-mono font-normal">ID: ${tenant.id}</span></td>
                     <td class="p-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${planColor}">${tenant.plan_tier || 'basic'}</span></td>
                     <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeColor}">${tenant.status || 'pending'}</span></td>
                     <td class="p-4 text-gray-500">${tenant.plan_expiry ? tenant.plan_expiry.split('T')[0] : 'Never'}</td>
                     <td class="p-4 text-end space-x-2">
-                        <button onclick="impersonateTenant('${tenant.id}', '${name}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg font-bold text-[10px] transition" title="Login into their dashboard">
+                        ${approveBtn}
+                        <button onclick="impersonateTenant('${tenant.id}', '${safeName}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg font-bold text-[10px] transition" title="Login into their dashboard">
                             <i class="fas fa-user-secret"></i> Impersonate
                         </button>
                         <button onclick="openEditTenantModal('${tenant.id}')" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-[10px] transition">
@@ -267,6 +278,21 @@
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        // Quick Approve Action
+        async function approveTenant(tenantId) {
+            const { error } = await supabaseClient
+                .from('tenants')
+                .update({ status: 'active' })
+                .eq('id', tenantId);
+
+            if (error) {
+                alert("Approval failed: " + error.message);
+                return;
+            }
+
+            await fetchTenantsData();
         }
 
         // Calculate Metrics
@@ -340,11 +366,10 @@
             fetchTenantsData();
         }
 
-        // Impersonation Engine
+        // Safe Impersonation Action
         function impersonateTenant(tenantId, businessName) {
             localStorage.setItem('impersonate_tenant_id', tenantId);
             localStorage.setItem('impersonate_business_name', businessName);
-            alert(`IMPERSONATION MODE ACTIVE\nLoading dashboard for: ${businessName}`);
             window.location.href = 'admin.html';
         }
 
