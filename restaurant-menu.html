@@ -2095,37 +2095,38 @@ function setupVerticalDraggable(elementId) {
 
                     if (bannerArray && Array.isArray(bannerArray)) {
                         const sectionBannerStr = bannerArray[sectionIndex];
-                    
-                    // Check if this slot exists and actually contains URLs
-                    if (sectionBannerStr && sectionBannerStr.trim() !== "") {
-                        const bannerUrls = sectionBannerStr.split(',').map(u => u.trim()).filter(Boolean).map(u => {
-                            if (!u.startsWith('http')) return `https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/banner/${u}`;
-                            return u;
-                        });
-
-                        if (bannerUrls.length > 0) {
-                            const bannerDiv = document.createElement('div');
-                            bannerDiv.className = "w-full aspect-[3/1] rounded-2xl overflow-hidden shadow-md relative mb-6";
-                            
-                            let imagesHtml = '';
-                            bannerUrls.forEach(url => {
-                                imagesHtml += `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="this.remove()">`;
+                        
+                        // Check if this slot exists and actually contains URLs
+                        if (sectionBannerStr && sectionBannerStr.trim() !== "") {
+                            const bannerUrls = sectionBannerStr.split(',').map(u => u.trim()).filter(Boolean).map(u => {
+                                if (!u.startsWith('http')) return `https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/banner/${u}`;
+                                return u;
                             });
-                            
-                            // INFINITE LOOP FIX: Clone the first image for seamless scrolling
-                            if (bannerUrls.length > 1) {
-                                imagesHtml += `<img src="${bannerUrls[0]}" class="w-full h-full object-cover shrink-0 snap-center" data-is-clone="true" onerror="this.remove()">`;
-                            }
 
-                            bannerDiv.innerHTML = `
-                                <div class="excel-banner-slider flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
-                                    ${imagesHtml}
-                                </div>
-                            `;
-                            container.appendChild(bannerDiv);
+                            if (bannerUrls.length > 0) {
+                                const bannerDiv = document.createElement('div');
+                                bannerDiv.className = "w-full aspect-[3/1] rounded-2xl overflow-hidden shadow-md relative mb-6";
+                                
+                                let imagesHtml = '';
+                                bannerUrls.forEach(url => {
+                                    imagesHtml += `<img src="${url}" class="w-full h-full object-cover shrink-0 snap-center" onerror="this.remove()">`;
+                                });
+                                
+                                // INFINITE LOOP FIX: Clone the first image for seamless scrolling
+                                if (bannerUrls.length > 1) {
+                                    imagesHtml += `<img src="${bannerUrls[0]}" class="w-full h-full object-cover shrink-0 snap-center" data-is-clone="true" onerror="this.remove()">`;
+                                }
+
+                                bannerDiv.innerHTML = `
+                                    <div class="excel-banner-slider flex w-full h-full overflow-x-auto snap-x snap-mandatory hide-scrollbar" style="scroll-behavior: smooth;">
+                                        ${imagesHtml}
+                                    </div>
+                                `;
+                                container.appendChild(bannerDiv);
+                            }
                         }
                     }
-                }
+                } // 🌟 THIS is the closing brace I forgot to give you!
             }
 
             if (!hasItems) {
