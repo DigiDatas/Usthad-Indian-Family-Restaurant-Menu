@@ -71,26 +71,72 @@
             <p class="text-xs text-gray-500 leading-relaxed">Isolated restaurant environments with subscription tracking, plan tiers, and approval controls.</p>
         </div>
     </section>
+You should paste the Login Modal HTML exactly between the closing </section> tag of your Features Grid and the <!-- SUPABASE CONFIG & AUTH SCRIPT --> comment.
+
+Here is exactly how that section of your code should look after you paste it in:
+
+HTML
+        <div class="p-6 bg-gray-50/50 rounded-3xl border border-gray-100 space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-lg">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <h3 class="font-bold text-gray-900 text-sm">Secure Tenant SaaS</h3>
+            <p class="text-xs text-gray-500 leading-relaxed">Isolated restaurant environments with subscription tracking, plan tiers, and approval controls.</p>
+        </div>
+    </section>
+
+    <!-- 🌟 PASTE THE LOGIN UI CARD HERE 🌟 -->
+    <div id="loginModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm hidden items-center justify-center z-50 transition-opacity">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl border border-gray-100 text-center space-y-6 max-w-sm w-full relative transform transition-all">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-900 transition">
+                <i class="fas fa-times text-lg"></i>
+            </button>
+            <div class="w-14 h-14 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-2xl shadow-md mx-auto">
+                <i class="fas fa-qrcode"></i>
+            </div>
+            <div>
+                <h2 class="font-bold text-gray-900 text-xl">Welcome to QRGate</h2>
+                <p class="text-xs text-gray-500 mt-2">Sign in or create a new restaurant account to access your POS dashboard.</p>
+            </div>
+            <button onclick="loginWithGoogle()" class="w-full bg-white border border-gray-300 text-gray-700 px-4 py-3 rounded-xl text-sm font-semibold hover:bg-gray-50 transition shadow-sm flex items-center justify-center gap-3">
+                <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" class="w-5 h-5">
+                Continue with Google
+            </button>
+            <p class="text-[10px] text-gray-400">By continuing, you agree to our Terms of Service and Privacy Policy.</p>
+        </div>
+    </div>
 
     <!-- SUPABASE CONFIG & AUTH SCRIPT -->
     <script>
-        const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co";
-        const SUPABASE_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
-        
-        // Initialize Supabase client
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // 1. Supabase Setup
+    const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function loginWithGoogle() {
-            const { error } = await supabaseClient.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin + '/Usthad-Indian-Family-Restaurant-Menu/onboarding-handler.html'
-                }
-            });
-            if (error) {
-                alert("Login Error: " + error.message);
+    // 2. Modal UI Controls
+    function openModal() {
+        const modal = document.getElementById('loginModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('loginModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+
+    // 3. Google Auth Logic
+    async function loginWithGoogle() {
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                // 🚀 Send them directly to the admin dashboard!
+                redirectTo: window.location.origin + '/Usthad-Indian-Family-Restaurant-Menu/admin.html'
             }
-        }
-    </script>
+        });
+        if (error) alert("Login Error: " + error.message);
+    }
+</script>
 </body>
 </html>
