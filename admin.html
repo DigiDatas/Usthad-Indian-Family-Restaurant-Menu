@@ -2752,15 +2752,14 @@ const stockRaw = document.getElementById('form-stock').value.trim();
             const btn = document.getElementById('btn-save-item');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
-            // ==========================================
-            // 🛑 SMART DUPLICATE CHECKER
-            // ==========================================
-            const { data: existingItem } = await supabaseClient
-                .from('menu_items')
-                .select('id')
-                .eq('item_code', itemCode)
-                .eq('language', language)
-                .maybeSingle();
+            // 🛑 SMART DUPLICATE CHECKER (Scoped to current restaurant)
+const { data: existingItem } = await supabaseClient
+    .from('menu_items')
+    .select('id')
+    .eq('restaurant_id', activeRestaurantId) // 🔒 Restrict check to this tenant
+    .eq('item_code', itemCode)
+    .eq('language', language)
+    .maybeSingle();
 
             if (existingItem && String(existingItem.id) !== String(id)) {
                 alert(`⚠️ WAIT! An item with the code "${itemCode}" already exists for ${language.toUpperCase()}. Please use a unique Item Code.`);
@@ -2917,34 +2916,41 @@ const stockRaw = document.getElementById('form-stock').value.trim();
             input.value = ''; // Clear the input box instantly
             renderImageGallery(); // Add the new thumbnail to the screen
         }
-        async function handleMultipleStorageUpload(event) {
-            const files = Array.from(event.target.files);
-            if (files.length === 0) return;
+        
+	async function handleMultipleStorageUpload(event) {
+    const files = Array.from(event.target.files);
+    if (files.length === 0) return;
 
-            const fileInputLabel = event.target.parentElement;
-            const originalLabelHtml = fileInputLabel.innerHTML;
-            fileInputLabel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${files.length} images...`;
+    const fileInputLabel = event.target.parentElement;
+    const originalLabelHtml = fileInputLabel.innerHTML;
+    fileInputLabel.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Uploading ${files.length} images...`;
 
-            for (const file of files) {
-                const fileExt = file.name.split('.').pop();
-                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-                
-                const { error: uploadError } = await supabaseClient.storage.from('menu-images').upload(fileName, file);
+    for (const file of files) {
+        const fileExt = file.name.split('.').pop();
+        // 🔒 Store under a tenant-specific folder: activeRestaurantId/filename
+        const filePath = `${activeRestaurantId}/${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+        
+        const { error: uploadError } = await supabaseClient.storage
+            .from('menu-images')
+            .upload(filePath, file);
 
-                if (uploadError) {
-                    alert(`Failed to upload ${file.name}: ${uploadError.message}`);
-                    continue;
-                }
-
-                const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(fileName);
-                if (publicData && publicData.publicUrl) {
-                    currentEditingImages.push(publicData.publicUrl);
-                }
-            }
-
-            fileInputLabel.innerHTML = originalLabelHtml;
-            renderImageGallery(); 
+        if (uploadError) {
+            alert(`Failed to upload ${file.name}: ${uploadError.message}`);
+            continue;
         }
+
+        const { data: publicData } = supabaseClient.storage
+            .from('menu-images')
+            .getPublicUrl(filePath);
+
+        if (publicData && publicData.publicUrl) {
+            currentEditingImages.push(publicData.publicUrl);
+        }
+    }
+
+    fileInputLabel.innerHTML = originalLabelHtml;
+    renderImageGallery(); 
+}
 
         // --- BULK JSON IMPORT ---
         function openJsonModal() {
@@ -3176,7 +3182,9 @@ let currentMediaTarget = 'product';
             headerTitle.innerHTML = `<i class="fas fa-images text-blue-500 me-2"></i> Select from Storage`;
             gallery.innerHTML = '<div class="text-blue-500 font-bold mt-10"><i class="fas fa-spinner fa-spin text-2xl mb-2"></i><br>Loading images from bucket...</div>';
             
-            const { data, error } = await supabaseClient.storage.from('menu-images').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+            const { data, error } = await supabaseClient.storage
+    .from('menu-images')
+    .list(activeRestaurantId, { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
 
             if (error) { gallery.innerHTML = `<span class="text-red-500">Error: ${error.message}</span>`; return; }
 
@@ -3185,7 +3193,9 @@ let currentMediaTarget = 'product';
 
             data.forEach(file => {
                 if (file.name === '.emptyFolderPlaceholder') return;
-                const { data: publicData } = supabaseClient.storage.from('menu-images').getPublicUrl(file.name);
+                const { data: publicData } = supabaseClient.storage
+    .from('menu-images')
+    .getPublicUrl(`${activeRestaurantId}/${file.name}`);
                 const publicUrl = publicData.publicUrl;
 
                 const imgCard = document.createElement('div');
