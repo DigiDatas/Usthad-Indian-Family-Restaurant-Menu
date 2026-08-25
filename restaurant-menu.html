@@ -867,6 +867,13 @@
     </div>
     <script>
 
+// 1. Grab the ?rest=UUID parameter from the browser URL
+const urlParams = new URLSearchParams(window.location.search);
+const restaurantId = urlParams.get('rest');
+
+if (!restaurantId) {
+    console.warn("⚠️ No restaurant ID found in URL. Falling back or showing error.");
+}
       const allowedDomains = [
             "digidatas.github.io", 
             "localhost",            
@@ -1243,7 +1250,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                 document.getElementById('loading-text').textContent = 'Loading Live Database...';
 
                 // 1. FETCH LIVE BRANDING (Bypassing JSON Completely!)
-                const { data: dbSettings } = await supabaseClient.from('restaurant_settings').select('*').order('id', { ascending: true });
+                const { data: dbSettings } = await supabaseClient.from('restaurant_settings').select('*').eq('restaurant_id', restaurantId).order('id', { ascending: true });
                 if (dbSettings && dbSettings.length > 0) {
                     window.dbSettingsEn = dbSettings[0]; 
                     window.dbSettingsAr = dbSettings.length > 1 ? dbSettings[1] : dbSettings[0]; 
@@ -1271,7 +1278,7 @@ let relatedItemsData = []; // (You did this perfectly!)
                 }
 
                 // 2. FETCH LIVE OFFERS & FLASHCARDS
-                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').order('order_index', { ascending: true });
+                const { data: dbOffers } = await supabaseClient.from('special_offers').select('*').eq('restaurant_id', restaurantId).order('order_index', { ascending: true });
                 if (dbOffers && dbOffers.length > 0) {
                     rawOffers = dbOffers.filter(o => o.offer_name !== 'Hidden System Row').map(o => ({
                         B: o.offer_name, C: o.description, D: o.price_before, E: o.price_after, F: o.image_url
@@ -1281,11 +1288,11 @@ let relatedItemsData = []; // (You did this perfectly!)
                 }
 
                 // 2.5 FETCH APPROVED REVIEWS
-                const reviewsResponse = await supabaseClient.from('reviews').select('*').eq('status', 'Approved').order('created_at', { ascending: false });
+                const reviewsResponse = await supabaseClient.from('reviews').select('*').eq('restaurant_id', restaurantId).eq('status', 'Approved').order('created_at', { ascending: false });
                 window.liveReviews = reviewsResponse.data || [];
 
                 // 3. FETCH LIVE RELATED ITEMS
-                const { data: relDbData } = await supabaseClient.from('related_items_map').select('*');
+                const { data: relDbData } = await supabaseClient.from('related_items_map').select('*').eq('restaurant_id', restaurantId);
                 window.liveRelatedItems = relDbData || [];
 
                 // 4. SET LANGUAGE PREFERENCES
@@ -1296,10 +1303,6 @@ let relatedItemsData = []; // (You did this perfectly!)
 
                 // 5. FETCH MENU FOR CURRENT LANGUAGE
                 await fetchMenuDataForLang(currentLang);
-                
-                // 🌟 START THE LIVE ENGINE!
-                enableLiveCustomerUpdates();
-
             } catch (error) {
                 console.error("Initialization Error:", error);
                 document.getElementById('loading-state').classList.add('hidden');
@@ -1312,10 +1315,11 @@ let relatedItemsData = []; // (You did this perfectly!)
             document.getElementById('menu-container').classList.add('hidden');
             
             const { data: menuData, error: menuError } = await supabaseClient
-                .from('menu_items')
-                .select('*')
-                .eq('language', lang)
-                .order('order_index', { ascending: true });
+    .from('menu_items')
+    .select('*')
+    .eq('restaurant_id', restaurantId) // 🔒 Scoped
+    .eq('language', lang)
+    .order('order_index', { ascending: true });
 
             if (menuData) {
                 activeMenuData = menuData.map(item => ({
@@ -2816,9 +2820,10 @@ let selectedCustomerArea = '';
 
 async function loadCustomerTables() {
     const { data, error } = await supabaseClient
-        .from('restaurant_tables')
-        .select('*')
-        .order('table_number', { ascending: true });
+    .from('restaurant_tables')
+    .select('*')
+    .eq('restaurant_id', restaurantId) // 🔒 Scoped
+    .order('table_number', { ascending: true });
         
     if (!error && data) {
         // Initialize an 'occupied' counter for each table
@@ -2831,10 +2836,11 @@ async function loadCustomerTables() {
 // 🌟 FETCH LIVE ORDERS TO CALCULATE OCCUPANCY
 async function fetchLiveOccupancy() {
     const { data, error } = await supabaseClient
-        .from('orders')
-        .select('table_number, guest_count')
-        .in('status', ['Pending', 'Preparing', 'Ready']) // Only look at active orders
-        .eq('order_type', 'Dine In');
+    .from('orders')
+    .select('table_number, guest_count')
+    .eq('restaurant_id', restaurantId) // 🔒 Scoped
+    .in('status', ['Pending', 'Preparing', 'Ready'])
+    .eq('order_type', 'Dine In');
 
     if (!error && data) {
         customerTables.forEach(t => t.occupied = 0); // Reset
@@ -3338,10 +3344,11 @@ function toggleQuickCart(id) {
                 if (cartItem.stockQty !== null && cartItem.stockQty !== undefined) {
                     // FIX: Search by exact row ID so old items without Item Codes never crash the system!
                     const { data: liveData } = await supabaseClient
-                        .from('menu_items')
-                        .select('stock_quantity')
-                        .eq('id', cartItem.id)
-                        .maybeSingle();
+    .from('menu_items')
+    .select('stock_quantity')
+    .eq('restaurant_id', restaurantId) // 🔒 Scoped
+    .eq('id', cartItem.id)
+    .maybeSingle();
 
                     if (liveData && liveData.stock_quantity !== null) {
                         const liveStock = Number(liveData.stock_quantity);
@@ -3364,12 +3371,13 @@ function toggleQuickCart(id) {
             
             try {
                 const { data: lastOrder } = await supabaseClient
-                    .from('orders')
-                    .select('order_number')
-                    .not('order_number', 'is', null)
-                    .order('created_at', { ascending: false })
-                    .limit(1)
-                    .maybeSingle();
+    .from('orders')
+    .select('order_number')
+    .eq('restaurant_id', restaurantId) // 🔒 Scoped
+    .not('order_number', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
                 if (lastOrder && lastOrder.order_number) {
                     const lastNum = parseInt(lastOrder.order_number.replace('ORD-', ''));
@@ -3387,21 +3395,22 @@ function toggleQuickCart(id) {
             // ==========================================
             try {
                 const { error } = await supabaseClient
-                    .from('orders')
-                    .insert([{
-                        order_number: uniqueOrderNo, 
-                        customer_id: currentUser ? currentUser.id : 'guest',
-                        customer_name: customerName,
-                        customer_phone: customerPhone,
-                        customer_email: currentUser ? currentUser.email : null,
-                        order_type: diningType,
-                        table_number: diningType === 'Dine In' ? selectedTable : null,
-                        guest_count: diningType === 'Dine In' ? guestCount : 1, // 🌟 NEW: Saves to database
-                        delivery_address: addressInput || null,
-                        items: cart,
-                        total_amount: subtotal,
-                        status: 'Pending'
-                    }]);
+    .from('orders')
+    .insert([{
+        restaurant_id: restaurantId, // 🌟 🔒 Binds order to this tenant!
+        order_number: uniqueOrderNo, 
+        customer_id: currentUser ? currentUser.id : 'guest',
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        customer_email: currentUser ? currentUser.email : null,
+        order_type: diningType,
+        table_number: diningType === 'Dine In' ? selectedTable : null,
+        guest_count: diningType === 'Dine In' ? guestCount : 1,
+        delivery_address: addressInput || null,
+        items: cart,
+        total_amount: subtotal,
+        status: 'Pending'
+    }]);
 
                 btn.innerHTML = originalBtnHtml;
 
@@ -3415,12 +3424,11 @@ function toggleQuickCart(id) {
                             const newStock = Math.max(0, cartItem.liveStock - cartItem.qty);
                             
                             let updateQuery;
-                            // If the item has a code, update both EN and AR rows. If not, update this exact ID!
-                            if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
-                                updateQuery = supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('item_code', cartItem.itemCode);
-                            } else {
-                                updateQuery = supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('id', cartItem.id);
-                            }
+if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
+    updateQuery = supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('restaurant_id', restaurantId).eq('item_code', cartItem.itemCode); // 🔒 Scoped
+} else {
+    updateQuery = supabaseClient.from('menu_items').update({ stock_quantity: newStock }).eq('restaurant_id', restaurantId).eq('id', cartItem.id); // 🔒 Scoped
+}
 
                             const { error: stockErr } = await updateQuery;
                                 
@@ -4325,50 +4333,6 @@ function toggleQuickCart(id) {
 
             setTimeout(() => { closeWaiterModal(); }, 3000); // Auto-close after 3 seconds
         }
-
-
-// ==========================================
-        // 🌟 LIVE CUSTOMER APP UPDATES (STOCK & TABLES)
-        // ==========================================
-        function enableLiveCustomerUpdates() {
-            // 1. Listen for Live Stock/Menu Changes
-            supabaseClient
-                .channel('live-customer-menu')
-                .on('postgres_changes', { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'menu_items' 
-                }, payload => {
-                    const updatedItem = payload.new;
-                    // Update our local menu memory instantly
-                    const localItem = activeMenuData.find(i => String(i.id) === String(updatedItem.id));
-                    if (localItem) {
-                        localItem.stockQty = updatedItem.stock_quantity;
-                        // Silently refresh the menu screen so the "Sold Out" badge appears!
-                        executeFilter();
-                    }
-                })
-                .subscribe();
-
-            // 2. Listen for Live Table Occupancy (Orders)
-            supabaseClient
-                .channel('live-customer-tables')
-                .on('postgres_changes', { 
-                    event: '*', // Listens to new orders OR order status changes
-                    schema: 'public', 
-                    table: 'orders' 
-                }, payload => {
-                    // If the customer has the table menu loaded, refresh the red/orange colors!
-                    if (customerTables && customerTables.length > 0) {
-                        fetchLiveOccupancy().then(() => {
-                            renderCustomerTablesList();
-                        });
-                    }
-                })
-                .subscribe();
-        }
-
-
         window.onload = init;
         setupSearch(); 
 
