@@ -3746,48 +3746,44 @@ const ordersRes = await supabaseClient
                 .from('restaurant_settings')
                 .select('*')
                 .eq('restaurant_id', activeRestaurantId) // 🔒 Scoped
-                .order('id', { ascending: true });
+                .maybeSingle(); // 🌟 ONLY GRAB ONE ROW!
             
-            if (data && data.length > 0) {
-                const mainRow = data[0]; 
-                const arRow = data.length > 1 ? data[1] : null; 
-
-                document.getElementById('setting-id').value = mainRow.id;
-                document.getElementById('set-brand').value = mainRow.brand_name || '';
+            if (data) {
+                document.getElementById('setting-id').value = data.id;
+                document.getElementById('set-brand').value = data.brand_name || '';
                 
-                if (arRow) {
-                    document.getElementById('setting-id-ar').value = arRow.id;
-                    document.getElementById('set-brand-ar').value = arRow.brand_name || '';
-                }
+                // 🌟 Read Arabic directly from the new column
+                document.getElementById('set-brand-ar').value = data.brand_name_ar || ''; 
 
-                if (mainRow.logo_link) {
-                    document.getElementById('admin-brand-logo').src = mainRow.logo_link;
+                if (data.logo_link) {
+                    document.getElementById('admin-brand-logo').src = data.logo_link;
                     document.getElementById('admin-brand-logo').classList.remove('hidden');
                     document.getElementById('admin-default-icon').classList.add('hidden');
                 }
 
-                const savedCurrency = mainRow.currency || 'SR';
+                const savedCurrency = data.currency || 'SR';
                 if (document.getElementById(`btn-curr-${savedCurrency}`)) {
                     selectCurrency(savedCurrency);
                 } else {
                     document.getElementById('set-currency').value = savedCurrency;
                 }
 
-                const dbLang = (mainRow.language || '').toLowerCase();
+                const dbLang = (data.language || '').toLowerCase();
                 document.getElementById('set-lang-en').checked = dbLang.includes('english') || dbLang === 'both' || dbLang === '';
                 document.getElementById('set-lang-ar').checked = dbLang.includes('arabic') || dbLang === 'both' || dbLang === '';
-                document.getElementById('set-contact').value = mainRow.contact || '';
-                document.getElementById('set-other-number').value = mainRow.other_number || '';
-                document.getElementById('set-wa').value = mainRow.whatsapp || '';
-                document.getElementById('set-email').value = mainRow.email || '';
-                document.getElementById('set-website').value = mainRow.website || '';
-                document.getElementById('set-address').value = mainRow.address || '';
-                document.getElementById('set-map').value = mainRow.location_url || '';
-                document.getElementById('set-logo').value = mainRow.logo_link || '';
-                document.getElementById('set-delivery').value = mainRow.delivery_charge || '';
-                document.getElementById('set-game').checked = mainRow.game_enabled || false;
                 
-                const savedSocials = mainRow.social_links || [];
+                document.getElementById('set-contact').value = data.contact || '';
+                document.getElementById('set-other-number').value = data.other_number || '';
+                document.getElementById('set-wa').value = data.whatsapp || '';
+                document.getElementById('set-email').value = data.email || '';
+                document.getElementById('set-website').value = data.website || '';
+                document.getElementById('set-address').value = data.address || '';
+                document.getElementById('set-map').value = data.location_url || '';
+                document.getElementById('set-logo').value = data.logo_link || '';
+                document.getElementById('set-delivery').value = data.delivery_charge || '';
+                document.getElementById('set-game').checked = data.game_enabled || false;
+                
+                const savedSocials = data.social_links || [];
                 adminSocials = defaultSocials.map(def => {
                     const found = savedSocials.find(s => s.id === def.id);
                     return { ...def, url: found ? found.url : '', enabled: found ? found.enabled : false };
@@ -3805,9 +3801,7 @@ const ordersRes = await supabaseClient
         }
 
         async function saveSettings() {
-            const idEn = document.getElementById('setting-id').value;
-            const idAr = document.getElementById('setting-id-ar').value;
-            
+            const settingId = document.getElementById('setting-id').value;
             const btn = document.getElementById('btn-save-settings');
             btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Saving...`;
 
@@ -3826,9 +3820,11 @@ const ordersRes = await supabaseClient
             if (enOn && arOn) activeLang = 'English&Arabic';
             else if (arOn) activeLang = 'Arabic';
 
-            const payloadEn = {
-                restaurant_id: activeRestaurantId, // 🔒 Scoped
+            // 🌟 ONE UNIFIED PAYLOAD!
+            const payload = {
+                restaurant_id: activeRestaurantId, 
                 brand_name: document.getElementById('set-brand').value.trim(),
+                brand_name_ar: document.getElementById('set-brand-ar').value.trim(), // 🌟 Saved to new column
                 currency: document.getElementById('set-currency').value.trim(),
                 language: activeLang,
                 contact: document.getElementById('set-contact').value.trim(),
@@ -3844,25 +3840,14 @@ const ordersRes = await supabaseClient
                 social_links: adminSocials 
             };
 
-            const payloadAr = { 
-                restaurant_id: activeRestaurantId, // 🔒 Scoped
-                brand_name: document.getElementById('set-brand-ar').value.trim() 
-            };
-
             let hasError = false;
-            if (idEn) {
-                const { error: err1 } = await supabaseClient.from('restaurant_settings').update(payloadEn).eq('id', idEn);
-                if (err1) hasError = true;
+            if (settingId) {
+                const { error } = await supabaseClient.from('restaurant_settings').update(payload).eq('id', settingId);
+                if (error) hasError = true;
             } else {
-                const { error: err1 } = await supabaseClient.from('restaurant_settings').insert([payloadEn]);
-                if (err1) hasError = true;
-            }
-
-            if (idAr) {
-                const { error: err2 } = await supabaseClient.from('restaurant_settings').update(payloadAr).eq('id', idAr);
-                if (err2) hasError = true;
-            } else if (payloadAr.brand_name) {
-                await supabaseClient.from('restaurant_settings').insert([payloadAr]);
+                const { data, error } = await supabaseClient.from('restaurant_settings').insert([payload]).select().single();
+                if (error) hasError = true;
+                if (data) document.getElementById('setting-id').value = data.id; // Save ID for future updates
             }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;
@@ -4182,16 +4167,16 @@ const ordersRes = await supabaseClient
             } else { currentAdminFlashcards = []; }
             renderGlobalGallery('flashcard');
 
-            // Scoped Banners fetch
-            const { data: setRows } = await supabaseClient
+            // Scoped Banners fetch (🌟 ONE ROW ONLY)
+            const { data: setRow } = await supabaseClient
                 .from('restaurant_settings')
                 .select('*')
                 .eq('restaurant_id', activeRestaurantId) // 🔒 Scoped
-                .order('id', { ascending: true })
-                .limit(2);
+                .maybeSingle();
             
-            const rowEn = setRows && setRows.length > 0 ? setRows[0].banner_images : [];
-            const rowAr = setRows && setRows.length > 1 ? setRows[1].banner_images : (setRows && setRows.length > 0 ? setRows[0].banner_images : []);
+            // Read EN and AR directly from the same row!
+            const rowEn = setRow ? setRow.banner_images : [];
+            const rowAr = setRow ? setRow.banner_images_ar : [];
             
             currentAdminBanners = [];
             const maxLength = Math.max(rowEn ? rowEn.length : 0, rowAr ? rowAr.length : 0, 5);
@@ -4257,14 +4242,17 @@ const ordersRes = await supabaseClient
                 if (arBox) sec.ar = arBox.checked;
             });
 
-            const idEn = document.getElementById('setting-id').value;
-            const idAr = document.getElementById('setting-id-ar').value;
+            const settingId = document.getElementById('setting-id').value;
 
             const payloadEn = currentAdminBanners.map(sec => (doEn && sec.en) ? sec.urls.join(',') : '');
             const payloadAr = currentAdminBanners.map(sec => (doAr && sec.ar) ? sec.urls.join(',') : '');
 
-            if (idEn) await supabaseClient.from('restaurant_settings').update({ banner_images: payloadEn }).eq('id', idEn);
-            if (idAr) await supabaseClient.from('restaurant_settings').update({ banner_images: payloadAr }).eq('id', idAr);
+            if (settingId) {
+                await supabaseClient.from('restaurant_settings').update({ 
+                    banner_images: payloadEn, 
+                    banner_images_ar: payloadAr // 🌟 Saves to new column
+                }).eq('id', settingId);
+            }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Banners`;
             alert("Banners successfully updated with master language settings!");
