@@ -1250,28 +1250,33 @@ let relatedItemsData = []; // (You did this perfectly!)
 
                 document.getElementById('loading-text').textContent = 'Loading Live Database...';
 
-                // 1. FETCH LIVE BRANDING (Bypassing JSON Completely!)
-                const { data: dbSettings } = await supabaseClient.from('restaurant_settings').select('*').eq('restaurant_id', restaurantId).order('id', { ascending: true });
-                if (dbSettings && dbSettings.length > 0) {
-                    window.dbSettingsEn = dbSettings[0]; 
-                    window.dbSettingsAr = dbSettings.length > 1 ? dbSettings[1] : dbSettings[0]; 
+                // 1. FETCH LIVE BRANDING 
+                const { data: dbSettings } = await supabaseClient
+                    .from('restaurant_settings')
+                    .select('*')
+                    .eq('restaurant_id', restaurantId)
+                    .maybeSingle(); // 🌟 Only grab the single unified row!
+
+                if (dbSettings) {
+                    window.dbSettingsEn = dbSettings; 
                     
                     // Map live database directly to the app's global variables
                     rawBranding = {
-                        B: window.dbSettingsEn.brand_name,
-                        C: window.dbSettingsEn.contact,
-                        D: window.dbSettingsEn.whatsapp,
-                        other_number: window.dbSettingsEn.other_number,
-                        F: window.dbSettingsEn.email,
-                        website: window.dbSettingsEn.website,
-                        H: window.dbSettingsEn.address,
-                        I: window.dbSettingsEn.location_url,
-                        smartLogo: window.dbSettingsEn.logo_link,
-                        smartDelivery: window.dbSettingsEn.delivery_charge,
-                        smartCurrency: window.dbSettingsEn.currency,
-                        social_links: window.dbSettingsEn.social_links,
-                        language: window.dbSettingsEn.language,
-                        P: window.dbSettingsEn.game_enabled ? 'true' : 'false'
+                        // 🌟 Smart Fallback: Use Arabic column if in AR, otherwise default to EN
+                        B: currentLang === 'ar' ? (dbSettings.brand_name_ar || dbSettings.brand_name) : dbSettings.brand_name,
+                        C: dbSettings.contact,
+                        D: dbSettings.whatsapp,
+                        other_number: dbSettings.other_number,
+                        F: dbSettings.email,
+                        website: dbSettings.website,
+                        H: dbSettings.address,
+                        I: dbSettings.location_url,
+                        smartLogo: dbSettings.logo_link,
+                        smartDelivery: dbSettings.delivery_charge,
+                        smartCurrency: dbSettings.currency,
+                        social_links: dbSettings.social_links,
+                        language: dbSettings.language,
+                        P: dbSettings.game_enabled ? 'true' : 'false'
                     };
                     globalCurrency = rawBranding.smartCurrency || "";
                 } else {
@@ -2077,16 +2082,19 @@ function setupVerticalDraggable(elementId) {
                 // Increase counter to track where we are in the menu
                 categoryCount++;
 
-                // 2. Supabase Live Banner Slider (Matches Slot Index to Category Count)
-                let activeSettings = currentLang === 'ar' && window.dbSettingsAr ? window.dbSettingsAr : window.dbSettingsEn;
-                
-                // Subtract 1 because Arrays start at 0 (Category 1 gets Banner Slot 0)
+                // 2. Supabase Live Banner Slider (Reads from new AR column)
+                let activeSettings = window.dbSettingsEn;
                 const sectionIndex = categoryCount - 1;
                 
-                if (activeSettings && activeSettings.banner_images && Array.isArray(activeSettings.banner_images)) {
-                    
-                    // Grab the specific string of URLs for THIS category block
-                    const sectionBannerStr = activeSettings.banner_images[sectionIndex];
+                if (activeSettings) {
+                    // 🌟 Check language and pick the correct array column
+                    let bannerArray = activeSettings.banner_images;
+                    if (currentLang === 'ar' && activeSettings.banner_images_ar && activeSettings.banner_images_ar.length > 0) {
+                        bannerArray = activeSettings.banner_images_ar;
+                    }
+
+                    if (bannerArray && Array.isArray(bannerArray)) {
+                        const sectionBannerStr = bannerArray[sectionIndex];
                     
                     // Check if this slot exists and actually contains URLs
                     if (sectionBannerStr && sectionBannerStr.trim() !== "") {
