@@ -184,15 +184,19 @@
 
     <!-- 🌟 CORE ENGINE JS -->
     <script>
-        // REPLACE WITH YOUR ACTUAL SUPABASE CREDENTIALS
         const SUPABASE_URL = "https://vhrxsjfblldksnalpyio.supabase.co"; 
         const SUPABASE_ANON_KEY = "sb_publishable_we3X4oxc_1R2mQVtlSuJVA_gGcQoQ-k";
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Fixed: Matching key variable name
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let tenantsCache = [];
 
         window.onload = async function() {
-            // Verify super admin session here if needed
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.user?.email) {
+                const emailEl = document.getElementById('super-admin-email');
+                if (emailEl) emailEl.innerText = session.user.email;
+            }
             await fetchTenantsData();
         };
 
@@ -214,9 +218,14 @@
 
         // Fetch Tenants from Supabase
         async function fetchTenantsData() {
-            const { data, error } = await supabaseClient.from('tenants').select('*').order('created_at', { ascending: false });
+            const { data, error } = await supabaseClient
+                .from('tenants')
+                .select('*')
+                .order('created_at', { ascending: false });
+
             if(error) {
                 console.error("Error fetching tenants:", error);
+                document.getElementById('tenant-count-label').innerText = "Failed to load";
                 return;
             }
             tenantsCache = data || [];
@@ -224,7 +233,7 @@
             updateMetrics(tenantsCache);
         }
 
-        // Render Table Rows
+        // Render Table Rows (Using restaurant_name)
         function renderTenantsTable(list) {
             const tbody = document.getElementById('tenants-table-body');
             tbody.innerHTML = '';
@@ -236,18 +245,19 @@
             }
 
             list.forEach(tenant => {
+                const name = tenant.restaurant_name || tenant.business_name || 'Unnamed Business';
                 const badgeColor = tenant.status === 'active' ? 'bg-green-50 text-green-700 border-green-200' : tenant.status === 'pending' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200';
                 const planColor = tenant.plan_tier === 'premium' ? 'bg-purple-100 text-purple-700' : tenant.plan_tier === 'pro' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700';
                 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-gray-50/50 transition";
+                tr.className = "hover:bg-gray-50/50 transition border-b border-gray-100";
                 tr.innerHTML = `
-                    <td class="p-4 font-bold text-gray-900">${tenant.business_name} <span class="block text-[10px] text-gray-400 font-mono font-normal">ID: ${tenant.id}</span></td>
+                    <td class="p-4 font-bold text-gray-900">${name} <span class="block text-[10px] text-gray-400 font-mono font-normal">ID: ${tenant.id}</span></td>
                     <td class="p-4"><span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${planColor}">${tenant.plan_tier || 'basic'}</span></td>
-                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeColor}">${tenant.status || 'active'}</span></td>
+                    <td class="p-4"><span class="px-2.5 py-1 rounded-full text-[10px] font-bold border uppercase tracking-wider ${badgeColor}">${tenant.status || 'pending'}</span></td>
                     <td class="p-4 text-gray-500">${tenant.plan_expiry ? tenant.plan_expiry.split('T')[0] : 'Never'}</td>
                     <td class="p-4 text-end space-x-2">
-                        <button onclick="impersonateTenant('${tenant.id}', '${tenant.business_name}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg font-bold text-[10px] transition" title="Login into their dashboard">
+                        <button onclick="impersonateTenant('${tenant.id}', '${name}')" class="bg-indigo-50 text-indigo-700 hover:bg-indigo-100 px-3 py-1.5 rounded-lg font-bold text-[10px] transition" title="Login into their dashboard">
                             <i class="fas fa-user-secret"></i> Impersonate
                         </button>
                         <button onclick="openEditTenantModal('${tenant.id}')" class="bg-gray-100 text-gray-600 hover:bg-gray-200 px-3 py-1.5 rounded-lg font-bold text-[10px] transition">
@@ -264,7 +274,7 @@
             document.getElementById('metric-total-tenants').innerText = list.length;
             const activeCount = list.filter(t => t.status === 'active').length;
             document.getElementById('metric-active-tenants').innerText = activeCount;
-            // Estimated MRR calculation
+
             const mrr = list.reduce((acc, t) => {
                 if(t.status !== 'active') return acc;
                 if(t.plan_tier === 'premium') return acc + 99;
@@ -277,7 +287,7 @@
         // Search Filter
         function filterTenants() {
             const query = document.getElementById('search-tenant').value.toLowerCase();
-            const filtered = tenantsCache.filter(t => t.business_name.toLowerCase().includes(query));
+            const filtered = tenantsCache.filter(t => (t.restaurant_name || '').toLowerCase().includes(query));
             renderTenantsTable(filtered);
         }
 
@@ -297,9 +307,9 @@
             if(!tenant) return;
             document.getElementById('modal-title').innerText = "Edit Business & Plan";
             document.getElementById('edit-tenant-id').value = tenant.id;
-            document.getElementById('input-business-name').value = tenant.business_name;
+            document.getElementById('input-business-name').value = tenant.restaurant_name || '';
             document.getElementById('input-plan-tier').value = tenant.plan_tier || 'basic';
-            document.getElementById('input-status').value = tenant.status || 'active';
+            document.getElementById('input-status').value = tenant.status || 'pending';
             document.getElementById('input-expiry').value = tenant.plan_expiry ? tenant.plan_expiry.split('T')[0] : '';
             document.getElementById('tenantModal').classList.replace('hidden', 'flex');
         }
@@ -311,20 +321,18 @@
         // Save / Update Record
         async function saveTenantRecord() {
             const id = document.getElementById('edit-tenant-id').value;
-            const business_name = document.getElementById('input-business-name').value;
+            const restaurant_name = document.getElementById('input-business-name').value.trim();
             const plan_tier = document.getElementById('input-plan-tier').value;
             const status = document.getElementById('input-status').value;
             const plan_expiry = document.getElementById('input-expiry').value || null;
 
-            if(!business_name) return alert("Please enter a business name.");
+            if(!restaurant_name) return alert("Please enter a business name.");
 
             if(id) {
-                // Update
-                const { error } = await supabaseClient.from('tenants').update({ business_name, plan_tier, status, plan_expiry }).eq('id', id);
+                const { error } = await supabaseClient.from('tenants').update({ restaurant_name, plan_tier, status, plan_expiry }).eq('id', id);
                 if(error) return alert("Error updating tenant: " + error.message);
             } else {
-                // Insert
-                const { error } = await supabaseClient.from('tenants').insert([{ business_name, plan_tier, status, plan_expiry }]);
+                const { error } = await supabaseClient.from('tenants').insert([{ restaurant_name, plan_tier, status, plan_expiry }]);
                 if(error) return alert("Error creating tenant: " + error.message);
             }
 
@@ -332,21 +340,20 @@
             fetchTenantsData();
         }
 
-        // 🌟 GOD MODE / IMPERSONATION ENGINE
+        // Impersonation Engine
         function impersonateTenant(tenantId, businessName) {
-            // Save the target tenant ID to browser localStorage
             localStorage.setItem('impersonate_tenant_id', tenantId);
             localStorage.setItem('impersonate_business_name', businessName);
-            
-            alert(`🔒 IMPERSONATION MODE ACTIVE\nYou are now logging into: ${businessName}`);
-            // Redirect to the regular admin panel, which will now boot up under their ID!
+            alert(`IMPERSONATION MODE ACTIVE\nLoading dashboard for: ${businessName}`);
             window.location.href = 'admin.html';
         }
 
         function handleLogout() {
             localStorage.removeItem('impersonate_tenant_id');
             localStorage.removeItem('impersonate_business_name');
-            window.location.href = 'index.html';
+            supabaseClient.auth.signOut().then(() => {
+                window.location.href = 'index.html';
+            });
         }
     </script>
 </body>
