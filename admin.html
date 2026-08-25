@@ -5219,49 +5219,79 @@ function updatePosRightPanelLabels() {
             else alert("Please save the order first before printing.");
         }
 
-        // ==========================================
-        // 🌟 LIVE KITCHEN DISPLAY (REAL-TIME ORDERS)
-        // ==========================================
-        function enableLiveOrders() {
-            // We use a free, professional bell sound from Mixkit
-            const bellSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-
-            supabaseClient
-                .channel('live-admin-orders')
-                .on('postgres_changes', { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'orders' 
-                }, payload => {
-                    console.log("🚨 NEW LIVE ORDER RECEIVED:", payload.new);
-                    
-                    // 1. Play the Notification Bell
-                    bellSound.play().catch(e => console.log("Audio blocked by browser until user clicks:", e));
-
-                    // 2. Refresh the Orders Grid automatically!
-                    if (typeof fetchOrders === 'function') {
-                        fetchOrders(); 
-                    }
-                })
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
-                        console.log("🟢 Live Order Tracking is ACTIVE");
-                    }
-                });
-        }
-
         // Init Hook
         const origVerify = window.verifyAdmin;
         window.verifyAdmin = async function() {
-            await origVerify(); // Waits to confirm they are logged in as Admin
-            
-            enableLiveOrders(); // 🌟 STARTS THE LIVE LISTENER!
-
+            await origVerify();
             setTimeout(() => {
                 renderPosOrderLine();
                 setPosMiddleView('tables'); 
             }, 1000);
         };
+
+window.onload = async function() {
+    // 1. Grab the session from the URL after Google redirects here
+    const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+    
+    if (!session) {
+        // If they aren't logged in, kick them back to login
+        window.location.href = 'login.html';
+        return;
+    }
+
+    const user = session.user;
+
+    // 2. Check if they exist in the database yet
+    let { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+    // 3. IF BRAND NEW USER: Auto-provision them instantly behind the scenes!
+    if (!profile) {
+        const defaultBusinessName = user.user_metadata && user.user_metadata.full_name 
+            ? `${user.user_metadata.full_name}'s Restaurant` 
+            : 'New Restaurant';
+
+        // Create Tenant
+        const { data: newTenant } = await supabaseClient
+            .from('tenants')
+            .insert([{ 
+                restaurant_name: defaultBusinessName,
+                plan_tier: 'basic',
+                status: 'pending' 
+            }])
+            .select().single();
+
+        // Create Profile
+        await supabaseClient
+            .from('profiles')
+            .insert([{
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata ? user.user_metadata.full_name : 'Restaurant Admin',
+                role: 'tenant_admin',
+                restaurant_id: newTenant.id
+            }]);
+            
+        // Done! Hide the loading spinner and show the dashboard UI
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('dashboard-ui').style.display = 'block';
+        return;
+    }
+
+    // 4. IF EXISTING USER: Route them correctly
+    if (profile.role === 'super_admin') {
+        // If you (the super admin) log in, quickly teleport to your master control room
+        window.location.href = 'super-admin.html';
+    } else {
+        // Normal restaurant owner: Hide spinner, show dashboard
+        document.getElementById('loading-spinner').style.display = 'none';
+        document.getElementById('dashboard-ui').style.display = 'block';
+    }
+};
+
 
         window.onload = verifyAdmin;
 // ==========================================
