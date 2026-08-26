@@ -1389,6 +1389,7 @@
             if (profileEl) profileEl.textContent = adminName;
 
             applyPlanGating(currentTenantPlan);
+	initWaiterBell();
 
             // 🌟 ADD THIS CODE RIGHT HERE:
             const previewBtn = document.getElementById('preview-link');
@@ -5471,73 +5472,74 @@ function updatePosRightPanelLabels() {
 // ==========================================
         // 🌟 NEW: SUPABASE REALTIME RECEIVER (ADMIN)
         // ==========================================
-        // 🌟 Now it only listens to THIS specific restaurant's bell!
-const waiterChannel = supabaseClient.channel('waiter-alerts-' + activeRestaurantId);
-        
-        // Add a CSS animation for shaking if they ring twice
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                25% { transform: translateX(-5px); }
-                50% { transform: translateX(5px); }
-                75% { transform: translateX(-5px); }
-            }
-            .animate-shake { animation: shake 0.4s ease-in-out; }
-        `;
-        document.head.appendChild(style);
-
-        waiterChannel.on('broadcast', { event: 'bell-ring' }, (payload) => {
-            const data = payload.payload;
+        function initWaiterBell() {
+            if (!activeRestaurantId) return; // Safety check
             
-            // 1. Play the Bell Sound!
-            const audio = new Audio('https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/service-bell.mp3'); // A reliable free sound URL
-            audio.play().catch(e => console.log("Audio requires user interaction first."));
-
-            const container = document.getElementById('waiter-toast-container');
-            const existingToast = document.getElementById(`toast-${data.table}`);
-
-            // 2. Anti-Spam Stacking Logic
-            if (existingToast) {
-                // If it already exists, just shake it and play the sound!
-                existingToast.classList.remove('animate-shake');
-                void existingToast.offsetWidth; // Trigger reflow
-                existingToast.classList.add('animate-shake');
-                
-                // Update the time and badge
-                existingToast.querySelector('.call-time').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                return;
-            }
-
-            // 3. Create New Toast
-            const toast = document.createElement('div');
-            toast.id = `toast-${data.table}`;
-            toast.className = "bg-white p-4 rounded-2xl shadow-2xl border-l-4 border-yellow-400 flex items-start gap-3 pointer-events-auto transform transition-all duration-500 translate-x-full opacity-0";
+            const waiterChannel = supabaseClient.channel('waiter-alerts-' + activeRestaurantId);
             
-            toast.innerHTML = `
-                <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 shrink-0">
-                    <i class="fas fa-concierge-bell text-lg animate-bounce"></i>
-                </div>
-                <div class="flex-1">
-                    <div class="flex justify-between items-start">
-                        <h4 class="font-black text-gray-900 text-sm">Table ${data.table}</h4>
-                        <span class="text-[9px] font-bold text-gray-400 call-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    </div>
-                    <p class="text-[10px] text-gray-500 font-bold mt-0.5">${data.name} requires assistance.</p>
-                    <button onclick="this.closest('div[id^=toast-]').remove()" class="mt-2 text-[10px] font-black text-yellow-600 bg-yellow-50 hover:bg-yellow-100 px-3 py-1.5 rounded-lg transition uppercase tracking-wider w-full text-center">
-                        <i class="fas fa-check"></i> Mark Attended
-                    </button>
-                </div>
+            // Add a CSS animation for shaking if they ring twice
+            const style = document.createElement('style');
+            style.innerHTML = `
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    50% { transform: translateX(5px); }
+                    75% { transform: translateX(-5px); }
+                }
+                .animate-shake { animation: shake 0.4s ease-in-out; }
             `;
+            document.head.appendChild(style);
 
-            container.appendChild(toast);
+            waiterChannel.on('broadcast', { event: 'bell-ring' }, (payload) => {
+                const data = payload.payload;
+                
+                // 1. Play the Bell Sound!
+                const audio = new Audio('https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/images/service-bell.mp3'); 
+                audio.play().catch(e => console.log("Audio requires user interaction first."));
 
-            // Animate it sliding in
-            setTimeout(() => {
-                toast.classList.remove('translate-x-full', 'opacity-0');
-            }, 50);
-            
-        }).subscribe();
+                const container = document.getElementById('waiter-toast-container');
+                const existingToast = document.getElementById(`toast-${data.table}`);
+
+                // 2. Anti-Spam Stacking Logic
+                if (existingToast) {
+                    existingToast.classList.remove('animate-shake');
+                    void existingToast.offsetWidth; // Trigger reflow
+                    existingToast.classList.add('animate-shake');
+                    
+                    existingToast.querySelector('.call-time').textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    return;
+                }
+
+                // 3. Create New Toast
+                const toast = document.createElement('div');
+                toast.id = `toast-${data.table}`;
+                toast.className = "bg-white p-4 rounded-2xl shadow-2xl border-l-4 border-yellow-400 flex items-start gap-3 pointer-events-auto transform transition-all duration-500 translate-x-full opacity-0";
+                
+                toast.innerHTML = `
+                    <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-500 shrink-0">
+                        <i class="fas fa-concierge-bell text-lg animate-bounce"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between items-start">
+                            <h4 class="font-black text-gray-900 text-sm">Table ${data.table}</h4>
+                            <span class="text-[9px] font-bold text-gray-400 call-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <p class="text-[10px] text-gray-500 font-bold mt-0.5">${data.name} requires assistance.</p>
+                        <button onclick="this.closest('div[id^=toast-]').remove()" class="mt-2 text-[10px] font-black text-yellow-600 bg-yellow-50 hover:bg-yellow-100 px-3 py-1.5 rounded-lg transition uppercase tracking-wider w-full text-center">
+                            <i class="fas fa-check"></i> Mark Attended
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(toast);
+
+                // Animate it sliding in
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full', 'opacity-0');
+                }, 50);
+                
+            }).subscribe();
+        }
 
 // 🌟 NEW: Universal Drag-to-Scroll for Desktop Admin Panels
         function startAdminDrag(e, slider) {
