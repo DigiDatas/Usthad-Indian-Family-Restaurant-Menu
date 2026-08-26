@@ -1349,7 +1349,8 @@
             const impersonatedName = localStorage.getItem('impersonate_business_name');
 
             if (profile?.role === 'super_admin') {
-                if (!impersonatedId) {
+                // 🌟 FIX: Block the literal text "null" and "undefined" so it never crashes!
+                if (!impersonatedId || impersonatedId === 'null' || impersonatedId === 'undefined') {
                     window.location.href = 'super-admin.html';
                     return;
                 }
@@ -5470,7 +5471,8 @@ function updatePosRightPanelLabels() {
 // ==========================================
         // 🌟 NEW: SUPABASE REALTIME RECEIVER (ADMIN)
         // ==========================================
-        const waiterChannel = supabaseClient.channel('waiter-alerts');
+        // 🌟 Now it only listens to THIS specific restaurant's bell!
+const waiterChannel = supabaseClient.channel('waiter-alerts-' + activeRestaurantId);
         
         // Add a CSS animation for shaking if they ring twice
         const style = document.createElement('style');
