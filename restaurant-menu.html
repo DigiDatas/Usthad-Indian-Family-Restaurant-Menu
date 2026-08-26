@@ -1430,23 +1430,26 @@ let relatedItemsData = []; // (You did this perfectly!)
             document.documentElement.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
             document.documentElement.lang = currentLang;
 
+            // 🌟 FIX: We now pull from the single database row containing both languages!
             let smartBrandName = "Our Restaurant";
-            if (window.dbSettingsEn && window.dbSettingsAr) {
-                smartBrandName = currentLang === 'en' ? (window.dbSettingsEn.brand_name || "Our Restaurant") : (window.dbSettingsAr.brand_name || "مطعمنا");
+            if (window.dbSettingsEn) {
+                smartBrandName = currentLang === 'en' 
+                    ? (window.dbSettingsEn.brand_name || "Our Restaurant") 
+                    : (window.dbSettingsEn.brand_name_ar || window.dbSettingsEn.brand_name || "مطعمنا");
             }
 
             document.getElementById('nav-title').textContent = smartBrandName;
             document.getElementById('footer-title').textContent = smartBrandName;
-// 🌟 NEW: Fetch dynamic descriptions for the Footer
+            document.getElementById('hero-title1').textContent = currentLang === 'en' ? "Welcome to" : "مرحباً بكم في";
+            
+            const heroBrandEl = document.getElementById('hero-brand-name');
+            if(heroBrandEl) heroBrandEl.textContent = smartBrandName;
+
+            // 🌟 ADDED: Dynamic descriptions for the Footer
             const descEn = window.dbSettingsEn?.description || "Made with fresh ingredients and authentic recipes to provide you with the best dining experience.";
             const descAr = window.dbSettingsEn?.description_ar || "محضر بمكونات طازجة ووصفات أصيلة لنقدم لك أفضل تجربة طعام.";
             const footerDescEl = document.getElementById('footer-desc');
             if (footerDescEl) footerDescEl.textContent = currentLang === 'en' ? descEn : descAr;
-            document.getElementById('hero-title1').textContent = currentLang === 'en' ? "Welcome to" : "مرحباً بكم في";
-            
-            // Fixed the old ID name so it doesn't error out!
-            const heroBrandEl = document.getElementById('hero-brand-name');
-            if(heroBrandEl) heroBrandEl.textContent = smartBrandName;
             
             document.getElementById('f-phone').textContent = rawBranding.C || "--";
             document.getElementById('f-whatsapp').textContent = rawBranding.D || "--";
