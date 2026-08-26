@@ -358,7 +358,10 @@
                 const { error } = await supabaseClient.from('tenants').update({ restaurant_name, plan_tier, status, plan_expiry }).eq('id', id);
                 if(error) return alert("Error updating tenant: " + error.message);
             } else {
-                const { error } = await supabaseClient.from('tenants').insert([{ restaurant_name, plan_tier, status, plan_expiry }]);
+                // 🌟 Auto-Generate Slug (lowercases, adds hyphens, removes weird symbols)
+                const slug = restaurant_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+                
+                const { error } = await supabaseClient.from('tenants').insert([{ restaurant_name, plan_tier, status, plan_expiry, slug }]);
                 if(error) return alert("Error creating tenant: " + error.message);
             }
 
