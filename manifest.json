@@ -1,8 +1,8 @@
-{
-  "name": "Menu Usthad Restaurant",
-  "short_name": "Usthad",
-  "start_url": "/Usthad-Indian-Family-Restaurant-Menu/index.html",
-  "scope": "/Usthad-Indian-Family-Restaurant-Menu/",
+ly{
+  "name": "Menuly Manage Your menue",
+  "short_name": "Menuly",
+  "start_url": "/menuly/index.html",
+  "scope": "/menuly/",
   "display": "standalone",
   "background_color": "#f8fafc",
   "theme_color": "#ef4444",
