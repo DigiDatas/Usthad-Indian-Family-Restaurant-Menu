@@ -1394,7 +1394,8 @@
             // 🌟 ADD THIS CODE RIGHT HERE:
             const previewBtn = document.getElementById('preview-link');
             if (previewBtn && activeRestaurantId) {
-                previewBtn.href = `restaurant-menu.html?rest=${activeRestaurantId}`;
+                const slugStr = profile.tenants?.slug || activeRestaurantId;
+                previewBtn.href = `restaurant-menu.html?menu=${slugStr}`;
             }
 
             // Fetch Data
