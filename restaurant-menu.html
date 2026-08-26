@@ -99,7 +99,7 @@
         <div class="relative z-10 py-6">
             <h1 class="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4 drop-shadow-md">
                 <span id="hero-title1">Welcome to</span> <br/>
-                <span id="hero-title2" class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">Our Restaurant</span>
+                <span id="hero-brand-name" class="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">Our Restaurant</span>
             </h1>
 
             <div id="offer-carousel-wrapper" class="hidden relative h-44 sm:h-48 mt-6 mb-2 mx-auto max-w-5xl overflow-hidden flex items-center justify-center">
@@ -1164,6 +1164,9 @@ let rawMenuAr = [];
 
 let currentLang = 'en'; 
 let langSetup = 'English&Arabic'; 
+// 🌟 NEW: Global variables for dynamic restaurant names
+let brandNameEn = "Our Restaurant"; 
+let brandNameAr = "مطعمنا";
 
 let globalCurrency = ""; 
 const newRiyalIcon = `<svg class="inline-block w-[0.8em] h-[0.8em] mx-0.5 fill-current" viewBox="0 0 202.03 220.76" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M3.62,190.51c1.85-3.4,4.63-11.11,8.33-12.04l62.35-13.27v-30.87l-63.28,13.58c-1.23,0,3.09-13.27,3.4-13.89,1.54-3.4,4.32-11.11,8.03-12.04l51.86-11.11V20.42c0-4.94,8.64-11.73,11.42-14.51.93-.62,9.88-8.64,9.88-4.94v105.57l24.69-5.56V31.84c0-4.94,8.64-11.73,11.73-14.2.62-.93,9.57-8.64,9.57-5.25v84.27l58.34-12.35h.31l1.23-.31c.93-.31-3.09,12.96-3.7,13.89-1.54,3.09-4.32,11.11-8.03,11.73l-48.15,10.5v24.39l60.19-12.66c1.23-.31-2.78,13.27-3.4,13.89-1.54,3.4-4.32,11.11-8.03,12.04l-68.53,14.82c-.93,0-1.54,0-1.54-1.23v-46.61l-24.69,5.25v31.79c0,6.79-13.27,25-20.06,26.86v-.31L.22,204.4c-1.23.31,3.09-12.96,3.4-13.89ZM196.55,194.83c-1.54,3.09-4.32,11.11-8.33,12.04l-68.84,13.89c-.93.31,3.09-12.96,3.7-13.89,1.54-3.4,4.32-11.11,8.03-12.04l68.84-13.89c1.54-.31-3.09,12.96-3.4,13.89Z"/></svg>`;
@@ -1242,6 +1245,25 @@ let relatedItemsData = []; // (You did this perfectly!)
                 waiterChannel = supabaseClient.channel('waiter-alerts-' + restaurantId);
                 waiterChannel.subscribe();
                 loadCustomerTables();
+// ==========================================
+                // 🌟 NEW: FETCH BRAND NAMES FROM SETTINGS
+                // ==========================================
+                const { data: settingsData, error: settingsError } = await supabaseClient
+                    .from('restaurant_settings')
+                    .select('brand_name, brand_name_ar')
+                    .eq('restaurant_id', restaurantId)
+                    .single();
+
+                if (settingsData) {
+                    // Save the data to our global variables
+                    brandNameEn = settingsData.brand_name || "Our Restaurant";
+                    brandNameAr = settingsData.brand_name_ar || brandNameEn; 
+                    
+                    // Update the screen immediately
+                    if (typeof updateBrandNamesUI === "function") {
+                        updateBrandNamesUI();
+                    }
+                }
                 // ==========================================
                 // 🔒 CLOUD SECURITY KILL-SWITCH
                 // ==========================================
@@ -1397,6 +1419,7 @@ let relatedItemsData = []; // (You did this perfectly!)
 
         function toggleLanguage() {
             currentLang = currentLang === 'en' ? 'ar' : 'en';
+	updateBrandNamesUI();
             document.getElementById('lang-text').textContent = currentLang === 'en' ? 'AR' : 'EN';
             closeModal();
             fetchMenuDataForLang(currentLang); // Now talks directly to the database!
@@ -1413,8 +1436,16 @@ let relatedItemsData = []; // (You did this perfectly!)
 
             document.getElementById('nav-title').textContent = smartBrandName;
             document.getElementById('footer-title').textContent = smartBrandName;
+// 🌟 NEW: Fetch dynamic descriptions for the Footer
+            const descEn = window.dbSettingsEn?.description || "Made with fresh ingredients and authentic recipes to provide you with the best dining experience.";
+            const descAr = window.dbSettingsEn?.description_ar || "محضر بمكونات طازجة ووصفات أصيلة لنقدم لك أفضل تجربة طعام.";
+            const footerDescEl = document.getElementById('footer-desc');
+            if (footerDescEl) footerDescEl.textContent = currentLang === 'en' ? descEn : descAr;
             document.getElementById('hero-title1').textContent = currentLang === 'en' ? "Welcome to" : "مرحباً بكم في";
-            document.getElementById('hero-title2').textContent = smartBrandName;
+            
+            // Fixed the old ID name so it doesn't error out!
+            const heroBrandEl = document.getElementById('hero-brand-name');
+            if(heroBrandEl) heroBrandEl.textContent = smartBrandName;
             
             document.getElementById('f-phone').textContent = rawBranding.C || "--";
             document.getElementById('f-whatsapp').textContent = rawBranding.D || "--";
@@ -1458,7 +1489,22 @@ let relatedItemsData = []; // (You did this perfectly!)
             document.getElementById('label-location').textContent = t.location;
             animateSearchPlaceholder();
         }
+function updateBrandNamesUI() {
+    // Decide which name to use based on the current language
+    const nameToShow = currentLang === 'ar' ? brandNameAr : brandNameEn;
+    
+    // Find the elements safely using your ACTUAL IDs
+    const navEl = document.getElementById('nav-title'); // The Top Left
+    const heroEl = document.getElementById('hero-brand-name'); // The Big Hero Text
+    const footerEl = document.getElementById('footer-title'); // The Footer Text
+    const brandModalEl = document.getElementById('brandModalTitle'); // The Popup Profile Text
 
+    // Update the text if the elements exist on the page
+    if (navEl) navEl.textContent = nameToShow;
+    if (heroEl) heroEl.textContent = nameToShow;
+    if (footerEl) footerEl.textContent = nameToShow;
+    if (brandModalEl) brandModalEl.textContent = nameToShow;
+}
         function renderOffers() {
             clearInterval(offerInterval);
             const wrapper = document.getElementById('offer-carousel-wrapper');
@@ -4019,9 +4065,10 @@ if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
             }
             document.getElementById('brandModalTitle').textContent = smartBrandName;
             
-            const defaultDescEn = "Welcome to our restaurant! We pride ourselves on serving delicious, high-quality food made with fresh ingredients and authentic recipes.";
-            const defaultDescAr = "مرحباً بكم في مطعمنا! نفخر بتقديم أشهى المأكولات عالية الجودة المحضرة بمكونات طازجة ووصفات أصيلة.";
-            document.getElementById('brandModalDesc').textContent = currentLang === 'en' ? defaultDescEn : defaultDescAr;
+            // 🌟 NEW: Fetch dynamic descriptions for the Brand Modal
+            const modalDescEn = window.dbSettingsEn?.description || "Welcome to our restaurant! We pride ourselves on serving delicious, high-quality food.";
+            const modalDescAr = window.dbSettingsEn?.description_ar || "مرحباً بكم في مطعمنا! نفخر بتقديم أشهى المأكولات عالية الجودة.";
+            document.getElementById('brandModalDesc').textContent = currentLang === 'en' ? modalDescEn : modalDescAr;
 
             document.getElementById('brandModalPhone').textContent = rawBranding.C || "--";
             document.getElementById('brandModalWA').textContent = rawBranding.D || "--";

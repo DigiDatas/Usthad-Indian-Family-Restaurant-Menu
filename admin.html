@@ -804,6 +804,17 @@
                                 <input type="text" id="set-brand-ar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
                             </div>
                         </div>
+<!-- Restaurant Description (English) -->
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Restaurant Description (English)</label>
+            <textarea id="admin-desc-en" rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="e.g., Welcome to our restaurant! We pride ourselves on..."></textarea>
+        </div>
+
+        <!-- Restaurant Description (Arabic) -->
+        <div class="mb-4">
+            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Restaurant Description (Arabic)</label>
+            <textarea id="admin-desc-ar" dir="rtl" rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="e.g., مرحباً بكم في مطعمنا! نفخر بتقديم أشهى..."></textarea>
+        </div>
                         
                         <!-- Currency & Language Checkboxes -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -3781,6 +3792,10 @@ const ordersRes = await supabaseClient
                 // 🌟 Read Arabic directly from the new column
                 document.getElementById('set-brand-ar').value = data.brand_name_ar || ''; 
 
+                // 🌟 NEW: Load English and Arabic Descriptions
+                document.getElementById('admin-desc-en').value = data.description || '';
+                document.getElementById('admin-desc-ar').value = data.description_ar || '';
+
                 if (data.logo_link) {
                     document.getElementById('admin-brand-logo').src = data.logo_link;
                     document.getElementById('admin-brand-logo').classList.remove('hidden');
@@ -3851,6 +3866,11 @@ const ordersRes = await supabaseClient
                 restaurant_id: activeRestaurantId, 
                 brand_name: document.getElementById('set-brand').value.trim(),
                 brand_name_ar: document.getElementById('set-brand-ar').value.trim(), // 🌟 Saved to new column
+                
+                // 🌟 NEW: Save descriptions to database
+                description: document.getElementById('admin-desc-en').value.trim(),
+                description_ar: document.getElementById('admin-desc-ar').value.trim(),
+
                 currency: document.getElementById('set-currency').value.trim(),
                 language: activeLang,
                 contact: document.getElementById('set-contact').value.trim(),
