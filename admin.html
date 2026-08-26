@@ -87,26 +87,6 @@
         </div>
 
 
-
-
-
-<!-- 🌟 NEW: REVIEWS BUTTON -->
-                <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-star text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Reviews</span>
-                </button>
-
-
-<!-- 🌟 INVENTORY (PREMIUM PLACEHOLDER) -->
-                <button onclick="alert('📦 Inventory Control & Recipe Costing is a Premium Feature.\n\nComing Soon in V2!')" class="sidebar-btn relative h-14 w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-blue-500 text-white opacity-50 hover:opacity-95 transition-all flex items-center group overflow-hidden shadow-sm hover:scale-[1.01]">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300">
-                        <i class="fas fa-boxes text-lg"></i>
-                    </div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[14px] whitespace-nowrap transition-opacity duration-300 flex items-center gap-2">
-                        Inventory <i class="fas fa-crown text-[10px] text-yellow-300 pb-2"></i>
-                    </span>
-                </button>
-
         <!-- Profile & Logout at Bottom -->
         <div class="p-3 border-t border-gray-800">
             <div class="relative h-10 w-full flex items-center">
@@ -3920,13 +3900,23 @@ const ordersRes = await supabaseClient
             const { data: existingRow } = await supabaseClient.from('restaurant_settings').select('id').eq('restaurant_id', activeRestaurantId).limit(1);
 
             if (existingRow && existingRow.length > 0) {
-                // Update the existing row safely
-                const { error } = await supabaseClient.from('restaurant_settings').update(payload).eq('restaurant_id', activeRestaurantId);
-                if (error) { hasError = true; alert("Update Error: " + error.message); }
+                // Update the existing row safely AND FORCE A RESPONSE (.select)
+                const { data: updatedData, error } = await supabaseClient.from('restaurant_settings').update(payload).eq('restaurant_id', activeRestaurantId).select();
+                
+                if (error) { 
+                    hasError = true; alert("Update Error: " + error.message); 
+                } else if (!updatedData || updatedData.length === 0) {
+                    hasError = true; alert("🚨 RLS SECURITY BLOCK: Supabase blocked the save. Please check your RLS Update Policies for 'restaurant_settings'!");
+                }
             } else {
                 // Insert if it does not exist
-                const { error } = await supabaseClient.from('restaurant_settings').insert([payload]);
-                if (error) { hasError = true; alert("Insert Error: " + error.message); }
+                const { data: insertedData, error } = await supabaseClient.from('restaurant_settings').insert([payload]).select();
+                
+                if (error) { 
+                    hasError = true; alert("Insert Error: " + error.message); 
+                } else if (!insertedData || insertedData.length === 0) {
+                    hasError = true; alert("🚨 RLS SECURITY BLOCK: Supabase blocked the insert. Please check your RLS Insert Policies for 'restaurant_settings'!");
+                }
             }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;
