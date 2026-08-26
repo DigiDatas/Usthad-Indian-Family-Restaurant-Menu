@@ -4272,7 +4272,7 @@ if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
         // ==========================================
         // 🌟 NEW: SUPABASE REALTIME BROADCAST (USER)
         // ==========================================
-        const waiterChannel = supabaseClient.channel('waiter-alerts');
+        const waiterChannel = supabaseClient.channel('waiter-alerts-' + restaurantId);
 
         function openWaiterModal() {
             if (!currentUser) {
