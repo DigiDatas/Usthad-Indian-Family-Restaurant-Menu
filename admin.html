@@ -39,42 +39,49 @@
                 <h1 class="absolute left-16 opacity-0 group-hover:opacity-100 text-xl font-black whitespace-nowrap transition-opacity duration-300 tracking-tight">Admin Suite</h1>
             </div>
 
-            <!-- Navigation Links (Increased Gap, Height, and Rounded Corners) -->
-            <nav class="flex flex-col gap-4 p-3 mt-6">
-                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="sidebar-btn relative h-14 w-full rounded-2xl bg-red-600 text-white transition-colors flex items-center shadow-sm">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-chart-pie text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Dashboard</span>
+            <!-- Navigation Links (Tightened Gap, Height, and Rounded Corners) -->
+            <nav class="flex flex-col gap-1.5 p-3 mt-4 flex-1 overflow-y-auto hide-scrollbar">
+                <button onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="sidebar-btn relative h-11 w-full rounded-xl bg-red-600 text-white transition-colors flex items-center shadow-sm">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-chart-pie text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Dashboard</span>
                 </button>
-<!-- 🌟 NEW: CASHIER POS BUTTON -->
-                <button onclick="switchTab('pos')" id="tab-btn-pos" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cash-register text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Cashier POS</span>
+                <button onclick="switchTab('pos')" id="tab-btn-pos" class="sidebar-btn relative h-11 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cash-register text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Cashier POS</span>
                 </button>
-                <button onclick="switchTab('menu')" id="tab-btn-menu" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-utensils text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Menu Manager</span>
+                <button onclick="switchTab('menu')" id="tab-btn-menu" class="sidebar-btn relative h-11 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-utensils text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Menu Manager</span>
                 </button>
-                <button onclick="switchTab('users')" id="tab-btn-users" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-users text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Customers</span>
+                <button onclick="switchTab('users')" id="tab-btn-users" class="sidebar-btn relative h-11 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-users text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Customers</span>
                 </button>
-                <button onclick="switchTab('offers')" id="tab-btn-offers" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-tags text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Offers</span>
+                <button onclick="switchTab('offers')" id="tab-btn-offers" class="sidebar-btn relative h-11 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-tags text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Offers</span>
                 </button>
-                <button onclick="switchTab('settings')" id="tab-btn-settings" class="sidebar-btn relative h-14 w-full rounded-2xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-5 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cog text-lg"></i></div>
-                    <span class="absolute left-14 opacity-0 group-hover:opacity-100 font-bold text-[15px] whitespace-nowrap transition-opacity duration-300">Settings</span>
+                <button onclick="switchTab('settings')" id="tab-btn-settings" class="sidebar-btn relative h-11 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-cog text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Settings</span>
                 </button>
-<!-- 🌟 NEW: My TV Button -->
-            <button onclick="switchTab('tv')" id="tab-btn-tv" class="sidebar-btn relative h-14 w-full rounded-2xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-blue-500 text-white opacity-50 hover:opacity-95 transition-all flex items-center group overflow-hidden shadow-sm hover:scale-[1.01]">
-                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300">
-                        <i class="fas fa-tv text-lg"></i>
+                <button onclick="switchTab('reviews')" id="tab-btn-reviews" class="sidebar-btn relative h-11 w-full rounded-xl text-gray-400 hover:bg-gray-800 hover:text-white transition-colors flex items-center">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-star text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300">Reviews</span>
+                </button>
+
+                <!-- Premium Tabs Separator -->
+                <div class="w-full h-px bg-gray-800 my-2"></div>
+
+                <button onclick="switchTab('tv')" id="tab-btn-tv" class="sidebar-btn relative h-11 w-full rounded-xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-blue-500 text-white opacity-50 hover:opacity-95 transition-all flex items-center group overflow-hidden shadow-sm">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-tv text-[15px]"></i></div>
+                    <div class="absolute left-12 opacity-0 group-hover:opacity-100 flex flex-col whitespace-nowrap transition-opacity duration-300 text-left">
+                        <span class="font-black text-sm leading-tight mt-0.5">My TV</span>
                     </div>
-                    <div class="absolute left-14 opacity-0 group-hover:opacity-100 flex flex-col whitespace-nowrap transition-opacity duration-300 text-left">
-                        <span class="font-black text-[14px] leading-tight">My TV</span>
-                        <span class="text-[8px] font-bold text-yellow-200 tracking-wider uppercase">Test Mode (Beta)</span>
-                    </div>
+                </button>
+                <button onclick="alert('📦 Inventory Control is a Premium Feature.')" class="sidebar-btn relative h-11 w-full rounded-xl bg-gradient-to-r from-fuchsia-500 via-purple-500 to-blue-500 text-white opacity-50 hover:opacity-95 transition-all flex items-center group overflow-hidden shadow-sm">
+                    <div class="absolute left-1/2 -translate-x-1/2 group-hover:left-4 group-hover:translate-x-0 w-6 h-6 flex items-center justify-center transition-all duration-300"><i class="fas fa-boxes text-[15px]"></i></div>
+                    <span class="absolute left-12 opacity-0 group-hover:opacity-100 font-bold text-sm whitespace-nowrap transition-opacity duration-300 flex items-center gap-2">Inventory <i class="fas fa-crown text-[9px] text-yellow-300 pb-1"></i></span>
                 </button>
             </nav>
         </div>
@@ -793,28 +800,32 @@
                         <input type="hidden" id="setting-id">
                         <input type="hidden" id="setting-id-ar">
                         
-                        <!-- Brand & Languages -->
+                        <!-- Brand & Descriptions -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (EN) *</label>
-                                <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                            <!-- Left Column: English -->
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (EN) *</label>
+                                    <input type="text" id="set-brand" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Restaurant Description (English)</label>
+                                    <textarea id="admin-desc-en" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="e.g., Welcome to our restaurant! We pride ourselves on..."></textarea>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (AR)</label>
-                                <input type="text" id="set-brand-ar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
+                            
+                            <!-- Right Column: Arabic -->
+                            <div class="flex flex-col gap-3">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Brand Name (AR)</label>
+                                    <input type="text" id="set-brand-ar" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm bg-gray-50 font-bold text-right" dir="rtl">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Restaurant Description (Arabic)</label>
+                                    <textarea id="admin-desc-ar" dir="rtl" rows="3" class="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="e.g., مرحباً بكم في مطعمنا! نفخر بتقديم أشهى..."></textarea>
+                                </div>
                             </div>
                         </div>
-<!-- Restaurant Description (English) -->
-        <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Restaurant Description (English)</label>
-            <textarea id="admin-desc-en" rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="e.g., Welcome to our restaurant! We pride ourselves on..."></textarea>
-        </div>
-
-        <!-- Restaurant Description (Arabic) -->
-        <div class="mb-4">
-            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Restaurant Description (Arabic)</label>
-            <textarea id="admin-desc-ar" dir="rtl" rows="3" class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-red-500 bg-gray-50" placeholder="e.g., مرحباً بكم في مطعمنا! نفخر بتقديم أشهى..."></textarea>
-        </div>
                         
                         <!-- Currency & Language Checkboxes -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1488,11 +1499,10 @@ async function logoutAdmin() {
 
         // BULLETPROOF TABS ENGINE
         function switchTab(tabId) {
-            // List of all base tab names
             const tabNames = ['dashboard', 'pos', 'menu', 'tv', 'reviews', 'settings', 'social', 'offers', 'users'];
             
-            // Silently hide all known tab variations (including section- and tab- prefixes)
             tabNames.forEach(name => {
+                // 1. Hide the content sections robustly
                 const candidates = [
                     document.getElementById(name),
                     document.getElementById('tab-' + name),
@@ -1502,9 +1512,16 @@ async function logoutAdmin() {
                 candidates.forEach(el => {
                     if (el) el.classList.add('hidden');
                 });
+
+                // 2. Reset the button colors (skip gradient buttons)
+                const btn = document.getElementById('tab-btn-' + name);
+                if (btn && name !== 'tv' && name !== 'inventory') { 
+                    btn.classList.remove('bg-red-600', 'text-white', 'shadow-sm');
+                    btn.classList.add('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
+                }
             });
 
-            // Find and show the target tab safely (checking section-, tab-, and plain IDs)
+            // 3. Show target content
             const target = document.getElementById(tabId) || 
                            document.getElementById('tab-' + tabId) || 
                            document.getElementById('section-' + tabId) || 
@@ -1514,6 +1531,17 @@ async function logoutAdmin() {
                 target.classList.remove('hidden');
             } else {
                 console.log("Note: Could not find container for tab: " + tabId);
+            }
+
+            // 4. Highlight the active button
+            const activeBtn = document.getElementById('tab-btn-' + tabId);
+            if (activeBtn && tabId !== 'tv' && tabId !== 'inventory') {
+                activeBtn.classList.remove('text-gray-400', 'hover:bg-gray-800', 'hover:text-white');
+                activeBtn.classList.add('bg-red-600', 'text-white', 'shadow-sm');
+                
+                // 5. Update Top Header Title dynamically
+                const headerTitle = document.getElementById('th-title');
+                if (headerTitle) headerTitle.textContent = activeBtn.innerText.trim();
             }
         }
 
@@ -3888,23 +3916,17 @@ const ordersRes = await supabaseClient
 
             let hasError = false;
             
-            if (settingId) {
-                // Try to update existing row
-                const { error } = await supabaseClient.from('restaurant_settings').update(payload).eq('id', settingId);
-                if (error) { 
-                    hasError = true; 
-                    alert("Supabase Update Error: " + error.message); // 🌟 Now it tells you exactly what went wrong!
-                }
+            // 🌟 BULLETPROOF SAVE: Force update on the exact Restaurant ID
+            const { data: existingRow } = await supabaseClient.from('restaurant_settings').select('id').eq('restaurant_id', activeRestaurantId).limit(1);
+
+            if (existingRow && existingRow.length > 0) {
+                // Update the existing row safely
+                const { error } = await supabaseClient.from('restaurant_settings').update(payload).eq('restaurant_id', activeRestaurantId);
+                if (error) { hasError = true; alert("Update Error: " + error.message); }
             } else {
-                // Insert a brand new row
-                const { data, error } = await supabaseClient.from('restaurant_settings').insert([payload]).select().single();
-                if (error) { 
-                    hasError = true; 
-                    alert("Supabase Insert Error: " + error.message); // 🌟 Now it tells you exactly what went wrong!
-                }
-                if (data) {
-                    document.getElementById('setting-id').value = data.id; // Save ID for future updates without refreshing
-                }
+                // Insert if it does not exist
+                const { error } = await supabaseClient.from('restaurant_settings').insert([payload]);
+                if (error) { hasError = true; alert("Insert Error: " + error.message); }
             }
 
             btn.innerHTML = `<i class="fas fa-save"></i> Save Settings`;

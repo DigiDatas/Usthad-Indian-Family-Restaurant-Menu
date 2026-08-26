@@ -1248,11 +1248,12 @@ let relatedItemsData = []; // (You did this perfectly!)
 // ==========================================
                 // 🌟 NEW: FETCH BRAND NAMES FROM SETTINGS
                 // ==========================================
-                const { data: settingsData, error: settingsError } = await supabaseClient
+                const { data: dbSettings } = await supabaseClient
                     .from('restaurant_settings')
-                    .select('brand_name, brand_name_ar')
+                    .select('*')
                     .eq('restaurant_id', restaurantId)
-                    .single();
+                    .limit(1)
+                    .maybeSingle(); // 🌟 ADDED LIMIT 1
 
                 if (settingsData) {
                     // Save the data to our global variables
