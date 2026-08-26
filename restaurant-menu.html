@@ -867,13 +867,10 @@
     </div>
     <script>
 
-// 1. Grab the ?rest=UUID parameter from the browser URL
+// 1. Grab the ?menu=slug parameter from the browser URL
 const urlParams = new URLSearchParams(window.location.search);
-const restaurantId = urlParams.get('rest');
-
-if (!restaurantId) {
-    console.warn("⚠️ No restaurant ID found in URL. Falling back or showing error.");
-}
+const menuSlug = urlParams.get('menu');
+let restaurantId = null; // 🌟 Will be filled automatically in init()
       const allowedDomains = [
             "digidatas.github.io", 
             "localhost",            
@@ -1196,7 +1193,7 @@ let relatedItemsData = []; // (You did this perfectly!)
         let selectedSubCategories = new Set();  // NEW: Multi-select logic
         let searchQuery = '';
         
-        let likedItems = new Set(JSON.parse(localStorage.getItem('likedItems_' + restaurantId)) || []);
+        let likedItems = new Set();
         let currentOpenItemId = null;
         let offerInterval = null;
         let currentOfferIndex = 0;
@@ -1223,6 +1220,23 @@ let relatedItemsData = []; // (You did this perfectly!)
 
         async function init() {
             try {
+                // 🌟 SLUG TO UUID LOOKUP BRIDGE
+                if (!menuSlug) throw new Error("No menu specified in URL.");
+                const { data: tenantData, error: tenantErr } = await supabaseClient
+                    .from('tenants')
+                    .select('id')
+                    .eq('slug', menuSlug)
+                    .single();
+                    
+                if (tenantErr || !tenantData) {
+                    document.body.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100vh; font-family:sans-serif; color:#ef4444;"><h2>Menu not found. Please check the link.</h2></div>`;
+                    return;
+                }
+                
+                restaurantId = tenantData.id; // Boom! We have the correct UUID!
+                
+                // Load favorites now that we know the ID
+                likedItems = new Set(JSON.parse(localStorage.getItem('likedItems_' + restaurantId)) || []);
                 // ==========================================
                 // 🔒 CLOUD SECURITY KILL-SWITCH
                 // ==========================================
