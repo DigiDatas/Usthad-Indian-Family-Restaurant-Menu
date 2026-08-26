@@ -1248,7 +1248,7 @@ let relatedItemsData = []; // (You did this perfectly!)
 // ==========================================
                 // 🌟 NEW: FETCH BRAND NAMES FROM SETTINGS
                 // ==========================================
-                const { data: dbSettings } = await supabaseClient
+                const { data: settingsData, error: settingsError } = await supabaseClient
                     .from('restaurant_settings')
                     .select('*')
                     .eq('restaurant_id', restaurantId)
