@@ -4062,10 +4062,12 @@ if (cartItem.itemCode && String(cartItem.itemCode).trim() !== "") {
             const img = document.getElementById('brandModalImage');
             img.src = rawBranding.smartLogo || 'https://raw.githubusercontent.com/DigiDatas/ShawarMax-Menu/main/logo.png'; 
 
-            // 2. FETCH LIVE BRAND NAME FROM DATABASE
+           // 🌟 2. FETCH LIVE BRAND NAME FROM UNIFIED DATABASE
             let smartBrandName = "Our Restaurant";
-            if (window.dbSettingsEn && window.dbSettingsAr) {
-                smartBrandName = currentLang === 'en' ? (window.dbSettingsEn.brand_name || "Our Restaurant") : (window.dbSettingsAr.brand_name || "مطعمنا");
+            if (window.dbSettingsEn) {
+                smartBrandName = currentLang === 'en' 
+                    ? (window.dbSettingsEn.brand_name || "Our Restaurant") 
+                    : (window.dbSettingsEn.brand_name_ar || window.dbSettingsEn.brand_name || "مطعمنا");
             }
             document.getElementById('brandModalTitle').textContent = smartBrandName;
             
